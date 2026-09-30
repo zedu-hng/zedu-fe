@@ -44,7 +44,7 @@
   - Flag name: `____________` (write `N/A` for small UI tweaks)
 - [ ] **Database / API contract:** schema changes follow Expand-Contract — no destructive drops or renames.
 - [ ] **Preview:** I verified the change in the fork build (and my team's preview link, if we deploy one).
-- [ ] **Protected files:** I did not change `.github/`, `AGENTS.md`, `CONTRIBUTING.md` or tooling config without reviewer agreement.
+- [ ] **Protected files:** I did not change `.github/`, `AGENTS.md`, `CONTRIBUTING.md` or tooling config without reviewer agreement and the `config-change-approved` label.
 
 ## Screenshots / recording
 
