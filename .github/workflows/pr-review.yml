@@ -3,6 +3,8 @@ name: PR Review Bot
 on:
   pull_request:
     branches:
+      - dev
+      - central-staging
       - staging
       - main
     types:

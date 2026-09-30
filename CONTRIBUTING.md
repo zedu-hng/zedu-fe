@@ -797,17 +797,17 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                   | Trigger                                      | Purpose                                          |
-| -------------------------- | -------------------------------------------- | ------------------------------------------------ |
-| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Prettier, ESLint, TypeScript, build              |
-| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan  |
-| `security-checks.yml`      | PR → `dev`, `staging`, `main`                | File policy, dependency audit, Gitleaks, Semgrep |
-| `malware-scan.yml`         | PR → `dev`, `staging`, `main`                | ClamAV + JS heuristics                           |
-| `commitlint.yml`           | PR → `dev`, `central-staging`                | Commit messages + PR title                       |
-| `pr-rules.yml`             | PR → `dev`, `central-staging`                | Branch name, single author, protected files      |
-| `fork-build.yml`           | PR events / comment / schedule               | Relays the fork's PR build as **Fork build**     |
-| `deploy-staging.yml`       | Push / dispatch → `staging`                  | Deploy staging (self-hosted runner)              |
-| `deploy-main.yml`          | Push / dispatch → `main`                     | Deploy production (self-hosted runner)           |
+| Workflow                   | Trigger                                                                | Purpose                                          |
+| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
+| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Prettier, ESLint, TypeScript, build              |
+| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan  |
+| `security-checks.yml`      | PR → `dev`, `central-staging`, `staging`, `main`                       | File policy, dependency audit, Gitleaks, Semgrep |
+| `malware-scan.yml`         | PR → `dev`, `central-staging`, `staging`, `main`                       | ClamAV + JS heuristics                           |
+| `commitlint.yml`           | PR → `dev`, `central-staging`                                          | Commit messages + PR title                       |
+| `pr-rules.yml`             | PR → `dev`, `central-staging`                                          | Branch name, single author, protected files      |
+| `fork-build.yml`           | PR events / comment / schedule                                         | Relays the fork's PR build as **Fork build**     |
+| `deploy-staging.yml`       | Push / dispatch → `staging`                                            | Deploy staging (self-hosted runner)              |
+| `deploy-main.yml`          | Push / dispatch → `main`                                               | Deploy production (self-hosted runner)           |
 
 ### Docker
 
