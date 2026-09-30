@@ -11,7 +11,7 @@ Instructions for AI coding agents working in `zedu-fe` (Next.js 16 App Router, R
 - Don't edit protected files (`.github/`, `AGENTS.md`, `CONTRIBUTING.md`, tooling config; full list in `CONTRIBUTING.md`). The **Protected files** check fails the PR unless a reviewer has approved the change and added the `config-change-approved` label.
 - One author per PR: commit only as the contributor, never mix in other people's commits.
 - Never commit `.env` or any `.env.*` file, `.pem` files, credential or service-account JSON, or files over 1 MB. CI's file policy and secret scan reject them.
-- Never hardcode public URLs or client-side identifiers. Read public config from `process.env.NEXT_PUBLIC_*`; keep secrets in server-only environment variables. If you add a variable, declare it in `.env.example`.
+- Never hardcode public URLs or client-side identifiers. Read public config from `process.env.NEXT_PUBLIC_*`; keep secrets in server-only environment variables.
 - Never create `* copy.*` files. Edit the original.
 - New routes and large features go behind a feature flag (`NEXT_PUBLIC_FF_*`, default `OFF`); small UI tweaks don't need one. See `CONTRIBUTING.md` → Feature flags.
 
