@@ -605,7 +605,7 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
 
 1. Fork `zedu-hng/zedu-fe` into your team's GitHub org.
 2. In the fork, go to **Actions** and enable workflows. Forks have them off by default, and your PR builds run there.
-3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables**, and add `APP_ENV_FILE` containing your full `.env` (the keys are listed in `.env.example`). CI writes it to `.env` before building. Without it, builds succeed but the app has no backend.
+3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Secrets → New repository secret**, and add `APP_ENV_FILE` containing your full `.env` (the keys are listed in `.env.example`). CI writes it to `.env` before building. Without it, builds succeed but the app has no backend.
 4. Each contributor clones the **team fork** and installs with `pnpm install` (see [Getting Started](#getting-started)).
 
 `pnpm install` installs the Husky hooks. On commit, Prettier, ESLint, TypeScript and the production build run, and commitlint checks your message.
@@ -797,17 +797,17 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                   | Trigger                        | Purpose                                          |
-| -------------------------- | ------------------------------ | ------------------------------------------------ |
-| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Prettier, ESLint, TypeScript, build             |
-| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan |
-| `security-checks.yml`      | PR → `dev`, `staging`, `main`  | File policy, dependency audit, Gitleaks, Semgrep |
-| `malware-scan.yml`         | PR → `dev`, `staging`, `main`  | ClamAV + JS heuristics                           |
-| `commitlint.yml`           | PR → `dev`, `central-staging`  | Commit messages + PR title                       |
-| `pr-rules.yml`             | PR → `dev`, `central-staging`  | Branch name, single author, protected files      |
-| `fork-build.yml`           | PR events / comment / schedule | Relays the fork's PR build as **Fork build**     |
-| `deploy-staging.yml`       | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)              |
-| `deploy-main.yml`          | Push / dispatch → `main`       | Deploy production (self-hosted runner)           |
+| Workflow                   | Trigger                                      | Purpose                                          |
+| -------------------------- | -------------------------------------------- | ------------------------------------------------ |
+| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Prettier, ESLint, TypeScript, build              |
+| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan  |
+| `security-checks.yml`      | PR → `dev`, `staging`, `main`                | File policy, dependency audit, Gitleaks, Semgrep |
+| `malware-scan.yml`         | PR → `dev`, `staging`, `main`                | ClamAV + JS heuristics                           |
+| `commitlint.yml`           | PR → `dev`, `central-staging`                | Commit messages + PR title                       |
+| `pr-rules.yml`             | PR → `dev`, `central-staging`                | Branch name, single author, protected files      |
+| `fork-build.yml`           | PR events / comment / schedule               | Relays the fork's PR build as **Fork build**     |
+| `deploy-staging.yml`       | Push / dispatch → `staging`                  | Deploy staging (self-hosted runner)              |
+| `deploy-main.yml`          | Push / dispatch → `main`                     | Deploy production (self-hosted runner)           |
 
 ### Docker
 
