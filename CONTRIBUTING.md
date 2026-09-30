@@ -799,8 +799,8 @@ pnpm start   # next start
 
 | Workflow                   | Trigger                        | Purpose                                          |
 | -------------------------- | ------------------------------ | ------------------------------------------------ |
-| `pr-pre-commit-checks.yml` | PR → `dev`, `staging`, `main`  | Prettier, ESLint, TypeScript, build              |
-| `pr-review.yml`            | PR → `dev`, `staging`, `main`  | Structure, reuse, hardcoded-URL and secret scan  |
+| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Prettier, ESLint, TypeScript, build             |
+| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan |
 | `security-checks.yml`      | PR → `dev`, `staging`, `main`  | File policy, dependency audit, Gitleaks, Semgrep |
 | `malware-scan.yml`         | PR → `dev`, `staging`, `main`  | ClamAV + JS heuristics                           |
 | `commitlint.yml`           | PR → `dev`, `central-staging`  | Commit messages + PR title                       |
