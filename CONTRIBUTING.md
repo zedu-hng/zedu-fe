@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to **Zedu** — a cross-platform collaboration workspace for messaging, channels, voice/video calls (Buzz), file sharing, search, notifications, and AI coworkers.
 
-This guide is written against the **actual files and conventions in this repository**. If something here conflicts with another doc, treat this file and the code as the source of truth.
+This guide covers two things: **how the code is organised** (onboarding) and **how work gets from a ticket into Zedu** (the team workflow in [Bootcamp Workflow](#bootcamp-workflow)). It is written against the **actual files and conventions in this repository**. If something here conflicts with another doc, treat this file and the code as the source of truth.
 
 > **Naming note:** The npm package is named `zedu_fe` (see `package.json`). Infrastructure, Docker images, and some paths still use legacy **zedu** names. The user-facing product brand is **Zedu** (`zedu.chat`).
 
@@ -19,7 +19,7 @@ This guide is written against the **actual files and conventions in this reposit
 - [Development Guidelines](#development-guidelines)
 - [Common Development Tasks](#common-development-tasks)
 - [Code Style and Quality](#code-style-and-quality)
-- [Git Workflow](#git-workflow)
+- [Bootcamp Workflow](#bootcamp-workflow)
 - [Testing](#testing)
 - [Build and Deployment](#build-and-deployment)
 - [Troubleshooting](#troubleshooting)
@@ -59,24 +59,14 @@ Cypress is already a dev dependency (`pnpm cypress`). An editor with ESLint and 
 
 ### 1. Fork and clone
 
-Fork [https://github.com/zeduapp/zedu_fe](https://github.com/zeduapp/zedu_fe), then clone **your fork**:
+Fork **`zedu-hng/zedu-fe`** into your team's GitHub org (the review repo, not `zeduchat`), then clone **your team's fork**:
 
 ```sh
-git clone git@github.com:<your-username>/zedu_fe.git
-cd zedu_fe
+git clone git@github.com:<your-team>/zedu-fe.git
+cd zedu-fe
 ```
 
-Add upstream:
-
-```sh
-git remote add upstream git@github.com:zeduapp/zedu_fe.git
-```
-
-HTTPS clone:
-
-```sh
-git clone https://github.com/zeduapp/zedu_fe.git
-```
+The full repository topology and branch model are in [Bootcamp Workflow](#bootcamp-workflow).
 
 ### 2. Install dependencies
 
@@ -88,9 +78,7 @@ pnpm install
 
 ### 3. Configure environment variables
 
-There is **no committed `.env` or `.env.example`** in this repo. Request values from a team member.
-
-Create `.env` in the project root. These variables are **referenced in the codebase today**:
+Copy `.env.example` (repo root) to `.env` and fill in your team's values. Ask your team lead if anything is missing. These variables are **referenced in the codebase today**:
 
 **Required for most local development**
 
@@ -154,9 +142,12 @@ Open [http://localhost:3000](http://localhost:3000).
 Before opening a PR:
 
 ```sh
-pnpm lint        # ESLint (package.json script)
-pnpm format      # Prettier on src/**/*.{ts,tsx,scss,html}
-pnpm build       # next build
+pnpm check-format   # Prettier
+pnpm check-lint     # ESLint
+pnpm check-types    # TypeScript
+pnpm build          # next build
+# or all at once:
+pnpm test-all
 ```
 
 ---
@@ -541,22 +532,22 @@ export default withAuthGate(MyPage, {
 pnpm format
 ```
 
-### ESLint (`.eslintrc.json`)
+### ESLint (`eslint.config.mjs`)
 
-Extends `eslint:recommended`, `next`, `next/core-web-vitals`, and `prettier`.
+Flat config built on Next.js core-web-vitals and Prettier.
 
 ```sh
-pnpm lint
+pnpm check-lint
 pnpm lint:fix
 ```
 
-### lint-staged
+### lint-staged and Husky
 
-`package.json` runs lint + format on staged `src/**/*.{ts,tsx}` via `lint-staged`. Husky is listed in devDependencies but **there is no `.husky/` directory in this repo**, so hooks may not run automatically — run `pnpm lint` and `pnpm format` manually before pushing.
+`package.json` runs lint + format on staged `src/**/*.{ts,tsx}` via `lint-staged`. Husky hooks live in `.husky/` and run Prettier, ESLint, TypeScript and the production build before each commit. Keep them enabled — fix the code rather than bypassing with `--no-verify`.
 
 ### Commit messages
 
-Conventional Commits are defined in `commitlint.config.cjs` (and a minimal `commitlint.config.js`):
+Conventional Commits are defined in `commitlint.config.cjs`:
 
 ```
 <type>(<optional-scope>): <subject>
@@ -574,71 +565,191 @@ fix(buzz): resolve mute state after reconnect
 docs: expand contributing guide
 ```
 
-Commitlint is configured but not wired to git hooks in this repo unless you set that up locally.
+Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in CI on your PR title.
 
 ---
 
-## Git Workflow
+## Bootcamp Workflow
 
-### Branches in this repository
+The short version:
 
-Verified remote branches include **`staging`** (default — `origin/HEAD` points here) and **`main`**. There is **no `dev` branch** on the remote at the time of this writing.
+> Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → your fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
 
-> `.github/pull_request_template.md` still says to open PRs against **`dev`**. Until that template is updated, **confirm the target branch with maintainers**. In practice, feature work is typically merged into **`staging`**.
+### 1. Ground rules
 
-### Branch naming
+- **Every change needs an approved ticket** in ClickUp or Linear. Nothing starts from an untracked chat request.
+- **One ticket per PR, one person per PR.** Each member opens their own PR from their own ticket branch. No team branches and no combined PRs: we review per developer, so nobody's work is held up by someone else's. If you find another problem, open another ticket.
+- **Your team lead reviews first.** They approve on your PR; Zedu reviewers pick it up after that.
+- **Don't change protected files** (see [Protected files](#5-protected-files)) unless a reviewer has agreed first.
+- **You never push to `zedu-hng` or `zeduchat` directly.** All work happens in your fork and comes in as a PR.
+- **AI is a tool, not an authority.** You own everything you submit. If you can't explain it, don't submit it.
 
-Create branches from the integration branch your team uses (usually `staging`):
+### 2. Repositories and branches
 
-| Prefix      | Use for                             |
-| ----------- | ----------------------------------- |
-| `feat/`     | New features                        |
-| `fix/`      | Bug fixes                           |
-| `refactor/` | Restructure without behavior change |
-| `chore/`    | Tooling, deps, config               |
-| `docs/`     | Documentation                       |
-| `test/`     | Tests                               |
-| `ci/`       | CI/CD                               |
-
-```sh
-git fetch upstream
-git checkout staging
-git pull upstream staging
-git checkout -b feat/your-feature-name
+```
+zeduchat/zedu-fe              Zedu's repo. Reviewers send batches here; you never touch it.
+  └─ zedu-hng/zedu-fe         Review org. Your PRs land here.
+       └─ <your-team>/zedu-fe Your team's fork. You work here.
 ```
 
-### Submitting a pull request
+| Branch in `zedu-hng` | Purpose                                                         | Who merges                                  |
+| -------------------- | --------------------------------------------------------------- | ------------------------------------------- |
+| `dev` (default)      | All PRs land here, from teams and reviewers alike.              | Reviewers, squash merge                     |
+| `central-staging`    | What's ready to go to Zedu; mirrors `zeduchat:central-staging`. | Reviewers promote `dev` → `central-staging` |
 
-1. Push to your fork:
+`staging` and `main` live on `zeduchat/zedu-fe` and are owned by the in-house team. You never target them.
 
-   ```sh
-   git push origin feat/your-feature-name
+Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **Sync fork** point at the wrong repo.
+
+### 3. One-time setup (per team)
+
+1. Fork `zedu-hng/zedu-fe` into your team's GitHub org.
+2. In the fork, go to **Actions** and enable workflows. Forks have them off by default, and your PR builds run there.
+3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables**, and add `APP_ENV_FILE` containing your full `.env` (the keys are listed in `.env.example`). CI writes it to `.env` before building. Without it, builds succeed but the app has no backend.
+4. Each contributor clones the **team fork** and installs with `pnpm install` (see [Getting Started](#getting-started)).
+
+`pnpm install` installs the Husky hooks. On commit, Prettier, ESLint, TypeScript and the production build run, and commitlint checks your message.
+
+### 4. Working on a ticket
+
+1. Move the ticket to **IN PROGRESS**.
+2. Sync your fork's `dev` from `zedu-hng` (GitHub **Sync fork** button), then pull.
+3. Branch from `dev` using the ticket ID:
+
+   ```
+   <type>/<ticket-id>-<short-description>
    ```
 
-2. Open a PR using [`.github/pull_request_template.md`](.github/pull_request_template.md).
+   Types: `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `perf`, `security`. The ticket ID is either a number or a prefix plus number. Example: `feat/CHAT-142-typing-indicator` or `fix/245-login-redirect`.
 
-3. **Confirm base branch** with maintainers (`staging` vs `main` vs template’s `dev`).
+4. Commit with [Conventional Commits](https://www.conventionalcommits.org/) (see [Commit messages](#commit-messages)). The PR title must pass commitlint too, and it becomes the squashed commit message.
+5. Commit only as yourself. The **Single author** check fails a PR with commits from more than one person. If you commit from several emails, add all of them to your GitHub account, or they count as different authors. Credit a collaborator with a `Co-authored-by:` trailer instead.
 
-4. Ensure `pnpm lint` and `pnpm build` pass locally.
+**Dependent tickets:** if ticket B needs ticket A, open B's PR after A merges, then update B from `dev`. Don't stack B on top of A's unmerged branch.
 
-5. Add screenshots or recordings for UI changes.
+**Testing combinations:** you can merge ticket branches into a private branch in your fork to test them together. Never open a PR from that branch.
 
-**Checklist:**
+### 5. Protected files
 
-- [ ] Follows conventions in this guide
-- [ ] `pnpm lint` passes
-- [ ] `pnpm build` passes locally
-- [ ] UI changes include screenshots/video
-- [ ] Commit messages follow Conventional Commits
-- [ ] Changes are scoped to the task
+These files are owned by the reviewers. The **Protected files** check fails any PR that changes them, unless a reviewer has agreed the change first and added the `config-change-approved` label:
+
+- `.github/` (workflows, templates, the review bot config);
+- `AGENTS.md` and `CONTRIBUTING.md`;
+- tooling config: `eslint.config.mjs`, `.prettierrc`, `.prettierignore`, `tsconfig.json`, `next.config.mjs`, `postcss.config.*`, `tailwind.config.*`, `commitlint.config.cjs`, `.gitleaks.toml`, `.semgrepignore`, `.husky/`, `.npmrc`;
+- `package.json` and `pnpm-lock.yaml` when the change is tooling-only (dependency additions the ticket needs are fine).
+
+**Moving or restructuring files needs its own approved ticket**; never mix it into feature work.
+
+### 6. Opening a PR
+
+1. Open a PR from your fork's ticket branch into **`zedu-hng/zedu-fe:dev`**. Open it from the ticket branch, not your fork's `dev`: that would drag in everything else merged there.
+2. Fill in [`.github/pull_request_template.md`](.github/pull_request_template.md) completely:
+   - the ticket link;
+   - what changed and why;
+   - how to test and what to expect;
+   - your team lead's GitHub handle;
+   - screenshots or a recording for visible changes;
+   - the AI-usage line.
+3. Ask your team lead to review it and leave an **Approve** review.
+4. Trigger the first build (see [How your PR gets built](#7-how-your-pr-gets-built)).
+5. Move the ticket to **IN REVIEW**.
+
+### 7. How your PR gets built
+
+Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to your team's backend. Zedu never holds your config or secrets.
+
+- **Builds run only while your PR is open.** Pushes to a ticket branch without an open PR skip the build. Docs-only pushes never build.
+- **First build:** opening the PR doesn't trigger one. In your fork, go to **Actions → PR build → Run workflow** on your branch, or push a commit. After that, every push builds automatically.
+- On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
+- No build showing at all? Check that Actions is enabled in your fork and that it's synced.
+
+If your team deploys a preview (for example Vercel), link it in the PR so reviewers can click through the change. The build gate proves it compiles; a preview proves it works.
+
+The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
+
+### 8. Review and merge
+
+- **Your team lead approves first.** Zedu reviewers only pick up PRs the lead has approved.
+- **1 Zedu reviewer approval** is required, and it must come after your last push.
+- All checks must pass, including **Fork build**.
+- All review threads must be resolved. Don't resolve a thread without actually addressing it.
+- To address feedback, push to the same ticket branch. Checks and the fork build re-run.
+- Reviewers **squash-merge** into `dev`. Your PR title becomes the commit message, so keep it conventional.
+- Contributors don't merge their own PRs.
+
+After merge, reviewers promote `dev` → `central-staging` with a merge commit, and send `central-staging` to `zeduchat` in batches. Sync your fork's `dev` (**Sync fork**) to pull in what's merged. The ticket goes **MERGED → VERIFIED → CLOSED** once the change is verified.
+
+### 9. Feature flags
+
+New routes and large features must be wrapped in a feature flag, default `OFF`, so we can merge safely and turn things on deliberately. Flags use the `NEXT_PUBLIC_FF_` prefix and are read through the helper in `src/lib/feature-flags.ts`. Name the flag in the PR template. Small, low-risk UI tweaks don't need one.
+
+### 10. AI usage
+
+AI is fine for explaining code, drafting implementations, tests, debugging, refactoring and docs.
+
+Don't:
+
+- paste generated code you haven't read;
+- submit code you can't explain;
+- give AI tools secrets or user data;
+- treat AI output as a substitute for testing or review.
+
+For significant AI-assisted changes, add one line to the PR saying how AI was used. If you use an AI coding agent, point it at [`AGENTS.md`](./AGENTS.md); it holds the repo conventions agents need, and most agents load it automatically.
+
+### 11. Security and secrets
+
+Never commit API keys, tokens, passwords, private keys, certificates, cloud or database credentials, `.env` files with real values, or user data.
+
+Anything prefixed `NEXT_PUBLIC_` is compiled into the browser bundle and readable by anyone. Treat it as public; real secrets belong on the backend, not the client. If you expose a secret, deleting it in the next commit is not enough — tell a reviewer immediately so it can be rotated. The **File policy**, **Gitleaks** and **Semgrep** checks enforce this.
+
+### 12. Definition of done
+
+- Acceptance criteria met.
+- All checks green on the PR, including **Fork build**.
+- Approved by your team lead and a Zedu reviewer, with all threads resolved.
+- Merged into `zedu-hng:dev`.
+- Verified in the build or preview.
+- Ticket closed in ClickUp or Linear.
+
+### 13. Getting unstuck
+
+Ask in your team's channel first, then the project channel. For a blocker, include:
+
+- the ticket number;
+- what you were trying to do;
+- what happened, with the error or build output;
+- what you already tried;
+- what help you need.
 
 ---
 
 ## Testing
 
+### Required checks
+
+Run the same checks CI runs before you open or update a PR:
+
+```sh
+pnpm check-format   # Prettier
+pnpm check-lint     # ESLint
+pnpm check-types    # TypeScript
+pnpm build          # production build
+pnpm test-all       # all of the above
+```
+
+The required gates are format, lint, types and a successful production build. There is no unit-test runner in this repo.
+
+**What to change:** only what your ticket touched. Don't add retroactive tests or refactors to unrelated code in the same file. Noticed a real gap? File a separate ticket.
+
+Manual verification against **your team's backend** in `pnpm dev`:
+
+- the flow your ticket describes, including loading, empty and error states;
+- layout at two viewport sizes (desktop and a narrow/mobile width);
+- keyboard focus and accessible labels for anything interactive.
+
 ### Cypress (E2E only)
 
-No Jest/Vitest/React Testing Library setup exists.
+No Jest/Vitest/React Testing Library setup exists. Cypress covers end-to-end checks of critical flows.
 
 **Run:**
 
@@ -686,14 +797,17 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                         | Trigger                     | Purpose                       |
-| -------------------------------- | --------------------------- | ----------------------------- |
-| `check-for-npm-build-errors.yml` | PR → `main`                 | `pnpm install` + `pnpm build` |
-| `deploy-staging.yml`             | Push / dispatch → `staging` | Deploy staging                |
-| `deploy-main.yml`                | Push / dispatch → `main`    | Deploy production             |
-| `pr_preview.yaml`                | PR opened/sync/closed       | PR preview environments       |
-| `create-release.yaml`            | Release published           | Upload release JSON to MinIO  |
-| `test_deployment.yaml`           | Manual dispatch             | Test PR preview port logic    |
+| Workflow                   | Trigger                        | Purpose                                          |
+| -------------------------- | ------------------------------ | ------------------------------------------------ |
+| `pr-pre-commit-checks.yml` | PR → `dev`, `staging`, `main`  | Prettier, ESLint, TypeScript, build              |
+| `pr-review.yml`            | PR → `dev`, `staging`, `main`  | Structure, reuse, hardcoded-URL and secret scan  |
+| `security-checks.yml`      | PR → `dev`, `staging`, `main`  | File policy, dependency audit, Gitleaks, Semgrep |
+| `malware-scan.yml`         | PR → `dev`, `staging`, `main`  | ClamAV + JS heuristics                           |
+| `commitlint.yml`           | PR → `dev`, `central-staging`  | Commit messages + PR title                       |
+| `pr-rules.yml`             | PR → `dev`, `central-staging`  | Branch name, single author, protected files      |
+| `fork-build.yml`           | PR events / comment / schedule | Relays the fork's PR build as **Fork build**     |
+| `deploy-staging.yml`       | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)              |
+| `deploy-main.yml`          | Push / dispatch → `main`       | Deploy production (self-hosted runner)           |
 
 ### Docker
 
