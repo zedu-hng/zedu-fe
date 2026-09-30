@@ -1,49 +1,65 @@
-<!-- Do not delete this PR template. Just edit it to include the required information -->
+## Ticket
 
-# Description
+<!-- Link the approved ClickUp/Linear ticket. -->
 
-<!-- If your PR fixes an open issue, use `Closes #999` to link your PR with the issue. #999 stands for the issue number you are fixing -->
+- **Ticket ID:** <!-- e.g. CHAT-142 -->
+- **Ticket title:**
 
-<!-- Github Issue Example: Closes #31 -->
+## Team lead
 
-**Closes #issue_number_here**
+<!-- @handle of your team lead. They review and approve before Zedu reviewers pick this up. -->
 
-# Changes proposed
+@
 
-## What were you told to do?
+## What changed
 
-<!-- Write the title of the issue/feature you are working on -->
+<!-- Short summary of the change. -->
 
-## What did you do?
+## Why
 
-<!-- Talk about the things you did eg. files changes, dependencies installed e.t.c -->
+<!-- The problem or reason this ticket exists. -->
 
-# Check List (Check all the applicable boxes)
+## How to test
 
-🚨Please review the [contribution guideline](CONTRIBUTING.md) for this repository.
+<!-- Numbered steps a reviewer can follow to verify the change themselves. -->
 
-<!-- Mark all the applicable boxes. To mark the box as done follow the following conventions -->
+1.
 
-<!--
-[x] - Correct; marked as done
-[X] - Correct; marked as done
-[ ] - Correct; marked as **not** done
+## What to expect
 
-[] - Not Correct; syntax error
-[ x] - Not Correct; space between the brackets
--->
+<!-- The expected behaviour after following the steps above. -->
 
-- [ ] My code follows the code style of this project.
-- [ ] This PR does not contain plagiarized content.
-- [ ] The title and description of the PR is clear and explains the approach.
-- [ ] I am making a pull request against the **dev branch** (left side).
-- [ ] My commit messages styles matches our requested structure.
-- [ ] My code additions will fail neither code linting checks nor unit test.
-- [ ] I am only making changes to files I was requested to.
+## Test evidence
 
-# Screenshots/Videos
+<!-- The Fork build check reports the build result automatically. Say which backend you tested against,
+     and whether tests were added or updated for what this ticket changed (and why not, if not). -->
 
-<!-- If the changes are static page changes or UI changes add screenshots -->
-<!-- If the changes involve implementing a functionality or working with apis, include a video
-detailing how to implement the functionality and the request to the api and responses from the api endpoint-->
-<!-- Add all the screenshots/videos which support your changes i.e before your change and after your change -->
+- Tested against:
+- Tests:
+
+## Mandatory checks
+
+- [ ] **Atomic:** exactly one ticket, max ~1 day of work (≤400 lines). Larger needs a `size-override` label from a reviewer.
+- [ ] **Feature flag:** new routes and large features sit behind a `NEXT_PUBLIC_FF_*` flag, default `OFF`.
+  - Flag name: `____________` (write `N/A` for small UI tweaks)
+- [ ] **Database / API contract:** schema changes follow Expand-Contract — no destructive drops or renames.
+- [ ] **Preview:** I verified the change in the fork build (and my team's preview link, if we deploy one).
+- [ ] **Protected files:** I did not change `.github/`, `AGENTS.md`, `CONTRIBUTING.md` or tooling config without reviewer agreement.
+
+## Screenshots / recording
+
+<!-- Required for visible or interactive changes. Otherwise write "N/A, non-visual change". -->
+
+## AI usage
+
+<!-- One line on how AI was used, if significant (see CONTRIBUTING.md, "AI usage"). -->
+
+## Checklist
+
+- [ ] Linked to an approved ticket
+- [ ] Only intended files changed
+- [ ] No secrets or debug code committed
+- [ ] Tests added/updated for what this ticket changed (not retroactive coverage of unrelated code)
+- [ ] Fork build triggered (first run: fork → Actions → PR build → Run workflow)
+- [ ] Team lead approved this PR
+- [ ] Self-reviewed (`git status` / `git diff`)
