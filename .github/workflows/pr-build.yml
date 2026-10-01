@@ -1,0 +1,101 @@
+name: PR build
+
+# Runs in contributor forks with the fork's own config (APP_ENV_FILE) and Actions minutes.
+# Builds only when this branch has an open PR into the review repo, so work-in-progress pushes cost nothing.
+# The review repo's fork-build.yml reads this run's result for the PR's head commit.
+#
+# First build after opening a PR: Actions -> PR build -> Run workflow on the branch (or push a commit).
+
+on:
+  push:
+    branches:
+      - "feat/**"
+      - "fix/**"
+      - "test/**"
+      - "docs/**"
+      - "refactor/**"
+      - "chore/**"
+      - "perf/**"
+      - "security/**"
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+concurrency:
+  group: pr-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: Open PR check
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.pr.outputs.build }}
+    steps:
+      - id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_REPO: ${{ vars.REVIEW_REPO || format('zedu-hng/{0}', github.event.repository.name) }}
+          OWNER: ${{ github.repository_owner }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          number=$(gh api -X GET "repos/$REVIEW_REPO/pulls" -f state=open -f head="$OWNER:$BRANCH" --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            echo "Open PR $REVIEW_REPO#$number from $OWNER:$BRANCH; building."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No open PR from $OWNER:$BRANCH into $REVIEW_REPO; skipping build. Open the PR, then run this workflow or push."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Lint, types and build
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # .env.* files are blocked by security-checks, so backend config lives in the APP_ENV_FILE repo variable (each fork sets its own).
+      - name: Write .env
+        env:
+          APP_ENV_FILE: ${{ vars.APP_ENV_FILE }}
+        run: |
+          if [ -z "$APP_ENV_FILE" ]; then
+            echo "::warning::APP_ENV_FILE variable not set; building with an empty .env (app will not reach a backend)."
+          fi
+          printf '%s\n' "$APP_ENV_FILE" > .env
+
+      - name: Prepare TypeScript environment
+        run: |
+          printf '/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n' > next-env.d.ts
+
+      - name: Prettier (check-format)
+        run: pnpm run check-format
+
+      - name: ESLint (check-lint)
+        run: pnpm run check-lint
+
+      - name: TypeScript (check-types)
+        run: pnpm run check-types
+
+      - name: Build
+        run: pnpm run build
