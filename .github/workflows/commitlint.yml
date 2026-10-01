@@ -10,6 +10,7 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+      - edited
 
 concurrency:
   group: commitlint-${{ github.workflow }}-${{ github.ref }}
