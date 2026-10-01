@@ -55,7 +55,13 @@ jobs:
           else
             echo "internal=false" >> "$GITHUB_OUTPUT"
           fi
-          perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission 2>/dev/null || echo none)
+          if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
+            echo "::warning::Permission lookup failed for $AUTHOR; retrying once."
+            if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
+              echo "::error::Permission lookup failed twice for $AUTHOR; treating the author as a non-reviewer."
+              perm=none
+            fi
+          fi
           case "$perm" in
             admin|maintain|write) echo "reviewer=true" >> "$GITHUB_OUTPUT" ;;
             *) echo "reviewer=false" >> "$GITHUB_OUTPUT" ;;
