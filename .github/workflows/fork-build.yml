@@ -99,11 +99,12 @@ jobs:
             echo "sha=$(jq -r .head.sha pr.json)"
             echo "head_repo=$(jq -r .head.repo.full_name pr.json)"
           } >> "$GITHUB_OUTPUT"
-          # Sync and promotion PRs (review repo or upstream long-lived branches) have no fork build.
+          # Same-repo PRs (reviewer branches, bots) and upstream long-lived branches have no fork build.
+          # Only contributor forks get the relay.
           head_repo=$(jq -r .head.repo.full_name pr.json); head_ref=$(jq -r .head.ref pr.json)
           upstream=$(gh api "repos/$REPO" --jq '.parent.full_name // ""')
-          if { [ "$head_repo" = "$REPO" ] || [ "$head_repo" = "$upstream" ]; } \
-             && { [ "$head_ref" = dev ] || [ "$head_ref" = central-staging ]; }; then
+          if [ "$head_repo" = "$REPO" ] \
+             || { [ "$head_repo" = "$upstream" ] && { [ "$head_ref" = dev ] || [ "$head_ref" = central-staging ]; }; }; then
             echo "internal=true" >> "$GITHUB_OUTPUT"
           else
             echo "internal=false" >> "$GITHUB_OUTPUT"
@@ -121,7 +122,11 @@ jobs:
           SHA: ${{ steps.pr.outputs.sha }}
           INTERNAL: ${{ steps.pr.outputs.internal }}
         run: |
-          reason=$([ "$INTERNAL" = true ] && echo "Sync/promotion PR; no fork build needed" || echo "Docs-only change; no build needed")
+          if [ "$INTERNAL" = true ]; then
+            reason="Same-repo or sync PR; no fork build needed"
+          else
+            reason="Docs-only change; no build needed"
+          fi
           gh api "repos/$REPO/statuses/$SHA" -f state=success -f context="$CONTEXT" -f description="$reason" >/dev/null
 
       - name: Wait for the fork's PR build

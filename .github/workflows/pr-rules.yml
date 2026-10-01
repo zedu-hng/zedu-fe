@@ -48,6 +48,14 @@ jobs:
     steps:
       - id: c
         run: |
+          case "$AUTHOR" in
+            dependabot\[bot\]|renovate\[bot\]|github-actions\[bot\])
+              echo "reviewer=true" >> "$GITHUB_OUTPUT"
+              echo "internal=false" >> "$GITHUB_OUTPUT"
+              echo "Author $AUTHOR is a bot; branch-name and single-author checks are waived."
+              exit 0
+              ;;
+          esac
           upstream=$(gh api "repos/$REPO" --jq '.parent.full_name // ""')
           if { [ "$HEAD_REPO" = "$REPO" ] || [ "$HEAD_REPO" = "$upstream" ]; } \
              && { [ "$HEAD_REF" = dev ] || [ "$HEAD_REF" = central-staging ]; }; then
@@ -116,7 +124,7 @@ jobs:
     if: needs.scope.outputs.internal == 'false'
     runs-on: ubuntu-latest
     env:
-      APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'config-change-approved') }}
+      APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'config-change-approved') || github.event.pull_request.user.login == 'dependabot[bot]' }}
     steps:
       - run: |
           protected='^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
