@@ -23,7 +23,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   pr-review:
@@ -73,12 +72,19 @@ jobs:
               --output review-report.json
           fi
 
-      - name: Post PR comment
-        uses: marocchino/sticky-pull-request-comment@v2
-        if: github.event_name == 'pull_request' && always()
+      # Upload the report instead of commenting: this job checks out and lints PR code, so on fork
+      # PRs its token is read-only and it cannot post a comment. "PR Review comment" picks the
+      # artifact up and posts it with a trusted write token after this run completes.
+      - name: Upload review report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          header: pr-review-bot
-          path: review-report.md
+          name: pr-review-report
+          path: |
+            review-report.md
+            review-report.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Fail on review errors
         if: steps.review.outcome == 'failure'
