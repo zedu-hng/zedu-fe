@@ -1,0 +1,19 @@
+# Maps bootcamp teams to their leads, Zedu reviewer and contributors.
+# The Team routing workflow reads this to request the right reviewer for a PR.
+#
+# teams:
+#   team-name:
+#     leads:
+#       - lead-handle        # one or more; any one can approve, so a single absence isn't a blocker
+#     reviewer: reviewer-handle
+#     members:
+#       - contributor-handle # used to map a PR author to a team
+#
+# fallback_reviewer: reviewer-handle   # used when a PR author isn't listed under any team
+#
+# Keep handles as plain logins (no @). Fill this in as teams form.
+
+teams: {}
+
+# Until teams are listed, route PRs from unmapped contributors here instead of going silent.
+fallback_reviewer: "zxenonx"
