@@ -114,7 +114,8 @@ jobs:
     steps:
       - run: |
           protected='^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
-          hits=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename' | grep -E "$protected" || true)
+          filenames=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          hits=$(printf '%s\n' "$filenames" | grep -E "$protected" || true)
           if [ -z "$hits" ]; then
             echo "OK: no protected files changed"
           elif [ "$APPROVED" = true ]; then
