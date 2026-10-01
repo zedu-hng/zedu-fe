@@ -1,7 +1,5 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { siteUrl } from "~/lib/env-urls";
-import { isFeatureEnabled } from "~/lib/feature-flags";
 import { zeduOspreyContributors } from "~/data/zedu-osprey-contributors";
 import { ContributorCard } from "../../_components/contributors/ContributorCard";
 
@@ -18,10 +16,6 @@ export const metadata: Metadata = {
 };
 
 const ZeduOspreyContributorsPage = () => {
-  if (!isFeatureEnabled("zeduOspreyContributors")) {
-    notFound();
-  }
-
   return (
     <div className="space-y-12 pb-20">
       <section className="relative isolate mt-10 flex w-full flex-col items-center gap-4 overflow-hidden px-4 pt-10 text-center sm:gap-6 sm:px-8 sm:pt-16 lg:px-12">
