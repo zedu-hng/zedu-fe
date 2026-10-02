@@ -1,41 +1,33 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
   title: "Zedu-Weaver — Our Team",
-  description: "Meet the 20 members of the Zedu-Weaver team.",
+  description: "Meet the 17 members of the Zedu-Weaver team.",
 };
 
 const members = [
-  "S.F Tommy",
-  "Jemi",
-  "Tearsmith",
-  "Khay",
-  "TheProductGirlie",
-  "Megafox",
-  "Pearl",
-  "thisOx2",
-  "Goodnews",
-  "Zeus",
-  "Nwa",
-  "roktech",
-  "emmanuel young",
-  "Samjean",
-  "Venson",
-  "Doug",
-  "Favour Daniel",
-  "Pleasure",
-  "vik_tor",
-  "Quell",
+  { fullName: "Omotomiwa Afonja", username: "S.F Tommy" },
+  { fullName: "Owai Owai", username: "thisOx2" },
+  { fullName: "Ummi M Kallay", username: "Khay" },
+  { fullName: "Peace Ihendi", username: "Pearl" },
+  { fullName: "Soneye Abimbola", username: "The Product Girlie" },
+  { fullName: "Folajomi Bello", username: "Magafox" },
+  { fullName: "Emmanuel Bassey Esoh", username: "Emmanuel Young" },
+  { fullName: "Ayodeji Adeniyi", username: "Dayjigud" },
+  { fullName: "Favour Daniel", username: "MR.FÃVY" },
+  { fullName: "Mercy Bamijoko", username: "Bambam" },
+  { fullName: "Egeonu Chiamaka Happiness", username: "happiness egeonu" },
+  { fullName: "Faith Obi", username: "Faith Obi" },
+  { fullName: "Abiodun Adeleke", username: "Tearsmith" },
+  { fullName: "Naomi Okoro", username: "Nayohmee" },
+  { fullName: "Ugonwa Ohagwasi", username: "nwa" },
+  { fullName: "Raphael Okeke", username: "@roktech" },
+  { fullName: "Emmanuel Umeogu", username: "Emmalaka" },
 ];
 
 export default function ContributorsPage() {
-  if (process.env.NEXT_PUBLIC_FF_CONTRIBUTORS !== "true") {
-    notFound();
-  }
-
   return (
     <main className={styles.page}>
       <div className={styles.content}>
@@ -60,15 +52,13 @@ export default function ContributorsPage() {
         <section aria-labelledby="members-heading">
           <div className={styles.rosterHeading}>
             <h2 id="members-heading">Team members</h2>
-            <span className={styles.count}>20 members</span>
+            <span className={styles.count}>{members.length} members</span>
           </div>
           <ol className={styles.roster}>
-            {members.map((name, index) => (
-              <li className={styles.member} key={name}>
-                <span className={styles.number} aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className={styles.name}>{name}</span>
+            {members.map(({ fullName, username }) => (
+              <li className={styles.member} key={fullName}>
+                <span className={styles.name}>{fullName}</span>
+                <span className={styles.username}>{username}</span>
               </li>
             ))}
           </ol>
@@ -77,7 +67,7 @@ export default function ContributorsPage() {
         <footer className={styles.footer}>
           <span>Zedu-Weaver</span>
           <span className={styles.endMark} aria-hidden="true">
-            ZW / 20
+            ZW / {members.length}
           </span>
         </footer>
       </div>
