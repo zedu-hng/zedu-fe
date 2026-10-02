@@ -97,7 +97,7 @@ const comparisonData = {
   withoutItems: [
     "Bootcamps use multiple tools for communication and collaboration",
     "Important updates and resources are often lost in crowded channels or long messages and chats",
-    "Students often don't know where to ask questions about lectures, and finding resources becomes difficult",
+    "Students often don't know where to ask questions about lectures, and finding resources becomes challenging",
     "Mentors struggle to keep track of student progress and manage group programs across different platforms",
     "Feedback on assignments and discussions happen in scattered places, making it hard to follow progress.",
   ],
@@ -142,7 +142,8 @@ const BootCampsSolutionsPage = () => {
             </h1>
             <p className="max-w-[46ch] text-sm leading-relaxed text-[#5a6170] sm:text-base">
               An all-in-one platform for bootcamps to manage cohorts, run live
-              classes, support students, and build active learning communities.
+              classes, support students, and build active learning communities,
+              all in one place.
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-[#5a6170] lg:justify-start">
               <div className="flex items-center gap-0.5" aria-hidden="true">
