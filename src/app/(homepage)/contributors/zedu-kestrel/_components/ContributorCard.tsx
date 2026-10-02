@@ -1,4 +1,4 @@
-import { ExternalLink, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import type { Contributor } from "../_lib/contributors";
 
 /**
@@ -53,7 +53,7 @@ export const ContributorCard = (member: Contributor) => {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3.5 text-xs text-neutral-600">
+      <div className="mt-5 flex items-center border-t border-neutral-100 pt-3.5 text-xs text-neutral-600">
         <a
           href={`mailto:${member.email}`}
           className="inline-flex items-center gap-1.5 truncate text-neutral-600 transition hover:text-primary-500"
@@ -61,18 +61,6 @@ export const ContributorCard = (member: Contributor) => {
           <Mail className="h-3.5 w-3.5 shrink-0 text-primary-500" />
           <span className="truncate">{member.email}</span>
         </a>
-
-        {member.linkedin && (
-          <a
-            href={`https://www.linkedin.com/in/${member.linkedin}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1 font-medium text-primary-500 transition hover:underline"
-          >
-            LinkedIn
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        )}
       </div>
     </article>
   );
