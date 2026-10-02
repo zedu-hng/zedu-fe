@@ -51,6 +51,12 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * TeamKestrelPage displays the hero banner, grid of contributor cards,
+ * and dynamic footer for Team Kestrel.
+ *
+ * @returns The rendered contributors page.
+ */
 const TeamKestrelPage = () => {
   return (
     <div className="space-y-16">

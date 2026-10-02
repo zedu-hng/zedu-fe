@@ -1,6 +1,12 @@
 import { ExternalLink, Mail } from "lucide-react";
 import type { Contributor } from "../_lib/contributors";
 
+/**
+ * Generates up to two uppercase initials from a full name.
+ *
+ * @param fullName - The full name of the contributor.
+ * @returns A 1-2 character uppercase initials string.
+ */
 function getInitials(fullName: string): string {
   return fullName
     .split(" ")
@@ -10,6 +16,13 @@ function getInitials(fullName: string): string {
     .join("");
 }
 
+/**
+ * ContributorCard component renders an individual team member card with
+ * avatar initials, role, background, Zedu handle, and contact links.
+ *
+ * @param member - Contributor details.
+ * @returns The rendered contributor card element.
+ */
 export const ContributorCard = (member: Contributor) => {
   return (
     <article className="flex h-full flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 text-left transition hover:border-primary-300 hover:shadow-sm">
@@ -51,7 +64,7 @@ export const ContributorCard = (member: Contributor) => {
 
         {member.linkedin && (
           <a
-            href={`//www.linkedin.com/in/${member.linkedin}`}
+            href={`https://www.linkedin.com/in/${member.linkedin}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex shrink-0 items-center gap-1 font-medium text-primary-500 transition hover:underline"
