@@ -16,7 +16,6 @@ class ErrorBoundary extends Component<Props, State> {
     this.resetError = this.resetError.bind(this);
   }
 
-  // eslint-disable-next-line no-unused-vars
   static getDerivedStateFromError(_: Error): State {
     return { hasError: true };
   }
@@ -44,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
               className="w-60 h-40"
             />
             <p className="text-xl font-semibold leading-6 text-slate-600">
-              Ooops!! Something went wrong
+              Ooooops!! Something went wrong
             </p>
             <p className="text-neutral-700 text-center leading-6">
               We cannot load this page at the moment
