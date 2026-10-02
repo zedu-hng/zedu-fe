@@ -1,0 +1,149 @@
+name: Lead approval
+
+# Sets the "Lead approval" commit status: green once one of the PR author's team leads has an
+# approving review, red otherwise. Reads teams.yml from the base branch, so a PR can't change it.
+#
+# A review on a fork PR runs with a read-only token and cannot set a status, so reviews are picked
+# up by a scheduled sweep that re-dispatches this workflow (a trusted, write-capable path).
+
+on:
+  pull_request_target:
+    branches:
+      - dev
+      - central-staging
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number to re-check
+        required: true
+      base_ref:
+        description: Branch the pull request targets
+        required: true
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: lead-approval-${{ github.event.pull_request.number || inputs.pr || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+  CONTEXT: Lead approval
+
+jobs:
+  # Scheduled: re-dispatch the check for open contributor PRs whose status isn't green yet.
+  sweep:
+    name: Re-check pending PRs
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: read
+    env:
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - run: |
+          # Re-check every open contributor PR, including ones already green: a dismissed or
+          # superseded review must be able to turn the status back to red.
+          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.repo.full_name) \(.base.ref)"' |
+          while read -r number head_repo base_ref; do
+            [ "$head_repo" = "$REPO" ] && continue
+            echo "PR #$number: re-checking"
+            gh workflow run lead-approval.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" -f pr="$number" -f base_ref="$base_ref"
+          done
+
+  approval:
+    name: Check lead approval
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.base_ref || github.event.pull_request.base.ref || github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Resolve PR
+        id: pr
+        env:
+          EVENT_PR: ${{ github.event.pull_request.number }}
+          INPUT_PR: ${{ inputs.pr }}
+        run: |
+          pr="$EVENT_PR"
+          [ -n "$pr" ] || pr="$INPUT_PR"
+          [[ "$pr" =~ ^[0-9]+$ ]] || { echo "No valid PR number; nothing to check."; exit 0; }
+          {
+            echo "number=$pr"
+            echo "sha=$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)"
+            echo "author=$(gh api "repos/$REPO/pulls/$pr" --jq .user.login)"
+            echo "head_repo=$(gh api "repos/$REPO/pulls/$pr" --jq .head.repo.full_name)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve leads
+        id: leads
+        if: steps.pr.outputs.number != ''
+        env:
+          AUTHOR: ${{ steps.pr.outputs.author }}
+          HEAD_REPO: ${{ steps.pr.outputs.head_repo }}
+        run: |
+          if [ "$HEAD_REPO" = "$REPO" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "$AUTHOR" in
+            *\[bot\]|github-actions)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              exit 0 ;;
+          esac
+          ruby -ryaml -e '
+            cfg = YAML.load_file(".github/teams.yml") || {}
+            author = ENV.fetch("AUTHOR")
+            team = (cfg["teams"] || {}).values.find { |v| Array(v["members"]).include?(author) }
+            if team
+              puts "mapped=true"
+              puts "leads=#{Array(team["leads"]).join(",")}"
+            else
+              puts "mapped=false"
+            end
+          ' >> "$GITHUB_OUTPUT"
+
+      - name: Set status
+        if: steps.pr.outputs.number != ''
+        env:
+          PR: ${{ steps.pr.outputs.number }}
+          SHA: ${{ steps.pr.outputs.sha }}
+          SKIP: ${{ steps.leads.outputs.skip }}
+          MAPPED: ${{ steps.leads.outputs.mapped }}
+          LEADS: ${{ steps.leads.outputs.leads }}
+        run: |
+          setstatus() { gh api "repos/$REPO/statuses/$SHA" -f state="$1" -f context="$CONTEXT" -f description="$2" >/dev/null; }
+          if [ "$SKIP" = "true" ]; then
+            setstatus success "Same-repo or bot PR; lead approval not enforced"
+            exit 0
+          fi
+          if [ "$MAPPED" != "true" ] || [ -z "$LEADS" ]; then
+            setstatus success "No team mapping; lead approval not enforced"
+            exit 0
+          fi
+          # The effective review state per person is their latest non-comment review, across all pages.
+          approved=$(gh api --paginate --slurp "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+            --jq 'flatten | map(select(.state != "COMMENTED")) | group_by(.user.login) | map(.[-1]) | map(select(.state == "APPROVED")) | .[].user.login')
+          leads_list=$(printf '%s\n' "$LEADS" | tr ',' '\n' | grep -v '^$')
+          hit=$(printf '%s\n' "$approved" | grep -Fxf <(printf '%s\n' "$leads_list") | head -1 || true)
+          printf 'Leads: %s\nApprovals: %s\n' "$(printf '%s ' $leads_list)" "$(printf '%s ' $approved)"
+          if [ -n "$hit" ]; then
+            setstatus success "Approved by team lead @$hit"
+          else
+            setstatus failure "Waiting for an approving review from a team lead: $(printf '@%s ' $leads_list)"
+          fi
