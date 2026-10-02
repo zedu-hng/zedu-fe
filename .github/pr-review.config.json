@@ -57,7 +57,10 @@
     "deprecatedAlias": "@/"
   },
   "hardcodedUrls": {
-    "allowPatterns": ["^https?://(www\\.)?w3\\.org(/|$)"],
+    "allowPatterns": [
+      "^https?://(www\\.)?w3\\.org(/|$)",
+      "^https?://avatars\\.githubusercontent\\.com/"
+    ],
     "excludePathPrefixes": ["cypress/", ".github/"],
     "scanExtensions": [".ts", ".tsx", ".js", ".jsx", ".mjs"]
   },
