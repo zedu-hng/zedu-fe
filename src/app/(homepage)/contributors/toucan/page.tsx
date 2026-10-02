@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { siteUrl } from "~/lib/env-urls";
 
 export const metadata: Metadata = {
-  title: "Team Toucan Contributors",
-  description: "Meet the members of Team Toucan who contributed to Zedu.",
+  title: "Team Zedu-Toucan Contributors",
+  description: "Meet the members of Team Zedu-Toucan who contributed to Zedu.",
   alternates: {
     canonical: siteUrl("/contributors/toucan"),
   },
@@ -60,10 +60,11 @@ const ToucanContributorsPage = () => {
     <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 px-4 py-16 sm:px-8 lg:px-12 mt-10">
       <div className="flex flex-col items-center gap-4 text-center">
         <h1 className="text-2xl font-semibold leading-tight text-neutral-900 sm:text-4xl md:text-5xl">
-          Team <span className="text-primary-500">Toucan</span>
+          Team <span className="text-primary-500">Zedu-Toucan</span>
         </h1>
         <p className="max-w-xl text-sm text-neutral-600 sm:text-base">
-          Meet the {members.length} members of Team Toucan contributing to Zedu.
+          Meet the {members.length} members of Team Zedu-Toucan contributing to
+          Zedu.
         </p>
       </div>
 
