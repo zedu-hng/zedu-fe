@@ -39,12 +39,19 @@ jobs:
           gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
             --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.sha)"' |
           while read -r number sha; do
+            # head_sha is the PR's head commit (identical to .head.sha), so this selects the PR's
+            # own review runs. The runs API has no PR-number filter, and a run's pull_requests
+            # array is empty for fork PRs, so head_sha is the only usable server-side filter.
             run_id=$(gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?head_sha=$sha&per_page=20" \
               --jq '[.workflow_runs[] | select(.event == "pull_request")] | sort_by(.created_at) | last | .id // empty' 2>/dev/null || true)
             [ -n "$run_id" ] || continue
             conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion' 2>/dev/null || true)
             case "$conclusion" in
               failure|cancelled|timed_out)
+                # Re-run the run instead of forcing a fresh merge commit. pr-review.yml re-reads
+                # the base branch's config and review script at run time, so a re-run evaluates
+                # the current base rules; the head commit under review is unchanged. Forcing a new
+                # event (close/reopen) would re-trigger every other PR workflow as well.
                 echo "PR #$number: re-running review run $run_id"
                 gh run rerun "$run_id" --repo "$REPO" --failed || true
                 ;;
