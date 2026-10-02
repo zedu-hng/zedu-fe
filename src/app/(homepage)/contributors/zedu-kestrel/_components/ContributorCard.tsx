@@ -1,0 +1,66 @@
+import { ExternalLink, Mail } from "lucide-react";
+import type { Contributor } from "../_lib/contributors";
+
+function getInitials(fullName: string): string {
+  return fullName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export const ContributorCard = (member: Contributor) => {
+  return (
+    <article className="flex h-full flex-col justify-between rounded-xl border border-neutral-200 bg-white p-5 text-left transition hover:border-primary-300 hover:shadow-sm">
+      <div className="flex items-start gap-3.5">
+        <div
+          aria-hidden="true"
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${member.avatarGradient} text-base font-bold text-white shadow-sm`}
+        >
+          {getInitials(member.name)}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-base font-semibold text-neutral-900">
+            {member.name}
+          </h2>
+          <p className="text-xs font-medium text-primary-500">
+            AI Product Engineer
+          </p>
+          <p className="mt-1 text-xs text-neutral-600">
+            Background:{" "}
+            <span className="font-medium text-neutral-800">
+              {member.background}
+            </span>
+          </p>
+          <p className="mt-0.5 text-xs text-neutral-500">
+            Zedu: <span className="font-medium">@{member.zeduName}</span>
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3.5 text-xs text-neutral-600">
+        <a
+          href={`mailto:${member.email}`}
+          className="inline-flex items-center gap-1.5 truncate text-neutral-600 transition hover:text-primary-500"
+        >
+          <Mail className="h-3.5 w-3.5 shrink-0 text-primary-500" />
+          <span className="truncate">{member.email}</span>
+        </a>
+
+        {member.linkedin && (
+          <a
+            href={`//www.linkedin.com/in/${member.linkedin}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 font-medium text-primary-500 transition hover:underline"
+          >
+            LinkedIn
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )}
+      </div>
+    </article>
+  );
+};
