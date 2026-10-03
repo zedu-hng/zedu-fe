@@ -51,7 +51,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-05",
-    name: "Faith Okon",
+    name: "Mbuotidem Okon",
     username: "Design Sensei",
     zeduName: "Design Sensei",
     background: "UI/UX & AI Developer",
