@@ -60,7 +60,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-06",
-    name: "Otega Otite",
+    name: "Otega Otite (Isaac)",
     username: "otega_otite",
     zeduName: "otega_otite",
     background: "Full-Stack Developer",
