@@ -21,7 +21,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-02",
-    name: "Collins Odogwu",
+    name: "Collins Adimabuia Odogwu",
     username: "Collins Odogwu",
     zeduName: "Collins Odogwu",
     background: "Data Analysis",
