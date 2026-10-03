@@ -502,6 +502,9 @@ importers:
       autoprefixer:
         specifier: ^10.4.19
         version: 10.5.0(postcss@8.5.15)
+      conventional-changelog-conventionalcommits:
+        specifier: ^10.4.0
+        version: 10.4.0
       cypress:
         specifier: ^13.13.2
         version: 13.17.0
@@ -893,6 +896,13 @@ packages:
         integrity: sha512-/yCrWGCoA1SVKOks25EGadP9Pnj0oAIHGpl2wH2M2Y46dPM2ueb8wyCVOD7O3WCTkaJ0IkKvzhl1JY7+uCT2Dw==,
       }
     engines: { node: ">=v18" }
+
+  "@conventional-changelog/template@1.4.0":
+    resolution:
+      {
+        integrity: sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg==,
+      }
+    engines: { node: ">=22" }
 
   "@cypress/request@3.0.10":
     resolution:
@@ -7004,6 +7014,13 @@ packages:
         integrity: sha512-6gfI3otXK5Ph5DfCOI1dblr+kN3FAm5a97hYoQkqNZxOaYa5WKfXH+AnpsmS+iUH2mgVC2Cg2Qw9m5OKcmNrIg==,
       }
     engines: { node: ">=18" }
+
+  conventional-changelog-conventionalcommits@10.4.0:
+    resolution:
+      {
+        integrity: sha512-Rriac6ZrAlVm6cy9Bz4NSp+WMHpwNXoPIYex+HjCgduAVUSbnew29DQjQw0C4g9u3HtSYzGiGY+pdBXAZo+4aA==,
+      }
+    engines: { node: ">=22" }
 
   conventional-changelog-conventionalcommits@7.0.2:
     resolution:
@@ -15836,6 +15853,8 @@ snapshots:
       "@types/conventional-commits-parser": 5.0.2
       chalk: 5.6.2
 
+  "@conventional-changelog/template@1.4.0": {}
+
   "@cypress/request@3.0.10":
     dependencies:
       aws-sign2: 0.7.0
@@ -19757,6 +19776,10 @@ snapshots:
   conventional-changelog-angular@8.3.1:
     dependencies:
       compare-func: 2.0.0
+
+  conventional-changelog-conventionalcommits@10.4.0:
+    dependencies:
+      "@conventional-changelog/template": 1.4.0
 
   conventional-changelog-conventionalcommits@7.0.2:
     dependencies:

@@ -191,6 +191,7 @@
     "@types/read-time-estimate": "^0.0.2",
     "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.19",
+    "conventional-changelog-conventionalcommits": "^10.4.0",
     "cypress": "^13.13.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.8",
@@ -217,7 +218,17 @@
       "react-email>next": "$next",
       "lodash@<4.17.12": "4.17.21",
       "underscore@<1.12.1": "1.13.8"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "canvas",
+      "cypress",
+      "esbuild",
+      "protobufjs",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "overrides": {
     "@types/react": "19.2.7",
