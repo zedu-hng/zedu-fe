@@ -9,7 +9,7 @@ const mockArticles = [
   },
   {
     title: "A Better Campus Communication Layer for Institutions",
-    desc: "Coordinate departments, faculty, and students in one structured workspace with role-based permissions, academic announcements, and reliable resource sharing.",
+    desc: "Coordinate departments, faculties, and students in one structured workspace with role-based permissions, academic announcements, and reliable resource sharing.",
     tag: "Educational Institution",
     image: "/images/homepage/articles/article-2.png",
   },
