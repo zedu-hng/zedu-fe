@@ -109,7 +109,7 @@ export const contributors: Contributor[] = [
     name: "Ochuba Daniel Ifeanyi",
     username: "Daniel Ifeanyi",
     zeduName: "Daniel Ifeanyi",
-    background: "Software Engineering",
+    background: "Software Development Student",
     email: "danielifeanyi74@gmail.com",
     linkedin: "daniel-ifeanyi-b33931325",
     avatarGradient: "from-blue-500 to-primary-400",
