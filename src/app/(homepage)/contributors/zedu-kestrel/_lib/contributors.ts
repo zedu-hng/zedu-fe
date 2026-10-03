@@ -139,7 +139,7 @@ export const contributors: Contributor[] = [
     name: "Afolabi Abdulbasit Opeyemi",
     username: "Aphoe",
     zeduName: "Aphoe",
-    background: "Web Developer",
+    background: "Web Developer & WordPress Developer",
     email: "abdulbasitafolabi7@gmail.com",
     linkedin: "afolabi-abdulbasit-604784275",
     avatarGradient: "from-primary-500 to-blue-400",
