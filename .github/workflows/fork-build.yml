@@ -48,7 +48,7 @@ jobs:
   # Scheduled: re-dispatch the relay for open PRs whose Fork build still says "No build yet".
   sweep:
     name: Re-check pending PRs
-    if: github.event_name == 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -75,10 +75,11 @@ jobs:
   relay:
     name: Relay fork build
     if: >-
-      github.event_name == 'pull_request_target' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.issue.pull_request &&
-       (github.event.comment.body == '/fork-build' || startsWith(github.event.comment.body, '/fork-build ')))
+      vars.IS_BOOTCAMP == 'true' &&
+      (github.event_name == 'pull_request_target' ||
+       github.event_name == 'workflow_dispatch' ||
+       (github.event.issue.pull_request &&
+        (github.event.comment.body == '/fork-build' || startsWith(github.event.comment.body, '/fork-build '))))
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
