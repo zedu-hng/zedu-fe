@@ -32,6 +32,7 @@ concurrency:
 
 env:
   GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
   REPO: ${{ github.repository }}
   LEAD_CONTEXT: Lead approved
   BUILD_CONTEXT: Fork build
@@ -82,15 +83,24 @@ jobs:
             build=$(status_of "$BUILD_CONTEXT")
             if [ "$draft" = "false" ] && [ "$lead" = "success" ] && [ "$build" = "success" ]; then
               if [ "$has_label" = "false" ]; then
-                gh pr edit "$pr" --add-label "$REVIEW_LABEL"
-                gh pr comment "$pr" --body "**Ready for review.** Lead approved and checks are green. @$REVIEWERS — claim this PR with \`/claim\`."
-                echo "PR #$pr: notified reviewers"
+                if ! gh pr edit "$pr" --add-label "$REVIEW_LABEL"; then
+                  echo "PR #$pr: failed to add $REVIEW_LABEL" >&2
+                  continue
+                fi
+                if gh pr comment "$pr" --body "**Ready for review.** Lead approved and checks are green. @$REVIEWERS — claim this PR with \`/claim\`."; then
+                  echo "PR #$pr: notified reviewers"
+                else
+                  echo "PR #$pr: failed to notify reviewers" >&2
+                fi
               else
                 echo "PR #$pr: already ready-for-review"
               fi
             elif [ "$has_label" = "true" ]; then
-              gh pr edit "$pr" --remove-label "$REVIEW_LABEL"
-              echo "PR #$pr: re-queued (draft=$draft lead=$lead build=$build)"
+              if gh pr edit "$pr" --remove-label "$REVIEW_LABEL"; then
+                echo "PR #$pr: re-queued (draft=$draft lead=$lead build=$build)"
+              else
+                echo "PR #$pr: failed to remove $REVIEW_LABEL" >&2
+              fi
             else
               echo "PR #$pr: not ready (draft=$draft lead=$lead build=$build)"
             fi
