@@ -41,6 +41,7 @@ env:
 jobs:
   scope:
     name: Classify PR
+    if: vars.IS_BOOTCAMP == 'true'
     runs-on: ubuntu-latest
     outputs:
       internal: ${{ steps.c.outputs.internal }}
