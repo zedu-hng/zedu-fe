@@ -12,7 +12,7 @@ export interface Contributor {
 export const contributors: Contributor[] = [
   {
     id: "kestrel-01",
-    name: "Jeff Yankson",
+    name: "Jefferson Yankson",
     username: "jeff yankson",
     zeduName: "jeff yankson",
     background: "Backend Developer",
