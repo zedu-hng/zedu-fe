@@ -115,12 +115,14 @@ after the merge. Nothing is stripped: the bootcamp files travel with the code an
 ### Hotfix path
 
 A reviewer opens a `hotfix/...` PR straight to `dev`, labels it `hotfix`, and fast-tracks it through
-Steps 2 and 3. A `hotfix` PR skips only the lead-approval and size checks.
+Steps 2 and 3. A `hotfix` PR bypasses lead approval and the size check. The `Fork build` workflow
+reports success without running the fork build.
 
 ## 6. Reviewer queue
 
 - When a PR is lead-approved and its Fork build passes, `reviewer-notify.yml` labels it
-  `ready-for-review` and mentions `@zedu-hng/reviewers` once, while the PR's team has fewer than 3
+  `ready-for-review` and mentions `@zedu-hng/reviewers` when it becomes ready, while the PR's team has
+  fewer than 3
   unclaimed PRs waiting. Beyond that it is labelled `queued`.
 - A reviewer comments `/claim` to take a PR and `/release` to return it. A 15-minute sweep escalates a
   PR left unclaimed for 24h and releases a claim with no review after 24h.
