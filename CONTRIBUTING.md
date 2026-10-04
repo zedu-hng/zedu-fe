@@ -604,6 +604,14 @@ zeduchat/zedu-fe              Zedu's repo. Reviewers send batches here; you neve
 
 `staging` and `main` live on `zeduchat/zedu-fe` and are owned by the in-house team. You never target them.
 
+Branches in your team's fork:
+
+| Branch in your fork         | Purpose                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dev`                       | Mirror of `zedu-hng:dev`. Sync only; never commit to it.                                                                                            |
+| `staging`                   | Team sandbox. Your lead merges ticket branches here to try them live on `<team>.groups.zedu.chat`. Never a PR source; reset it from `dev` any time. |
+| `<type>/<ticket-id>-<desc>` | One ticket. The only branch you open a PR from.                                                                                                     |
+
 Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **Sync fork** point at the wrong repo.
 
 ### 3. One-time setup (per team)
@@ -668,7 +676,13 @@ Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to
 - On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
 - No build showing at all? Check that Actions is enabled in your fork and that it's synced.
 
-If your team deploys a preview (for example Vercel), link it in the PR so reviewers can click through the change. The build gate proves it compiles; a preview proves it works.
+**Previews.** Once your team lead approves, a preview of your PR deploys automatically at `https://<PR number>.hng.groups.zedu.chat` and a bot comments the link. Reviewers can also request one with the `preview` label. Previews:
+
+- run against the shared `dev` backend, so they show exactly what reviewers will test;
+- rebuild on every push while active;
+- are removed when the PR closes, after 24 hours without a push, or when the running-preview cap is reached (oldest first). Push a commit or ask a reviewer to bring one back.
+
+Before approval, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
 The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
 

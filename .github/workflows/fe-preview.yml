@@ -1,0 +1,68 @@
+name: FE preview
+
+# Coolify PR previews, served at PREVIEW_URL_TEMPLATE (e.g. https://<pr>.hng.groups.zedu.chat).
+# Coolify clones pull/<N>/head of this repo, builds it in its own queue (Concurrent builds setting)
+# and runs it with the app's *preview* env set, which must hold public NEXT_PUBLIC_* values only.
+# Logic: .github/scripts/fe-preview.sh. Never checks out PR code.
+#
+# A PR gets a preview when Lead approval reads "Approved by team lead", or a reviewer adds the
+# `preview` label. Previews are removed on close, after PREVIEW_TTL_HOURS without a push, or when
+# the cap is hit (oldest evicted). Lead approval statuses are set with GITHUB_TOKEN and fire no
+# events, so a 10-minute sweep picks them up.
+#
+# Inert until configured: vars.COOLIFY_URL, vars.COOLIFY_FE_APP, vars.PREVIEW_URL_TEMPLATE,
+# secrets.COOLIFY_TOKEN (deploy + write on the preview app). Optional: vars.PREVIEW_CAP (10),
+# vars.PREVIEW_TTL_HOURS (24).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  pull_request_target:
+    branches:
+      - dev
+    types:
+      - labeled
+      - synchronize
+      - closed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+# One reconciler at a time: the cap and the state comments assume no parallel sweeps.
+concurrency:
+  group: fe-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Reconcile previews
+    if: github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_FE_APP != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_FE_APP: ${{ vars.COOLIFY_FE_APP }}
+      PREVIEW_URL_TEMPLATE: ${{ vars.PREVIEW_URL_TEMPLATE }}
+      PREVIEW_CAP: ${{ vars.PREVIEW_CAP || '10' }}
+      PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '24' }}
+      EVENT_ACTION: ${{ github.event.action }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Reconcile
+        run: |
+          if [ "$EVENT_ACTION" = closed ]; then
+            bash .github/scripts/fe-preview.sh close "$PR"
+          else
+            bash .github/scripts/fe-preview.sh sweep
+          fi
