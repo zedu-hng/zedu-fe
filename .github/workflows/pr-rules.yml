@@ -7,7 +7,8 @@ name: PR rules
 # - Single author: one person per PR. Co-authored-by trailers are fine. Reviewers are exempt.
 # - Protected files: .github/, AGENTS.md, CONTRIBUTING.md, tooling config.
 #   Blocked unless a reviewer adds the `config-change-approved` label.
-# Sync and promotion PRs (dev / central-staging from this repo or upstream) skip all three.
+# Sync and promotion PRs (label `sync`, head dev/central-staging or upstream main/staging) are
+# waived here. Hotfix PRs (label `hotfix`) still run all three.
 
 on:
   pull_request_target:
@@ -37,6 +38,7 @@ env:
   HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
   HEAD_REF: ${{ github.event.pull_request.head.ref }}
   AUTHOR: ${{ github.event.pull_request.user.login }}
+  LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
 
 jobs:
   scope:
@@ -46,6 +48,8 @@ jobs:
     outputs:
       internal: ${{ steps.c.outputs.internal }}
       reviewer: ${{ steps.c.outputs.reviewer }}
+      sync: ${{ steps.c.outputs.sync }}
+      hotfix: ${{ steps.c.outputs.hotfix }}
     steps:
       - id: c
         run: |
@@ -64,6 +68,20 @@ jobs:
           else
             echo "internal=false" >> "$GITHUB_OUTPUT"
           fi
+          labels=",${LABELS},"
+          hotfix=false
+          case "$labels" in *,hotfix,*) hotfix=true ;; esac
+          echo "hotfix=$hotfix" >> "$GITHUB_OUTPUT"
+          has_sync=false
+          case "$labels" in *,sync,*) has_sync=true ;; esac
+          head_ok=false
+          case "$HEAD_REF" in dev|central-staging|main|staging) head_ok=true ;; esac
+          if [ "$has_sync" = true ] && [ "$head_ok" = true ] \
+             && { [ "$HEAD_REPO" = "$REPO" ] || [ "$HEAD_REPO" = "$upstream" ]; }; then
+            echo "sync=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sync=false" >> "$GITHUB_OUTPUT"
+          fi
           if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
             echo "::warning::Permission lookup failed for $AUTHOR; retrying once."
             if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
@@ -80,13 +98,18 @@ jobs:
   branch-name:
     name: Branch name
     needs: scope
-    if: needs.scope.outputs.internal == 'false'
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
     runs-on: ubuntu-latest
     env:
       REVIEWER: ${{ needs.scope.outputs.reviewer }}
+      SYNC: ${{ needs.scope.outputs.sync }}
     steps:
       - run: |
-          pattern='^(feat|fix|test|docs|refactor|chore|perf|security)/([A-Za-z]+-)?[[:digit:]]+-[a-z[:digit:]][a-z[:digit:]-]*$'
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; branch-name check waived."
+            exit 0
+          fi
+          pattern='^(feat|fix|hotfix|test|docs|refactor|chore|perf|security)/([A-Za-z]+-)?[[:digit:]]+-[a-z[:digit:]][a-z[:digit:]-]*$'
           if [[ "$HEAD_REF" =~ $pattern ]]; then
             echo "OK: $HEAD_REF"
           elif [ "$REVIEWER" = true ]; then
@@ -99,12 +122,17 @@ jobs:
   single-author:
     name: Single author
     needs: scope
-    if: needs.scope.outputs.internal == 'false'
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
     runs-on: ubuntu-latest
     env:
       REVIEWER: ${{ needs.scope.outputs.reviewer }}
+      SYNC: ${{ needs.scope.outputs.sync }}
     steps:
       - run: |
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; single-author check waived."
+            exit 0
+          fi
           # GitHub login when the commit email is linked to an account, otherwise the author email.
           authors=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/commits" \
             --jq '.[] | (.author.login // .commit.author.email)' | sort -u)
@@ -122,12 +150,17 @@ jobs:
   protected-files:
     name: Protected files
     needs: scope
-    if: needs.scope.outputs.internal == 'false'
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
     runs-on: ubuntu-latest
     env:
       APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'config-change-approved') || github.event.pull_request.user.login == 'dependabot[bot]' }}
+      SYNC: ${{ needs.scope.outputs.sync }}
     steps:
       - run: |
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; protected-files check waived."
+            exit 0
+          fi
           protected='^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
           filenames=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
           hits=$(printf '%s\n' "$filenames" | grep -E "$protected" || true)
