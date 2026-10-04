@@ -40,6 +40,7 @@ module.exports = {
         "docs",
         "feat",
         "fix",
+        "hotfix",
         "perf",
         "refactor",
         "revert",
