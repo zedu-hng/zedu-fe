@@ -9,6 +9,8 @@ name: PR rules
 #   Blocked unless a reviewer adds the `config-change-approved` label.
 # - Size: at most ~400 changed lines (lockfiles and generated files excluded). Reviewers can apply
 #   the `size-override` label to allow a larger PR.
+# - PR title: <type>(<ticket-id>): <summary>, with the ticket matching the branch.
+# - PR template: every checkbox in .github/pull_request_template.md must be ticked.
 # Sync and promotion PRs (label `sync`, head dev/central-staging or upstream main/staging) are
 # waived here. Hotfix PRs (label `hotfix`) skip only size; branch/author/protected still run.
 
@@ -210,3 +212,78 @@ jobs:
             exit 1
           fi
           echo "OK: within the ~$limit line limit."
+
+  title:
+    name: PR title
+    needs: scope
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SYNC: ${{ needs.scope.outputs.sync }}
+      REVIEWER: ${{ needs.scope.outputs.reviewer }}
+      TITLE: ${{ github.event.pull_request.title }}
+    steps:
+      - run: |
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; PR title check waived."
+            exit 0
+          fi
+          if [[ "$TITLE" =~ ^[a-z]+\(([A-Za-z]*-)?([0-9]+)\):[[:space:]]+(.+)$ ]]; then
+            tnum="${BASH_REMATCH[2]}"
+          else
+            if [ "$REVIEWER" = "true" ]; then
+              echo "::notice::Title doesn't match <type>(<ticket-id>): <summary>; allowed because $AUTHOR is a reviewer."
+              exit 0
+            fi
+            echo "::error::PR title must be <type>(<ticket-id>): <summary>, e.g. fix(CHAT-142): clear the typing indicator."
+            exit 1
+          fi
+          bnum=$(printf '%s' "$HEAD_REF" | grep -oE '[0-9]+' | head -1 || true)
+          if [ -z "$bnum" ]; then
+            echo "::notice::Branch has no ticket number; skipping the title/branch ticket match."
+          elif [ "$bnum" = "$tnum" ]; then
+            echo "OK: PR title ticket $tnum matches the branch."
+          elif [ "$REVIEWER" = "true" ]; then
+            echo "::notice::Title ticket ($tnum) doesn't match branch ($bnum); allowed because $AUTHOR is a reviewer."
+          else
+            echo "::error::PR title ticket '$tnum' doesn't match the branch ticket '$bnum'. Use the same ticket as your branch name."
+            exit 1
+          fi
+
+  template:
+    name: PR template
+    needs: scope
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SYNC: ${{ needs.scope.outputs.sync }}
+      REVIEWER: ${{ needs.scope.outputs.reviewer }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - run: |
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; PR template check waived."
+            exit 0
+          fi
+          if [ "$REVIEWER" = "true" ]; then
+            echo "::notice::Reviewer PR; PR template check waived."
+            exit 0
+          fi
+          template=$(gh api "repos/$REPO/contents/.github/pull_request_template.md?ref=$BASE_REF" --jq .content | base64 -d)
+          body=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .body)
+          norm() { tr '[:upper:]' '[:lower:]' | tr -s '[:space:]' ' '; }
+          body_norm=$(printf '%s' "$body" | norm)
+          missing=""
+          while IFS= read -r line; do
+            label=$(printf '%s' "$line" | sed -E 's/^- \[[ xX]\] //')
+            label_norm=$(printf '%s' "$label" | norm)
+            [ -n "$label_norm" ] || continue
+            printf '%s\n' "$body_norm" | grep -qF "[x] $label_norm" || missing="${missing}  - ${label}"$'\n'
+          done < <(printf '%s\n' "$template" | grep -E '^- \[ \] ')
+          if [ -n "$missing" ]; then
+            echo "::error::Tick every checkbox in the PR template (.github/pull_request_template.md)."
+            echo "Unticked:"
+            printf '%s' "$missing"
+            exit 1
+          fi
+          echo "OK: all PR template checkboxes are ticked."
