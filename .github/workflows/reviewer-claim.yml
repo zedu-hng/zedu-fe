@@ -92,6 +92,13 @@ jobs:
         run: |
           assignees=$(gh api "repos/$REPO/pulls/$PR" --jq '[.assignees[].login] | join(",")')
           if [ "$ACTION" = "claim" ]; then
+            labels=$(gh api "repos/$REPO/pulls/$PR" --jq '[.labels[].name] | join(",")')
+            case ",$labels," in
+              *,"$REVIEW_LABEL",*) ;;
+              *)
+                gh pr comment "$PR" --body "This PR isn't in the ready-for-review queue yet; a team lead approves and the queue marks it ready first."
+                exit 0 ;;
+            esac
             if [ -z "$assignees" ]; then
               gh pr edit "$PR" --add-assignee "$WHO"
               gh pr edit "$PR" --remove-label "$ESCALATED_LABEL" 2>/dev/null || true
@@ -124,8 +131,8 @@ jobs:
             [ -n "$pr" ] || continue
             assignees=$(gh api "repos/$REPO/pulls/$pr" --jq '[.assignees[].login] | join(",")')
             if [ -z "$assignees" ]; then
-              labeled_at=$(gh api "repos/$REPO/issues/$pr/timeline" --paginate \
-                --jq "[.[] | select(.event==\"labeled\" and .label.name==\"$REVIEW_LABEL\")] | last | .created_at // empty")
+              labeled_at=$(gh api --paginate "repos/$REPO/issues/$pr/timeline?per_page=100" |
+                jq -s "[flatten[] | select(.event==\"labeled\" and .label.name==\"$REVIEW_LABEL\")] | last | .created_at // empty")
               [ -n "$labeled_at" ] || continue
               age=$(( now - $(date -d "$labeled_at" +%s) ))
               labels=$(gh api "repos/$REPO/pulls/$pr" --jq '[.labels[].name] | join(",")')
@@ -140,13 +147,13 @@ jobs:
               esac
             else
               who=$(printf '%s' "$assignees" | cut -d, -f1)
-              claimed_at=$(gh api "repos/$REPO/issues/$pr/timeline" --paginate \
-                --jq '[.[] | select(.event=="assigned")] | last | .created_at // empty')
+              claimed_at=$(gh api --paginate "repos/$REPO/issues/$pr/timeline?per_page=100" |
+                jq -s '[flatten[] | select(.event=="assigned")] | last | .created_at // empty')
               [ -n "$claimed_at" ] || continue
               claim_age=$(( now - $(date -d "$claimed_at" +%s) ))
               if [ "$claim_age" -ge $(( STALE_HOURS * 3600 )) ]; then
-                reviewed=$(gh api "repos/$REPO/pulls/$pr/reviews" --paginate \
-                  --jq "[.[] | select(.user.login==\"$who\")] | length")
+                reviewed=$(gh api --paginate "repos/$REPO/pulls/$pr/reviews?per_page=100" |
+                  jq -s "[flatten[] | select(.user.login==\"$who\")] | length")
                 if [ "$reviewed" = "0" ]; then
                   gh pr edit "$pr" --remove-assignee "$who"
                   gh pr comment "$pr" --body "Auto-released after ${STALE_HOURS}h with no review; back in the queue. @$who comment \`/claim\` if you're still on it."

@@ -76,8 +76,8 @@ jobs:
             has_label=false
             case ",$labels," in *,"$REVIEW_LABEL",*) has_label=true ;; esac
             status_of() {
-              gh api "repos/$REPO/commits/$sha/status" \
-                --jq ".statuses[] | select(.context == \"$1\") | .state" | head -1
+              gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" \
+                --jq ".[] | select(.context == \"$1\") | .state" | head -1
             }
             lead=$(status_of "$LEAD_CONTEXT")
             build=$(status_of "$BUILD_CONTEXT")
