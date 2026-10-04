@@ -8,7 +8,7 @@ Instructions for AI coding agents working in `zedu-fe` (Next.js 16 App Router, R
 
 - Work only on a ticket branch in the contributor's fork. Never push to `dev`, `central-staging`, `staging` or `main`, and never target `zeduchat` directly. PRs go into `zedu-hng/zedu-fe:dev`.
 - Keep the change to what the ticket asks. No drive-by refactors, renames or dependency bumps.
-- One logical change per PR, at most ~400 lines of meaningful code (lockfiles, generated files and formatting don't count). The app must still work after it merges — nothing half-finished visible to users.
+- One logical change per PR, at most ~400 lines of meaningful code (lockfiles and generated files like `*.tsbuildinfo` don't count). The app must still work after it merges — nothing half-finished visible to users.
 - Don't edit protected files (`.github/`, `AGENTS.md`, `CONTRIBUTING.md`, tooling config; full list in `CONTRIBUTING.md`). The **Protected files** check fails the PR unless a reviewer has approved the change and added the `config-change-approved` label.
 - One author per PR: commit only as the contributor, never mix in other people's commits.
 - Never commit `.env` or any `.env.*` file, `.pem` files, credential or service-account JSON, or files over 1 MB. CI's file policy and secret scan reject them.

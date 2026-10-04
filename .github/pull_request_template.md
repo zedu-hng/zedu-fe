@@ -39,7 +39,7 @@
 
 ## Mandatory checks
 
-- [ ] **Atomic:** one logical change, at most ~400 lines of meaningful code (lockfiles, generated files and formatting don't count). Larger needs a `size-override` label from a reviewer.
+- [ ] **Atomic:** one logical change, at most ~400 lines of meaningful code (lockfiles and generated files like `*.tsbuildinfo` don't count). Larger needs a `size-override` label from a reviewer.
 - [ ] **Database / API contract:** schema changes follow Expand-Contract — no destructive drops or renames.
 - [ ] **Preview:** I checked the change in my fork's preview (or the fork build, if the team hasn't set up previews).
 - [ ] **Protected files:** I did not change `.github/`, `AGENTS.md`, `CONTRIBUTING.md` or tooling config without reviewer agreement and the `config-change-approved` label.
