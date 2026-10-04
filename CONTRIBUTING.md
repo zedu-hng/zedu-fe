@@ -575,6 +575,8 @@ The short version:
 
 > Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → your fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
 
+Reviewers and team leads: [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) has the org and fork settings and the sync/release runbook.
+
 ### 1. Ground rules
 
 - **Every change needs an approved ticket** in ClickUp or Linear. Nothing starts from an untracked chat request.
@@ -608,7 +610,7 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
 
 1. Fork `zedu-hng/zedu-fe` into your team's GitHub org.
 2. In the fork, go to **Actions** and enable workflows. Forks have them off by default, and your PR builds run there.
-3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Secrets → New repository secret**, and add `APP_ENV_FILE` containing your full `.env` (the keys are listed in `env.example`). CI writes it to `.env` before building. Without it, builds succeed but the app has no backend.
+3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables → New repository variable**, and add `APP_ENV_FILE` with the **non-sensitive** values the build needs, one `KEY=value` per line (for example `NEXT_PUBLIC_API_URL=...`; the keys are in `env.example`). CI writes them to `.env` before building. Anything sensitive (tokens, certificates) must be a **secret**, never a variable: variables print in the build logs. Without this, builds succeed but the app has no backend. Full fork setup, including the preview secrets, is in [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md).
 4. Each contributor clones the **team fork** and installs with `pnpm install` (see [Getting Started](#getting-started)).
 
 `pnpm install` installs the Husky hooks. On commit, Prettier, ESLint, TypeScript and the production build run, and commitlint checks your message.
