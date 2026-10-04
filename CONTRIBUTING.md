@@ -579,6 +579,9 @@ The short version:
 
 - **Every change needs an approved ticket** in ClickUp or Linear. Nothing starts from an untracked chat request.
 - **One ticket per PR, one person per PR.** Each member opens their own PR from their own ticket branch. No team branches and no combined PRs: we review per developer, so nobody's work is held up by someone else's. If you find another problem, open another ticket.
+- **One logical change, about 400 lines.** Size PRs by scope, not time: with AI tools a day's work can be thousands of lines. A PR is one logical change of at most ~400 lines of meaningful code (lockfiles, generated files and formatting don't count). Larger changes need a reviewer's `size-override` label, or they get split.
+- **Shippable slice.** After your PR merges the app must still work and nothing half-finished may be visible to users. If a feature needs several tickets, stack the PRs (see [Working on a ticket](#4-working-on-a-ticket)) and put the visible change last.
+- **One open PR per author**, except a single stacked chain for one feature.
 - **Your team lead reviews first.** They approve on your PR; Zedu reviewers pick it up after that.
 - **Don't change protected files** (see [Protected files](#5-protected-files)) unless a reviewer has agreed first.
 - **You never push to `zedu-hng` or `zeduchat` directly.** All work happens in your fork and comes in as a PR.
@@ -620,12 +623,12 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
    <type>/<ticket-id>-<short-description>
    ```
 
-   Types: `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `perf`, `security`. The ticket ID is either a number or a prefix plus number. Example: `feat/CHAT-142-typing-indicator` or `fix/245-login-redirect`.
+   Types: `feat`, `fix`, `hotfix`, `test`, `docs`, `refactor`, `chore`, `perf`, `security`. The ticket ID is either a number or a prefix plus number. Example: `feat/CHAT-142-typing-indicator` or `fix/245-login-redirect`.
 
 4. Commit with [Conventional Commits](https://www.conventionalcommits.org/) (see [Commit messages](#commit-messages)). The PR title must pass commitlint too, and it becomes the squashed commit message.
 5. Commit only as yourself. The **Single author** check fails a PR with commits from more than one person. If you commit from several emails, add all of them to your GitHub account, or they count as different authors. Credit a collaborator with a `Co-authored-by:` trailer instead.
 
-**Dependent tickets:** if ticket B needs ticket A, open B's PR after A merges, then update B from `dev`. Don't stack B on top of A's unmerged branch.
+**Multi-ticket features (stacked PRs):** if a feature needs several tickets, start them together with [`gh stack`](https://github.com/github/gh-stack) instead of waiting for each to merge. PR 1 targets `dev`, PR 2 targets PR 1's branch, PR 3 targets PR 2's branch — when PR 1 merges the rest retarget automatically. Keep each PR to one ticket and one author, order the stack so the visible change comes last, and never open a PR from a branch that has other people's tickets merged into it. The **PR title** check requires the PR's ticket to match its branch.
 
 **Testing combinations:** you can merge ticket branches into a private branch in your fork to test them together. Never open a PR from that branch.
 
@@ -679,9 +682,9 @@ The other checks (lint, types, build, security scans, **Commitlint**, **Branch n
 
 After merge, reviewers promote `dev` → `central-staging` with a merge commit, and send `central-staging` to `zeduchat` in batches. Sync your fork's `dev` (**Sync fork**) to pull in what's merged. The ticket goes **MERGED → VERIFIED → CLOSED** once the change is verified.
 
-### 9. Feature flags
+### 9. Shippable slices
 
-New routes and large features must be wrapped in a feature flag, default `OFF`, so we can merge safely and turn things on deliberately. Flags use the `NEXT_PUBLIC_FF_` prefix and are read through the helper in `src/lib/feature-flags.ts`. Name the flag in the PR template. Small, low-risk UI tweaks don't need one.
+Zedu has no feature-flag system, so every PR must be safe to merge on its own: after it merges, the app still works and nothing half-finished is visible to users. If a feature needs several tickets, split it so the additive, non-visible parts (backend, database) land first and the visible UI change lands last, and stack the PRs (see [Working on a ticket](#4-working-on-a-ticket)).
 
 ### 10. AI usage
 
