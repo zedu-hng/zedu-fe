@@ -7,8 +7,10 @@ name: PR rules
 # - Single author: one person per PR. Co-authored-by trailers are fine. Reviewers are exempt.
 # - Protected files: .github/, AGENTS.md, CONTRIBUTING.md, tooling config.
 #   Blocked unless a reviewer adds the `config-change-approved` label.
+# - Size: at most ~400 changed lines (lockfiles and generated files excluded). Reviewers can apply
+#   the `size-override` label to allow a larger PR.
 # Sync and promotion PRs (label `sync`, head dev/central-staging or upstream main/staging) are
-# waived here. Hotfix PRs (label `hotfix`) still run all three.
+# waived here. Hotfix PRs (label `hotfix`) skip only size; branch/author/protected still run.
 
 on:
   pull_request_target:
@@ -173,3 +175,38 @@ jobs:
             while read -r f; do echo "  - $f"; done <<< "$hits"
             exit 1
           fi
+
+  size:
+    name: Size
+    needs: scope
+    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SYNC: ${{ needs.scope.outputs.sync }}
+      HOTFIX: ${{ needs.scope.outputs.hotfix }}
+      OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'size-override') }}
+    steps:
+      - run: |
+          if [ "$SYNC" = "true" ]; then
+            echo "::notice::Sync PR; size check waived."
+            exit 0
+          fi
+          if [ "$HOTFIX" = "true" ]; then
+            echo "::notice::Hotfix PR; size check waived."
+            exit 0
+          fi
+          if [ "$OVERRIDE" = "true" ]; then
+            echo "::notice::size-override label applied; size check waived."
+            exit 0
+          fi
+          # Lockfiles and generated files don't count toward the reviewable size.
+          count=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" \
+            --jq '.[] | select(.filename | test("(^|/)(pnpm-lock\\.yaml|package-lock\\.json|yarn\\.lock)$") | not) | select(.filename | test("\\.tsbuildinfo$") | not) | (.additions + .deletions)' \
+            | awk '{s+=$1} END {print s+0}')
+          limit=400
+          echo "Changed lines (lockfiles/generated excluded): $count (limit ~$limit)"
+          if [ "$count" -gt "$limit" ]; then
+            echo "::error::This PR changes $count lines, over the ~$limit limit. Split it into smaller PRs, or ask a reviewer for the size-override label."
+            exit 1
+          fi
+          echo "OK: within the ~$limit line limit."
