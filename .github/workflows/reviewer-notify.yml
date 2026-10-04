@@ -1,0 +1,97 @@
+name: Reviewer notify
+
+# When a contributor PR is lead-approved and its Fork build passes, label it ready-for-review and
+# mention the reviewers team once, so any reviewer can pick it up. Reviewers are not assigned.
+# If the PR becomes a draft or a gate goes red again, the label is removed so it re-queues.
+# Runs on PR events and a 15-minute sweep; reads teams.yml/statuses from the base repo only.
+
+on:
+  pull_request_target:
+    branches:
+      - dev
+      - central-staging
+    types:
+      - ready_for_review
+      - labeled
+      - unlabeled
+      - synchronize
+      - reopened
+      - converted_to_draft
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: read
+
+concurrency:
+  group: reviewer-notify-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+  LEAD_CONTEXT: Lead approved
+  BUILD_CONTEXT: Fork build
+  REVIEW_LABEL: ready-for-review
+  REVIEWERS: zedu-hng/reviewers
+
+jobs:
+  notify:
+    name: Notify reviewers
+    if: vars.IS_BOOTCAMP == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect PRs
+        id: prs
+        env:
+          EVENT_PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$EVENT_PR" ]; then
+            printf '%s\n' "$EVENT_PR" > prs.txt
+          else
+            gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
+              --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | .number' > prs.txt
+          fi
+
+      - name: Notify or re-queue
+        run: |
+          while read -r pr; do
+            [ -n "$pr" ] || continue
+            gh api "repos/$REPO/pulls/$pr" > pr.json
+            sha=$(jq -r .head.sha pr.json)
+            draft=$(jq -r .draft pr.json)
+            head_repo=$(jq -r .head.repo.full_name pr.json)
+            labels=$(jq -r '[.labels[].name] | join(",")' pr.json)
+            if [ "$head_repo" = "$REPO" ]; then
+              echo "PR #$pr: same-repo; skip"
+              continue
+            fi
+            case ",$labels," in
+              *,sync,*|*,hotfix,*) echo "PR #$pr: sync/hotfix; skip"; continue ;;
+            esac
+            has_label=false
+            case ",$labels," in *,"$REVIEW_LABEL",*) has_label=true ;; esac
+            status_of() {
+              gh api "repos/$REPO/commits/$sha/status" \
+                --jq ".statuses[] | select(.context == \"$1\") | .state" | head -1
+            }
+            lead=$(status_of "$LEAD_CONTEXT")
+            build=$(status_of "$BUILD_CONTEXT")
+            if [ "$draft" = "false" ] && [ "$lead" = "success" ] && [ "$build" = "success" ]; then
+              if [ "$has_label" = "false" ]; then
+                gh pr edit "$pr" --add-label "$REVIEW_LABEL"
+                gh pr comment "$pr" --body "**Ready for review.** Lead approved and checks are green. @$REVIEWERS — claim this PR with \`/claim\`."
+                echo "PR #$pr: notified reviewers"
+              else
+                echo "PR #$pr: already ready-for-review"
+              fi
+            elif [ "$has_label" = "true" ]; then
+              gh pr edit "$pr" --remove-label "$REVIEW_LABEL"
+              echo "PR #$pr: re-queued (draft=$draft lead=$lead build=$build)"
+            else
+              echo "PR #$pr: not ready (draft=$draft lead=$lead build=$build)"
+            fi
+          done < prs.txt
