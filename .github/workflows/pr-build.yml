@@ -7,11 +7,10 @@ name: PR build
 # The review repo's fork-build.yml reads this run's result for the PR's head commit.
 #
 # First build after opening a PR: Actions -> PR build -> Run workflow on the branch (or push a commit).
+# Only runs when the fork sets FORK_BUILD_ENABLED=true; repo variables are not copied to forks.
 
 on:
   push:
-    paths-ignore:
-      - "**.md"
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +23,7 @@ permissions:
 jobs:
   gate:
     name: Open PR check
+    if: vars.FORK_BUILD_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
       build: ${{ steps.pr.outputs.build }}
