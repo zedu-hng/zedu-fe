@@ -159,11 +159,18 @@ jobs:
               continue
             fi
             conclusion=$(echo "$run" | jq -r .conclusion)
+            run_id=$(echo "$run" | jq -r .id)
+            jobs=$(gh api "repos/$HEAD_REPO/actions/runs/$run_id/jobs")
+            # A fork that hasn't set FORK_BUILD_ENABLED skips the gate job entirely.
+            gate=$(printf '%s' "$jobs" | jq -r '[.jobs[] | select(.name == "Open PR check")] | last | .conclusion // empty')
+            if [ "$gate" = "skipped" ]; then
+              echo "disabled=true" >> "$GITHUB_OUTPUT"
+              status success "Fork build disabled in this fork for ${SHA:0:7}"
+              exit 0
+            fi
             # A run whose build jobs were all skipped (pushed before the PR existed) is not a build.
             if [ "$conclusion" = "success" ]; then
-              run_id=$(echo "$run" | jq -r .id)
-              built=$(gh api "repos/$HEAD_REPO/actions/runs/$run_id/jobs" \
-                --jq '[.jobs[] | select(.name != "Open PR check" and .conclusion != "skipped")] | length')
+              built=$(printf '%s' "$jobs" | jq '[.jobs[] | select(.name != "Open PR check" and .conclusion != "skipped")] | length')
               if [ "$built" -eq 0 ]; then
                 echo "found=false" >> "$GITHUB_OUTPUT"
                 status pending "No build yet for ${SHA:0:7}. In your fork: Actions > PR build > Run workflow." "$url"
@@ -173,7 +180,7 @@ jobs:
             {
               echo "found=true"
               echo "url=$url"
-              echo "id=$(echo "$run" | jq -r .id)"
+              echo "id=$run_id"
               echo "conclusion=$conclusion"
             } >> "$GITHUB_OUTPUT"
             if [ "$conclusion" = "success" ]; then
@@ -192,11 +199,14 @@ jobs:
           FOUND: ${{ steps.run.outputs.found }}
           URL: ${{ steps.run.outputs.url }}
           CONCLUSION: ${{ steps.run.outputs.conclusion }}
+          DISABLED: ${{ steps.run.outputs.disabled }}
         run: |
           {
             echo "### Fork build for \`${SHA:0:7}\`"
             echo
-            if [ "$FOUND" != "true" ]; then
+            if [ "$DISABLED" = "true" ]; then
+              echo "The fork build is **disabled** in \`$HEAD_REPO\`. A team lead turns it on by setting the \`FORK_BUILD_ENABLED\` repository variable to \`true\` in the fork (Settings → Secrets and variables → Actions → Variables)."
+            elif [ "$FOUND" != "true" ]; then
               echo "No build found yet in \`$HEAD_REPO\`. Builds only run once this PR is open, so trigger the first one:"
               echo "**your fork → Actions → PR build → Run workflow** on this branch, or push a commit. This check picks it up within 15 minutes, or comment \`/fork-build\` to check now."
               echo
