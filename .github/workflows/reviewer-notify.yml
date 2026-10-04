@@ -98,6 +98,15 @@ jobs:
             if [ "$na" != "0" ]; then
               echo "PR #$num ($team): claimed; not counted"
               continue
+            fi
+            if [ "$has_ready" = true ]; then
+              echo "PR #$num ($team): already ready"
+              continue
+            fi
+            if [ "${waiting[$team]:-0}" -lt "$CAP" ]; then
+              if ! gh pr edit "$num" --add-label "$REVIEW_LABEL"; then
+                echo "PR #$num ($team): failed to add $REVIEW_LABEL" >&2
+                continue
               fi
               waiting[$team]=$(( ${waiting[$team]:-0} + 1 ))
               [ "$has_queued" = true ] && gh pr edit "$num" --remove-label "$QUEUED_LABEL" || true
