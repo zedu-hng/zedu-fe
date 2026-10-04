@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { IbisNewsletterCopy } from "./newsletter-copy";
 
 export const metadata: Metadata = {
   title: "Team Ibis Contributors",
@@ -55,6 +56,7 @@ const contributors = [
 export default function Page() {
   return (
     <main className="min-h-screen bg-background">
+      <IbisNewsletterCopy />
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-12 max-w-2xl">
