@@ -116,14 +116,22 @@ jobs:
           else
             echo "docs_only=false" >> "$GITHUB_OUTPUT"
           fi
+          labels=$(jq -r '[.labels[].name] | join(",")' pr.json)
+          case ",$labels," in
+            *,sync,*|*,hotfix,*) echo "bypass=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "bypass=false" >> "$GITHUB_OUTPUT" ;;
+          esac
 
       - name: No fork build needed
-        if: steps.pr.outputs.internal == 'true' || steps.pr.outputs.docs_only == 'true'
+        if: steps.pr.outputs.internal == 'true' || steps.pr.outputs.docs_only == 'true' || steps.pr.outputs.bypass == 'true'
         env:
           SHA: ${{ steps.pr.outputs.sha }}
           INTERNAL: ${{ steps.pr.outputs.internal }}
+          BYPASS: ${{ steps.pr.outputs.bypass }}
         run: |
-          if [ "$INTERNAL" = true ]; then
+          if [ "$BYPASS" = "true" ]; then
+            reason="Sync/hotfix PR; no fork build needed"
+          elif [ "$INTERNAL" = true ]; then
             reason="Same-repo or sync PR; no fork build needed"
           else
             reason="Docs-only change; no build needed"
