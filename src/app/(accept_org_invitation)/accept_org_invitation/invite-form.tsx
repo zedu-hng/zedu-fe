@@ -115,7 +115,7 @@ const InviteForm = () => {
       } else if (!isLoggedIn && !isNewUser) {
         setPendingRedirect({
           path: buildAuthRedirectUrl("/auth/login", userEmail),
-          message: `Please login to continue to join ${formattedOrgName} organisation.`,
+          message: `Please log in to join the ${formattedOrgName} organisation.`,
         });
       }
 
