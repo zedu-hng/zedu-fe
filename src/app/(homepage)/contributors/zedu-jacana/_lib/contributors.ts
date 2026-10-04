@@ -13,7 +13,7 @@ export const contributors: Contributor[] = [
   {
     name: "Swingle Rebeca",
     username: "Rebecca swingle",
-    githubUsername: "Swingle Rebeca",
+    githubUsername: "SwingleRebeca",
   },
   {
     name: "Nkoro Fortune",
@@ -33,7 +33,7 @@ export const contributors: Contributor[] = [
   {
     name: "Ejikeme Chinaza",
     username: "ejikeme Chinaza",
-    githubUsername: "ejikeme Chinaza",
+    githubUsername: "ejikemeChinaza",
   },
   {
     name: "Eze Vivian",
