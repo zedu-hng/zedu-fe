@@ -70,7 +70,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Oluwafemi Moses Oladipo", username: "Oluwafemi Oladipo" },
   { name: "Adewale Abdulmajeed Ajibola", username: "Jeedy" },
   { name: "John Nnamdi", username: "Unkle jhonie" },
-  { name: "Daniel Olaleye", username: "Vida" },
+  { name: "Olaleye Daniel", username: "Vida" },
   { name: "Sofiyah Owolabi", username: "Sophie" },
   { name: "Vincent Akinsoyinu", username: "vince.dev" },
   { name: "Arafah Muhyideen", username: "Dhinar" },
