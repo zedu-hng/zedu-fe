@@ -28,6 +28,7 @@ export const contributors: Contributor[] = [
   { name: "Fawaz Yusuff", repo: "https://github.com/flawrrz/hng-i15-stage-1-todo-list" },
   { name: "Francis Anyah", repo: "https://github.com/assisi-francis/todo_list" },
   { name: "Godgift Achong", repo: "https://github.com/giftninho/HNG_taskflow-todo" },
+  { name: "Godspower Nwwnkwo", repo: "https://github.com/GODSPE1/PHP" },
   { name: "Ibrahim Sulaimon Opeyemi", repo: "https://github.com/Sulai007/HNG-todo-app" },
   { name: "Jalar Jacques", repo: "https://github.com/jalarjacques-gif/HNG-TASK-1" },
   { name: "Joanna Tebadda", repo: "https://github.com/JoannaTebadda/zuratasks" },
