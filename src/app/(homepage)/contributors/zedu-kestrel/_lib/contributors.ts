@@ -195,7 +195,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-092",
-    name: "Fabian Chibuike Muoghalu",
+    name: "Fabian (Chibuike) Muoghalu",
     username: "Fabbenco",
     zeduName: "Fabbenco",
     background: "Backend / Full-Stack / AI Developer",
