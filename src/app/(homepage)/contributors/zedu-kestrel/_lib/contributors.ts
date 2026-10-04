@@ -116,7 +116,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-12",
-    name: "Silvia Ojekere",
+    name: "Silvia Onuwa Ojekere",
     username: "Silvia",
     zeduName: "Silvia",
     background: "Customer Support",
