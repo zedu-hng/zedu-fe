@@ -30,7 +30,7 @@ env:
 jobs:
   route:
     name: Route to team lead
-    if: github.event.pull_request.draft == false
+    if: vars.IS_BOOTCAMP == 'true' && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

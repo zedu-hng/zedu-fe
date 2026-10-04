@@ -45,7 +45,7 @@ jobs:
   # Scheduled: re-dispatch the check for open contributor PRs whose status isn't green yet.
   sweep:
     name: Re-check pending PRs
-    if: github.event_name == 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -66,7 +66,7 @@ jobs:
 
   approval:
     name: Check lead approval
-    if: github.event_name != 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
