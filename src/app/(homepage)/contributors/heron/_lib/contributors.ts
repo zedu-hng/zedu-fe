@@ -11,7 +11,7 @@ export const TEAM_NAME = "Heron";
 // Order doesn't matter: the page sorts by name, so add your entry anywhere.
 export const contributors: Contributor[] = [
   {
-    name: "Tolulope Ogungbemi",
+    name: "Ogungbemi Tolulope",
     role: "Team Lead",
     zeduUsername: "Dave Tolu",
   },
