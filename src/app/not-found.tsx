@@ -17,7 +17,7 @@ function notFound() {
             Something went wrong
           </p>
           <p className="text-sm font-normal leading-5 mt-3 text-slate-600">
-            Please restart application
+            Please restart the application
           </p>
         </div>
       </div>

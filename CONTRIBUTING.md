@@ -769,7 +769,9 @@ Each team member should:
 
    ```sh
    pnpm test-all
-   
+
+   ```
+
 ---
 
 ## Testing
