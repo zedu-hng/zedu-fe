@@ -29,13 +29,14 @@ jobs:
     steps:
       - name: Dispatch Lead approval for the reviewed PR
         run: |
-          # Same-repo runs list their PR. Fork runs don't, so match open PRs by head commit; when several
-          # share that commit, re-check them all rather than guess which one was reviewed (a re-check
-          # is harmless, and the reviewed PR is always among them).
+          # Same-repo runs list their PR. Fork runs don't, so match open PRs by commit. A review run's
+          # commit may be the PR's head or its test-merge commit (refs/pull/N/merge), so match either.
+          # When several PRs match, re-check them all rather than guess which one was reviewed (a
+          # re-check is harmless, and the reviewed PR is always among them).
           prs=$(jq -r '.[] | "\(.number) \(.base.ref)"' <<< "$RUN_PRS")
           if [ -z "$prs" ]; then
             prs=$(gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-              | jq -rs --arg s "$HEAD_SHA" 'flatten | map(select(.head.sha == $s)) | .[] | "\(.number) \(.base.ref)"')
+              | jq -rs --arg s "$HEAD_SHA" 'flatten | map(select(.head.sha == $s or .merge_commit_sha == $s)) | .[] | "\(.number) \(.base.ref)"')
           fi
           if [ -z "$prs" ]; then echo "No open PR has head $HEAD_SHA; nothing to re-check."; exit 0; fi
           while read -r number base; do
