@@ -11,7 +11,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Muftiat Bakare", username: "dev_elixir" },
   { name: "Divine John", username: "dicint" },
   { name: "Yaasir Titilope Adigun", username: "Yaasir" },
-  { name: "Adeshile Victor", username: "victor_adeshile" },
+  { name: "Victor Adeshile", username: "victor_adeshile" },
   { name: "Ikah Collins ifebuche", username: "Idan Codes" },
   { name: "Rukayyah Ibrahim", username: "cocoon" },
   { name: "Amartey Rukayya Yusuf", username: "rukayya yusuf amartey" },
