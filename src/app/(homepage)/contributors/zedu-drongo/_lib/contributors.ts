@@ -60,7 +60,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Nurudeen Ibrahim Shehu", username: "Techienuru" },
   { name: "Fatimah Olaitan", username: "thetitilola" },
   { name: "Maryanne Omage", username: "mimi" },
-  { name: "Oluwatomisin Bakare", username: "oluwatomisin_bakare" },
+  { name: "Bakare Oluwatomisin", username: "oluwatomisin_bakare" },
   { name: "Oladapo Ajiboye", username: "Oladapo.Jacob" },
   { name: "Ubong David Umoette", username: "UbongUmoette" },
   { name: "John Ureke", username: "john ureke" },
