@@ -46,8 +46,8 @@ const Welcome = () => {
             Welcome to Zedu.
           </h1>
           <p className=" my-8 text-center text-md md:text-lg text-balance text-[rgba(110,110,111,1)]">
-            Your intelligent workspace where AI agents and humans collaborate in
-            real time to get things done.
+            Your workspace for faster communication, clearer coordination, and
+            better day-to-day teamwork.
           </p>
 
           <div>
