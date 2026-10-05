@@ -276,6 +276,15 @@ jobs:
           number: ${{ env.PR_NUMBER }}
           path: comment.md
 
+      # The ready-for-review queue needs this PR's Fork build result, and a status write fires no event.
+      # Its 3-minute re-checks don't trigger it (reviewer-notify ignores dispatched Fork build runs), so
+      # tell it here, only when the result changed. Runs share one group there, so bursts collapse.
+      - name: Update review queue
+        if: >-
+          (steps.run.outputs.changed == 'true' && (steps.run.outputs.found == 'true' || steps.run.outputs.disabled == 'true')) ||
+          steps.pr.outputs.docs_only == 'true'
+        run: gh workflow run reviewer-notify.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" || echo "::warning::Couldn't dispatch Reviewer notify; its sweep catches up."
+
       # Last step: the next run joins this PR's concurrency group, which cancels this one.
       - name: Re-check later
         if: steps.run.outputs.again == 'true'
