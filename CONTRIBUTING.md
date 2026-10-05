@@ -604,6 +604,14 @@ zeduchat/zedu-fe              Zedu's repo. Reviewers send batches here; you neve
 
 `staging` and `main` live on `zeduchat/zedu-fe` and are owned by the in-house team. You never target them.
 
+Branches in your team's fork:
+
+| Branch in your fork         | Purpose                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dev`                       | Mirror of `zedu-hng:dev`. Sync only; never commit to it.                                                                                            |
+| `staging`                   | Team sandbox. Your lead merges ticket branches here to try them live on `<team>.groups.zedu.chat`. Never a PR source; reset it from `dev` any time. |
+| `<type>/<ticket-id>-<desc>` | One ticket. The only branch you open a PR from.                                                                                                     |
+
 Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **Sync fork** point at the wrong repo.
 
 ### 3. One-time setup (per team)
@@ -668,7 +676,13 @@ Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to
 - On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
 - No build showing at all? Check that Actions is enabled in your fork and that it's synced.
 
-If your team deploys a preview (for example Vercel), link it in the PR so reviewers can click through the change. The build gate proves it compiles; a preview proves it works.
+**Previews.** Every PR from a registered team org gets a preview at `https://<PR number>.preview.groups.zedu.chat`, rebuilt on every push. Zedu builds it on GitHub's runners and hosts it, so your team sets nothing up. PRs from other forks get one when a reviewer adds the `preview` label.
+
+- The **Preview** check links to it (Details) once it's live, and a bot comment shows the link, the commit and the backend it uses.
+- It runs against the shared `dev` backend, exactly what reviewers test. If your PR needs backend work that isn't on `dev` yet, add a `Backend URL:` line to the PR description with that backend's host (for example `https://api.<team>.groups.zedu.chat`). The **Backend dependency** check then fails until the backend lands on `dev` and you delete the line, so the PR can't merge against unreleased backend code.
+- It's removed when the PR closes or after 48 hours without a push; the link comes back on your next push. Google sign-in and calls don't work in previews; use email login.
+
+Before you open the PR, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
 The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
 
