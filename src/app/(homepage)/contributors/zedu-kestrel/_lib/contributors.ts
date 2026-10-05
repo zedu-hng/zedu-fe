@@ -203,4 +203,12 @@ export const contributors: Contributor[] = [
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
   },
-];
+    {
+    id: "kestrel-022",
+    name: "Onaopemipo Oyelami",
+    username: "Nopylyn",
+    zeduName: "Nopylyn",
+    background: "Product Management",
+    email: "oyelamionaopemipo@gmail.com",
+    avatarGradient: "from-primary-500 to-blue-400",
+  },
