@@ -36,27 +36,22 @@ jobs:
     steps:
       - name: Re-run failed reviews for open PRs
         run: |
+          set -o pipefail
+          # Two list calls instead of one or two per open PR: open PR heads, then the latest 200 review
+          # runs. A head whose newest review run failed gets that run re-run.
           gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.sha)"' |
-          while read -r number sha; do
-            # head_sha is the PR's head commit (identical to .head.sha), so this selects the PR's
-            # own review runs. The runs API has no PR-number filter, and a run's pull_requests
-            # array is empty for fork PRs, so head_sha is the only usable server-side filter.
-            run_id=$(gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?head_sha=$sha&per_page=20" \
-              --jq '[.workflow_runs[] | select(.event == "pull_request")] | sort_by(.created_at) | last | .id // empty' 2>/dev/null || true)
-            [ -n "$run_id" ] || continue
-            conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion' 2>/dev/null || true)
-            case "$conclusion" in
-              failure|cancelled|timed_out)
-                # Re-run the run instead of forcing a fresh merge commit. pr-review.yml re-reads
-                # the base branch's config and review script at run time, so a re-run evaluates
-                # the current base rules; the head commit under review is unchanged. Forcing a new
-                # event (close/reopen) would re-trigger every other PR workflow as well.
+            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.head.sha) \(.number)"' > heads.txt
+          for page in 1 2; do
+            gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?event=pull_request&per_page=100&page=$page" \
+              --jq '.workflow_runs[] | "\(.head_sha) \(.id) \(.status) \(.conclusion // "")"'
+          done > runs.txt
+          # runs.txt is newest first, so the first line per head is its latest run.
+          awk 'NR == FNR { pr[$1] = $2; next } ($1 in pr) && !seen[$1]++ { print pr[$1], $2, $3, $4 }' heads.txt runs.txt |
+          while read -r number run_id status conclusion; do
+            case "$status:$conclusion" in
+              completed:failure|completed:cancelled|completed:timed_out)
                 echo "PR #$number: re-running review run $run_id"
-                gh run rerun "$run_id" --repo "$REPO" --failed || true
-                ;;
-              *)
-                echo "PR #$number: review run $run_id is $conclusion; nothing to do"
-                ;;
+                gh run rerun "$run_id" --repo "$REPO" --failed || true ;;
+              *) echo "PR #$number: review run $run_id is ${conclusion:-$status}; nothing to do" ;;
             esac
           done
