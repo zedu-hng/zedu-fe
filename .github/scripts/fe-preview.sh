@@ -15,6 +15,8 @@
 # gate and backend are recomputed from the GitHub API and the base branch config.
 # State: one bot comment per PR, edited in place:
 #   <!-- fe-preview state=active|queued|expired|evicted|removed|error|skipped sha= tag= host= dep= at= -->
+# `at` is when this commit first got a state, i.e. the last push. Rewrites for the same commit
+# (settle, sweep, label or body-edit redeploys) keep it, so TTL and eviction count from the push.
 # A preview only leaves `active` once Coolify confirms the delete, so a failed delete is retried.
 set -euo pipefail
 
@@ -57,9 +59,12 @@ read_state() {
 }
 
 write_state() { # pr state sha tag host dep message [comment id]
-  local body
+  local body prev psha pat at=$NOW
+  prev=$(read_state "$1")
+  read -r _ _ psha _ _ _ pat <<< "${prev:-- - - - - - -}"
+  [ "$psha" = "${3:--}" ] && [[ "$pat" =~ ^[0-9]+$ ]] && at=$pat
   body=$(printf '%s state=%s sha=%s tag=%s host=%s dep=%s at=%s -->\n### Preview\n\n%s\n' \
-    "$MARK" "$2" "${3#-}" "${4#-}" "${5#-}" "${6#-}" "$NOW" "$7")
+    "$MARK" "$2" "${3#-}" "${4#-}" "${5#-}" "${6#-}" "$at" "$7")
   if dry; then echo "  [dry-run] PR #$1 state=$2: $7" >&2; return 0; fi
   if [ -n "${8:-}" ] && [ "$8" != - ]; then
     gh api -X PATCH "repos/$REPO/issues/comments/$8" -f body="$body" >/dev/null
@@ -261,6 +266,13 @@ sweep() {
         fi ;;
     esac
   done
+  # A failed delete on close leaves a closed PR's preview active; retry those for two weeks.
+  for n in $(gh api "repos/$REPO/pulls?state=closed&base=dev&sort=updated&direction=desc&per_page=50" \
+    --jq '.[] | select((.closed_at | fromdateiso8601) > (now - 1209600)) | .number'); do
+    read -r _ st _ <<< "$(read_state "$n")"
+    [ "$st" = active ] && { remove "$n" removed "Removed: PR closed." || true; }
+  done
+  return 0
 }
 
 case "${1:-}" in
