@@ -241,4 +241,14 @@ export const contributors: Contributor[] = [
     linkedin: "mercy-gatwiri-17454b228",
     avatarGradient: "from-primary-500 to-secondary-400",
   },
+  {
+    id: "kestrel-021",
+    name: "DIVINE CHUKWUDI",
+    username: "D.C.",
+    zeduName: "D.C.",
+    background: "Backend / Full-Stack / AI Developer",
+    email: "d-grid@outlook.com",
+    linkedin: "DIVINE CHUKWUDI",
+    avatarGradient: "from-secondary-500 to-tertiary-400",
+  },
 ];
