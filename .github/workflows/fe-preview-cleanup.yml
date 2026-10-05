@@ -21,8 +21,9 @@ permissions:
   issues: write
   pull-requests: write
 
+# Per PR for closes; sweeps share one group, where a newer sweep replacing a waiting one is harmless.
 concurrency:
-  group: fe-preview-state
+  group: fe-preview-cleanup-${{ github.event.pull_request.number || 'sweep' }}
   cancel-in-progress: false
 
 jobs:

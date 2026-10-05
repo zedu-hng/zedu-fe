@@ -7,6 +7,10 @@
 #   fe-preview.sh settle <pr> <sha> <deployment> <result>  set Preview, only if that deployment is current
 #   fe-preview.sh close <pr>                           PR closed: delete preview and image tags
 #   fe-preview.sh sweep                                expire idle previews, start queued ones
+#   fe-preview.sh prnum <sha>                          print the open PR whose head is <sha>, for per-PR locks
+#
+# Locks are per PR (GitHub keeps only one waiting job per concurrency group and cancels older
+# ones, so a global lock dropped deploys). The cap is therefore approximate under simultaneous deploys.
 #
 # Env: REPO, GH_TOKEN, COOLIFY_URL (https only), COOLIFY_TOKEN, COOLIFY_PREVIEW_APP,
 #      PREVIEW_CAP (30), PREVIEW_TTL_HOURS (48), DRY_RUN=1 (no Coolify, GHCR or GitHub writes).
@@ -173,12 +177,19 @@ deploy_tag() { # pr sha tag host comment-id
   return 0
 }
 
-deploy() { # head-sha image
-  local sha=$1 tarball=$2 built=${3:-} pr pull org head_repo labels gate host override id st ssha shost
-  pull=$(gh api "repos/$REPO/commits/$sha/pulls" --jq '[.[] | select(.state == "open" and .base.ref == "dev")][0] // empty')
+# The open PR into dev whose head is this commit, as JSON, or nothing.
+pull_of() { # sha
+  local pull
+  pull=$(gh api "repos/$REPO/commits/$1/pulls" --jq '[.[] | select(.state == "open" and .base.ref == "dev")][0] // empty')
   # Fork commits aren't linked to base-repo PRs; fall back to matching the head sha.
   [ -n "$pull" ] || pull=$(gh api --paginate "repos/$REPO/pulls?state=open&base=dev&per_page=100" \
-    | jq -cs --arg s "$sha" 'flatten | map(select(.head.sha == $s))[0] // empty')
+    | jq -cs --arg s "$1" 'flatten | map(select(.head.sha == $s))[0] // empty')
+  printf '%s' "$pull"
+}
+
+deploy() { # head-sha image
+  local sha=$1 tarball=$2 built=${3:-} pr pull org head_repo labels gate host override id st ssha shost
+  pull=$(pull_of "$sha")
   [ -n "$pull" ] || { echo "No open PR into dev has head $sha (superseded or closed); nothing to do."; return 0; }
   pr=$(jq -r .number <<< "$pull"); head_repo=$(jq -r '.head.repo.full_name // ""' <<< "$pull")
   org=${head_repo%%/*}; labels=$(jq -c '[.labels[].name]' <<< "$pull")
@@ -254,7 +265,7 @@ watch() { # deployment-uuid -> result=<status> in GITHUB_OUTPUT; writes nothing 
   return 0
 }
 
-# Runs under the fe-preview-state lock: a newer deployment for the same PR wins.
+# Runs under the per-PR lock (fe-preview-pr-<N>): a newer deployment for the same PR wins.
 settle() { # pr sha deployment result
   local id st sha tag host dep at
   read -r id st sha tag host dep at <<< "$(read_state "$1")"
@@ -334,6 +345,7 @@ sweep() {
 
 case "${1:-}" in
   deploy) deploy "${2:?head sha}" "${3:--}" "${4:-}" ;;
+  prnum) pull_of "${2:?sha}" | jq -r '.number // empty' ;;
   buildend) buildend "${2:?sha}" "${3:?conclusion}" "${4:-}" ;;
   queued) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Usage: $0 queued <pr>" >&2; exit 1; }; queued "$2" ;;
   watch) watch "${2:?deployment}" ;;
