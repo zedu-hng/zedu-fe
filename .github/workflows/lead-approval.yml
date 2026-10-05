@@ -56,13 +56,21 @@ jobs:
       - run: |
           # Re-check every open contributor PR, including ones already green: a dismissed or
           # superseded review must be able to turn the status back to red.
-          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.repo.full_name) \(.base.ref)"' |
+          set -o pipefail
+          prs=$(gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.repo.full_name) \(.base.ref)"') \
+            || { echo "::warning::Could not list open PRs (API error); skipping this sweep."; exit 0; }
           while read -r number head_repo base_ref; do
+            [ -n "$number" ] || continue
             [ "$head_repo" = "$REPO" ] && continue
             echo "PR #$number: re-checking"
-            gh workflow run lead-approval.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" -f pr="$number" -f base_ref="$base_ref"
-          done
+            # Stop on the first failure (usually the installation rate limit) instead of firing
+            # the rest of the sweep into the same 403s.
+            if ! gh workflow run lead-approval.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" -f pr="$number" -f base_ref="$base_ref"; then
+              echo "::warning::Dispatch failed at PR #$number (likely rate limited); stopping this sweep."
+              break
+            fi
+          done <<< "$prs"
 
   approval:
     name: Check lead approval
@@ -83,13 +91,38 @@ jobs:
           pr="$EVENT_PR"
           [ -n "$pr" ] || pr="$INPUT_PR"
           [[ "$pr" =~ ^[0-9]+$ ]] || { echo "No valid PR number; nothing to check."; exit 0; }
+          # One GraphQL read instead of six REST calls. This is the workflow's hot path and the
+          # installation token is shared across the whole repo, so the per-run request count matters.
+          owner=${REPO%/*}; name=${REPO#*/}
+          attempt=0
+          until data=$(gh api graphql -f query='
+            query($owner: String!, $name: String!, $pr: Int!) {
+              repository(owner: $owner, name: $name) {
+                pullRequest(number: $pr) {
+                  headRefOid
+                  author { login }
+                  headRepository { name owner { login } }
+                  labels(first: 20) { nodes { name } }
+                }
+              }
+            }' -f owner="$owner" -f name="$name" -F pr="$pr" \
+            --jq '.data.repository.pullRequest | {
+              sha: .headRefOid,
+              author: (.author.login // ""),
+              head_repo: (if .headRepository then (.headRepository.owner.login + "/" + .headRepository.name) else "" end),
+              head_owner: (if .headRepository then .headRepository.owner.login else "" end),
+              labels: ([.labels.nodes[].name] | join(","))
+            }'); do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 3 ]; then
+              echo "::warning::Could not resolve PR #$pr after $attempt attempts (API error); leaving the status unchanged."
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
           {
             echo "number=$pr"
-            echo "sha=$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)"
-            echo "author=$(gh api "repos/$REPO/pulls/$pr" --jq .user.login)"
-            echo "head_repo=$(gh api "repos/$REPO/pulls/$pr" --jq .head.repo.full_name)"
-            echo "head_owner=$(gh api "repos/$REPO/pulls/$pr" --jq '.head.repo.owner.login // ""')"
-            echo "labels=$(gh api "repos/$REPO/pulls/$pr" --jq '[.labels[].name] | join(",")')"
+            jq -r '"sha=\(.sha)", "author=\(.author)", "head_repo=\(.head_repo)", "head_owner=\(.head_owner)", "labels=\(.labels)"' <<< "$data"
           } >> "$GITHUB_OUTPUT"
 
       - name: Resolve leads
