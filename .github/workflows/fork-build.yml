@@ -193,6 +193,9 @@ jobs:
             } >> "$GITHUB_OUTPUT"
             if [ "$conclusion" = "success" ]; then
               status success "Fork build passed for ${SHA:0:7}" "$url"
+              preview=$(gh api "repos/$HEAD_REPO/commits/$SHA/status" \
+                --jq '.statuses[] | select(.context == "zedu/preview") | .target_url' | head -1)
+              [ -n "$preview" ] && echo "preview=$preview" >> "$GITHUB_OUTPUT"
             else
               status failure "Fork build $conclusion for ${SHA:0:7}" "$url"
             fi
@@ -208,6 +211,7 @@ jobs:
           URL: ${{ steps.run.outputs.url }}
           CONCLUSION: ${{ steps.run.outputs.conclusion }}
           DISABLED: ${{ steps.run.outputs.disabled }}
+          PREVIEW: ${{ steps.run.outputs.preview }}
         run: |
           {
             echo "### Fork build for \`${SHA:0:7}\`"
@@ -222,7 +226,13 @@ jobs:
             elif [ "$CONCLUSION" != "success" ]; then
               echo "The fork build **$CONCLUSION**: [see the run]($URL). Fix it and push; this updates automatically."
             else
-              echo "Built in your fork: [run]($URL). Test from the fork's preview link (if your team deploys one), or check out this branch."
+              echo "Built in your fork: [run]($URL)."
+              if [ -n "$PREVIEW" ]; then
+                echo
+                echo "**Preview:** $PREVIEW"
+              fi
+              echo
+              echo "Or check out this branch to test locally."
             fi
           } > comment.md
 
