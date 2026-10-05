@@ -1,7 +1,8 @@
 name: FE preview cleanup
 
-# Removes a PR's Coolify preview and image tags when it closes, and every 15 minutes expires idle
-# previews, starts queued ones and settles deployments the deploy job didn't see finish.
+# Removes a PR's Coolify preview and image tags when it closes. The sweep (cron, and after preview
+# deploys at most every 10 minutes) expires idle previews, starts queued ones and settles
+# deployments the deploy job didn't see finish.
 # Logic: .github/scripts/fe-preview.sh. Never checks out PR code. Inert until configured.
 
 on:
@@ -10,8 +11,14 @@ on:
       - dev
     types:
       - closed
+  # GitHub drops scheduled runs under load (zero ran in this repo's first hours), so the sweep also
+  # runs after every preview deploy. The cron, off the round minutes, covers quiet periods.
+  workflow_run:
+    workflows: ["FE preview deploy"]
+    types:
+      - completed
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -48,7 +55,16 @@ jobs:
           persist-credentials: false
 
       - name: Clean up
+        env:
+          EVENT: ${{ github.event_name }}
+          RUN_ID: ${{ github.run_id }}
         run: |
+          # Deploy-triggered sweeps: at most one per 10 minutes, to stay inside the token's API budget.
+          if [ "$EVENT" = workflow_run ]; then
+            recent=$(gh api "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?status=success&per_page=10" \
+              | jq --arg id "$RUN_ID" '[.workflow_runs[] | select((.id | tostring) != $id and ((.created_at | fromdateiso8601) > (now - 600)))] | length')
+            [ "$recent" -eq 0 ] || { echo "A sweep ran in the last 10 minutes; skipping."; exit 0; }
+          fi
           if [ -n "$PR" ]; then
             bash .github/scripts/fe-preview.sh close "$PR"
           else
