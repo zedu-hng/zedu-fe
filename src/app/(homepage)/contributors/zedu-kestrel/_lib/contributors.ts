@@ -198,7 +198,7 @@ export const contributors: Contributor[] = [
     name: "Fabian Chibuike Muoghalu",
     username: "Fabbenco",
     zeduName: "Fabbenco",
-    background: "Backend / Full-Stack / AI Developer",
+    background: "Backend / Full-Stack / AI Engineer",
     email: "fabbenco97@gmail.com",
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
