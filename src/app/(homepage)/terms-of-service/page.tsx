@@ -150,9 +150,8 @@ function TermsOfService() {
               Acceptance of Terms
             </h2>
             <p className="text-[#5C5C5C] text-sm lg:text-xl">
-              By downloading, installing, or using the Zedu App, you agree to
-              these Terms and any future updates or modifications. We reserve
-              the right to update these Terms at any time, and your continued
+              By downloading, installing, or using the Zedu App, you agree to all our terms and any future update or modifications.
+              We reserve the right to update these Terms at any time, and your continued
               use of the App constitutes acceptance of the revised Terms.
             </p>
           </section>
