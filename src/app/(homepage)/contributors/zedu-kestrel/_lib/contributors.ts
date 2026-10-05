@@ -203,4 +203,13 @@ export const contributors: Contributor[] = [
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
   },
+  {
+    id: "kestrel-20",
+    name: "Maryjane Okafor (Emjay)",
+    username: "Emjay",
+    zeduName: "maryjane_okafor",
+    background: "Software Engineer",
+    email: "maryukjane@gmail.com",
+    avatarGradient: "from-blue-400 to-tertiary-500",
+  },
 ];
