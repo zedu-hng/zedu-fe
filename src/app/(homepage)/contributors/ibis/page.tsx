@@ -15,7 +15,7 @@ const contributors = [
   "@Damola",
   "@Adegbola",
   "@meklitseife86",
-  "@emeka iwegbu",
+  "@Emeka Iwegbu",
   "@IheanachoVictory",
   "@Chinwendu Enyinnah",
   "@Ahurika",
