@@ -72,9 +72,10 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "John Nnamdi", username: "Unkle jhonie" },
   { name: "Daniel Olaleye", username: "Vida" },
   { name: "Sofiyah Owolabi", username: "Sophie" },
-  { name: "Vincent Akinsoyinu", username: "vince.dev" },
+  { name: "Akinsoyinu Vincent", username: "vince.dev" },
   { name: "Arafah Muhyideen", username: "Dhinar" },
   { name: "Anuonye Chidera Victor", username: "Victor Courage" },
   { name: "Onyedikachi Oluchi", username: "Jemi" },
   { name: "Abubakar Sadiq Muhammad", username: "Sadiq" },
+  
 ];
