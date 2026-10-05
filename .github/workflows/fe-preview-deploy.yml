@@ -54,7 +54,10 @@ jobs:
         id: pr
         env:
           SHA: ${{ github.event.workflow_run.head_sha }}
-        run: echo "pr=$(bash .github/scripts/fe-preview.sh prnum "$SHA")" >> "$GITHUB_OUTPUT"
+        # Fail loudly: a swallowed API error here used to look like "no PR" and skip the deploy.
+        run: |
+          pr=$(bash .github/scripts/fe-preview.sh prnum "$SHA") || { echo "::error::Couldn't look up the PR for $SHA."; exit 1; }
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Deploy preview
