@@ -17,7 +17,7 @@ const HeroSection = () => {
       />
       <h1 className="text-2xl font-semibold leading-tight text-neutral-900 sm:text-4xl md:text-5xl text-center">
         Built for Bootcamps and{" "}
-        <span className="text-primary-500">Learning</span> Communities
+        <span className="text-primary-500">Upskilling</span> Communities
       </h1>
       <p className="max-w-[95%] text-xs text-neutral-600 sm:max-w-[90%] sm:text-base md:max-w-[65%] lg:max-w-[45%] lg:text-lg">
         Talk about structured channels, cohort communication, and affordable
