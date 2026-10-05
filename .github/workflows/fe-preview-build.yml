@@ -1,0 +1,179 @@
+name: FE preview build
+
+# Untrusted half of FE PR previews: builds the PR's code into a container image on a throwaway
+# runner with a read-only token and no secrets, and uploads it with a meta.json describing the PR.
+# fe-preview-deploy.yml (trusted, workflow_run) decides whether to deploy it to Coolify.
+#
+# Config is read from the base branch, never the PR: .github/preview.env (switch, domain, default
+# backend, public NEXT_PUBLIC_* values), .github/preview-orgs (team orgs that auto-preview) and
+# .github/preview/Dockerfile. Nothing builds while PREVIEW_ENABLED isn't true.
+#
+# Backend: PREVIEW_BACKEND_HOST (the dev backend), or a `Backend URL: https://api.<name>.groups.zedu.chat`
+# line in the PR body pointing at a backend preview. The deploy side fails the Backend dependency
+# check while that override is present.
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - labeled
+      - edited
+
+permissions:
+  contents: read
+
+jobs:
+  # Filters events before anything takes the per-PR build lock. A title edit, an unrelated label or a
+  # body edit that leaves the Backend URL line alone (ticking template checkboxes) used to join the
+  # lock and cancel the real build in progress.
+  relevant:
+    name: Preview-relevant event
+    if: github.repository == 'zedu-hng/zedu-fe' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    env:
+      ACTION: ${{ github.event.action }}
+      LABEL: ${{ github.event.label.name }}
+      BODY: ${{ github.event.pull_request.body }}
+      BODY_FROM: ${{ github.event.changes.body.from }}
+      BODY_CHANGED: ${{ github.event.changes.body != null }}
+    steps:
+      - id: check
+        run: |
+          # Same as bline() in fe-preview.sh: "none" when absent, so removing the line counts as a change.
+          bline() {
+            local l
+            l=$(printf '%s\n' "$1" | tr -d '\r' | grep -iE '^[[:space:]]*backend url:' | head -1 || true)
+            [ -n "$l" ] || { echo none; return 0; }
+            echo "line:$(sed -E 's/^[[:space:]]*[Bb][Aa][Cc][Kk][Ee][Nn][Dd] [Uu][Rr][Ll]:[[:space:]]*//; s/[[:space:]`<>]//g; s#/+$##' <<< "$l")"
+          }
+          go=true
+          case "$ACTION" in
+            labeled) [ "$LABEL" = preview ] || go=false ;;
+            edited)
+              if [ "$BODY_CHANGED" != true ] || [ "$(bline "$BODY_FROM")" = "$(bline "$BODY")" ]; then go=false; fi ;;
+          esac
+          echo "Event $ACTION: preview-relevant=$go"
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build preview image
+    needs: relevant
+    if: needs.relevant.outputs.go == 'true'
+    # Per PR, and only for relevant events: a newer push still cancels the older build.
+    concurrency:
+      group: fe-preview-build-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+      SHA: ${{ github.event.pull_request.head.sha }}
+      HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+      ACTION: ${{ github.event.action }}
+      LABEL: ${{ github.event.label.name }}
+      LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+      BODY_CHANGED: ${{ github.event.changes.body != null }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Decide
+        id: meta
+        run: |
+          cfg="$RUNNER_TEMP/cfg"; mkdir -p "$cfg"
+          git fetch -q --no-tags --depth=1 origin "$BASE_REF"
+          for f in preview.env preview-orgs preview/Dockerfile; do
+            git show "FETCH_HEAD:.github/$f" > "$cfg/$(basename "$f")" 2>/dev/null || { echo "No .github/$f on $BASE_REF; previews not set up."; exit 0; }
+          done
+          get() { sed -n "s/^$1=//p" "$cfg/preview.env" | head -1; }
+          [ "$(get PREVIEW_ENABLED)" = true ] || { echo "PREVIEW_ENABLED isn't true on $BASE_REF; skipping."; exit 0; }
+
+          org=${HEAD_REPO%%/*}
+          if [ "$HEAD_REPO" = "$REPO" ]; then gate=reviewer
+          elif grep -v '^#' "$cfg/preview-orgs" | grep -qixF "$org"; then gate=registered
+          elif jq -e 'index("preview") != null' <<< "$LABELS" >/dev/null; then gate=label
+          else gate=skip; fi
+
+          host=$(get PREVIEW_BACKEND_HOST); override=false; error=""
+          line=$(printf '%s\n' "$PR_BODY" | tr -d '\r' | grep -iE '^[[:space:]]*backend url:' | head -1 || true)
+          if [ -n "$line" ]; then
+            url=$(sed -E 's/^[[:space:]]*[Bb][Aa][Cc][Kk][Ee][Nn][Dd] [Uu][Rr][Ll]:[[:space:]]*//; s/[[:space:]`<>]//g; s#/+$##' <<< "$line")
+            if [[ "$url" =~ ^https://(api\.[a-z0-9-]+\.groups\.zedu\.chat)$ ]]; then
+              host=${BASH_REMATCH[1]}; override=true
+            else
+              error="Backend URL must look like https://api.<name>.groups.zedu.chat"
+            fi
+          fi
+
+          jq -n --arg pr "$PR" --arg sha "$SHA" --arg org "$org" --arg gate "$gate" --arg host "$host" \
+            --argjson override "$override" --arg error "$error" --arg action "$ACTION" --arg label "$LABEL" \
+            '{pr: ($pr|tonumber), sha: $sha, org: $org, gate: $gate, backend_host: $host,
+              override: $override, error: $error, action: $action, label: $label, image: false}' > meta.json
+          cat meta.json
+          build=$([ "$gate" != skip ] && [ -z "$error" ] && echo true || echo false)
+          {
+            echo "upload=true"; echo "build=$build"; echo "host=$host"
+            echo "domain=$(get PREVIEW_DOMAIN)"; echo "cfg=$cfg"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        if: steps.meta.outputs.build == 'true'
+        with:
+          version: 10.27.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.meta.outputs.build == 'true'
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Build image
+        if: steps.meta.outputs.build == 'true'
+        env:
+          HOST: ${{ steps.meta.outputs.host }}
+          DOMAIN: ${{ steps.meta.outputs.domain }}
+          CFG: ${{ steps.meta.outputs.cfg }}
+        run: |
+          pnpm install --frozen-lockfile
+          {
+            grep '^NEXT_PUBLIC_' "$CFG/preview.env"
+            echo "NEXT_PUBLIC_API_URL=https://$HOST"
+            echo "NEXT_PUBLIC_BASE_URL=https://$HOST/api/v1"
+            echo "NEXT_PUBLIC_CONNECT_URL=wss://$HOST/centrifugo/connection/websocket"
+            echo "NEXT_PUBLIC_CLIENT_URL=https://$PR.$DOMAIN"
+          } > .env
+          pnpm run build
+          [ -f .next/standalone/server.js ] || { echo "::error::No standalone output; next.config must keep output: standalone."; exit 1; }
+
+          img="$RUNNER_TEMP/img"
+          cp -r .next/standalone "$img"
+          mkdir -p "$img/.next" "$img/public/mainapp/_next"
+          cp -r .next/static "$img/.next/static"
+          [ -d public ] && cp -r public/. "$img/public/"
+          cp -r .next/static "$img/public/mainapp/_next/static"
+          cp "$CFG/Dockerfile" "$img/Dockerfile"
+          docker build -q -t fe-preview:local "$img"
+          docker save fe-preview:local | gzip > image.tar.gz
+          jq '.image = true' meta.json > meta.tmp && mv meta.tmp meta.json
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.meta.outputs.upload == 'true'
+        with:
+          name: fe-preview
+          path: |
+            meta.json
+            image.tar.gz
+          if-no-files-found: warn
+          retention-days: 1
