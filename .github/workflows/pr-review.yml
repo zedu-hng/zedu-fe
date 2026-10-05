@@ -35,6 +35,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Run the review with the base branch's rules, not the ones frozen into this PR's cached
+      # test-merge ref. GitHub only refreshes refs/pull/<n>/merge on PR events, so without this a
+      # merged fix to the bot's config would keep producing a stale verdict. .github/ is protected,
+      # so the base copy is the trusted one.
+      - name: Use the base branch's review rules
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}"
+          git checkout FETCH_HEAD -- \
+            .github/pr-review.config.json \
+            .github/scripts/pr-review
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
