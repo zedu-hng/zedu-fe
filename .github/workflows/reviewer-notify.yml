@@ -1,9 +1,13 @@
 name: Reviewer notify
 
-# When a contributor PR is lead-approved and its Fork build passes, label it ready-for-review and
-# mention the reviewers team once, so any reviewer can pick it up. Reviewers are not assigned.
-# If the PR becomes a draft or a gate goes red again, the label is removed so it re-queues.
-# Runs on PR events and a 15-minute sweep; reads teams.yml/statuses from the base repo only.
+# Maintains the ready-for-review queue for contributor PRs.
+# - A PR that is lead-approved and its Fork build passes is marked ready-for-review and the
+#   reviewers team is mentioned once, but only while its team has fewer than CAP unclaimed PRs
+#   waiting. Beyond that it is marked queued.
+# - A queued PR is promoted oldest-first as slots free (a PR is claimed, merged or closed).
+# - Claimed PRs keep the label (the claim sweep uses it) but don't occupy a slot.
+# - PRs that go back to draft or fail a gate lose the labels and re-queue later.
+# Reviewers are not assigned. Runs on PR events and a 15-minute sweep; never checks out PR code.
 
 on:
   pull_request_target:
@@ -37,71 +41,86 @@ env:
   LEAD_CONTEXT: Lead approved
   BUILD_CONTEXT: Fork build
   REVIEW_LABEL: ready-for-review
+  QUEUED_LABEL: queued
   REVIEWERS: zedu-hng/reviewers
+  CAP: "3"
 
 jobs:
   notify:
-    name: Notify reviewers
+    name: Maintain ready-for-review queue
     if: vars.IS_BOOTCAMP == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Collect PRs
-        id: prs
-        env:
-          EVENT_PR: ${{ github.event.pull_request.number }}
+      - name: Load registered teams
         run: |
-          if [ -n "$EVENT_PR" ]; then
-            printf '%s\n' "$EVENT_PR" > prs.txt
-          else
-            gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-              --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | .number' > prs.txt
-          fi
+          gh api "repos/$REPO/contents/.github/teams.yml" --jq .content | base64 -d > teams.yml
+          ruby -ryaml -e '
+            cfg = YAML.load_file("teams.yml") || {}
+            puts (cfg["teams"] || {}).keys
+          ' > teams.txt
 
-      - name: Notify or re-queue
+      - name: Collect PRs
         run: |
-          while read -r pr; do
-            [ -n "$pr" ] || continue
-            gh api "repos/$REPO/pulls/$pr" > pr.json
-            sha=$(jq -r .head.sha pr.json)
-            draft=$(jq -r .draft pr.json)
-            head_repo=$(jq -r .head.repo.full_name pr.json)
-            labels=$(jq -r '[.labels[].name] | join(",")' pr.json)
-            if [ "$head_repo" = "$REPO" ]; then
-              echo "PR #$pr: same-repo; skip"
+          : > rows.tsv
+          # '|' separator: tab is IFS-whitespace, so empty fields would collapse and shift columns.
+          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
+            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | select(.head.repo.full_name != "'"$REPO"'") | [.number, .user.login, .created_at, (.draft|tostring), (.head.repo.owner.login // "deleted"), ([.labels[].name]|join(",")), (([.assignees[]]|length)|tostring), .head.sha] | map(tostring) | join("|")' |
+          while IFS='|' read -r num author created draft owner labels na sha; do
+            case ",$labels," in *,sync,*|*,hotfix,*) continue ;; esac
+            # The team is the fork's owner. Only registered forks can be queued, but forks that
+            # aren't registered are still written through with green=false so the queue step can
+            # strip any stale ready-for-review/queued labels from them.
+            team="$owner"
+            green=false
+            if grep -qixF "$owner" teams.txt; then
+              state() { gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" --jq ".[] | select(.context == \"$1\") | .state" | head -1; }
+              lead=$(state "$LEAD_CONTEXT")
+              build=$(state "$BUILD_CONTEXT")
+              [ "$lead" = "success" ] && [ "$build" = "success" ] && green=true
+            fi
+            printf '%s|%s|%s|%s|%s|%s|%s|%s\n' \
+              "$num" "$team" "$created" "$draft" "$labels" "$na" "$green" "$sha" >> rows.tsv
+          done
+
+      - name: Maintain queue
+        run: |
+          declare -A waiting
+          while IFS='|' read -r num team created draft labels na green sha; do
+            case ",$labels," in *,"$REVIEW_LABEL",*) [ "$na" = "0" ] && waiting[$team]=$(( ${waiting[$team]:-0} + 1 )) ;; esac
+          done < rows.tsv
+          sort -s -t'|' -k3,3 rows.tsv | while IFS='|' read -r num team created draft labels na green sha; do
+            has_ready=false; case ",$labels," in *,"$REVIEW_LABEL",*) has_ready=true ;; esac
+            has_queued=false; case ",$labels," in *,"$QUEUED_LABEL",*) has_queued=true ;; esac
+            if [ "$draft" = "true" ] || [ "$green" != "true" ]; then
+              [ "$has_ready" = true ] && gh pr edit "$num" --remove-label "$REVIEW_LABEL" || true
+              [ "$has_queued" = true ] && gh pr edit "$num" --remove-label "$QUEUED_LABEL" || true
+              echo "PR #$num ($team): not eligible (draft=$draft green=$green)"
               continue
             fi
-            case ",$labels," in
-              *,sync,*|*,hotfix,*) echo "PR #$pr: sync/hotfix; skip"; continue ;;
-            esac
-            has_label=false
-            case ",$labels," in *,"$REVIEW_LABEL",*) has_label=true ;; esac
-            status_of() {
-              gh api "repos/$REPO/commits/$sha/status" \
-                --jq ".statuses[] | select(.context == \"$1\") | .state" | head -1
-            }
-            lead=$(status_of "$LEAD_CONTEXT")
-            build=$(status_of "$BUILD_CONTEXT")
-            if [ "$draft" = "false" ] && [ "$lead" = "success" ] && [ "$build" = "success" ]; then
-              if [ "$has_label" = "false" ]; then
-                if ! gh pr edit "$pr" --add-label "$REVIEW_LABEL"; then
-                  echo "PR #$pr: failed to add $REVIEW_LABEL" >&2
-                  continue
-                fi
-                if gh pr comment "$pr" --body "**Ready for review.** Lead approved and checks are green. @$REVIEWERS — claim this PR with \`/claim\`."; then
-                  echo "PR #$pr: notified reviewers"
-                else
-                  echo "PR #$pr: failed to notify reviewers" >&2
-                fi
-              else
-                echo "PR #$pr: already ready-for-review"
+            if [ "$na" != "0" ]; then
+              echo "PR #$num ($team): claimed; not counted"
+              continue
+            fi
+            if [ "$has_ready" = true ]; then
+              echo "PR #$num ($team): already ready"
+              continue
+            fi
+            if [ "${waiting[$team]:-0}" -lt "$CAP" ]; then
+              if ! gh pr edit "$num" --add-label "$REVIEW_LABEL"; then
+                echo "PR #$num ($team): failed to add $REVIEW_LABEL" >&2
+                continue
               fi
-            elif [ "$has_label" = "true" ]; then
-              if gh pr edit "$pr" --remove-label "$REVIEW_LABEL"; then
-                echo "PR #$pr: re-queued (draft=$draft lead=$lead build=$build)"
+              waiting[$team]=$(( ${waiting[$team]:-0} + 1 ))
+              [ "$has_queued" = true ] && gh pr edit "$num" --remove-label "$QUEUED_LABEL" || true
+              if gh pr comment "$num" --body "**Ready for review.** Lead approved and checks are green. @$REVIEWERS — claim this PR with \`/claim\`."; then
+                echo "PR #$num ($team): ready"
               else
-                echo "PR #$pr: failed to remove $REVIEW_LABEL" >&2
+                echo "PR #$num ($team): failed to notify reviewers" >&2
               fi
             else
-              echo "PR #$pr: not ready (draft=$draft lead=$lead build=$build)"
+              if [ "$has_queued" != "true" ] && ! gh pr edit "$num" --add-label "$QUEUED_LABEL"; then
+                echo "PR #$num ($team): failed to add $QUEUED_LABEL" >&2
+              fi
+              echo "PR #$num ($team): queued"
             fi
-          done < prs.txt
+          done
