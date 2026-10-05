@@ -94,14 +94,18 @@ jobs:
         env:
           RUN_ID: ${{ github.run_id }}
         run: |
+          # A sweep counts from when its Sweep step finished, not when its run was created. Runs created
+          # in the last 30 minutes cover every sweep that can have finished in the last 10 (15 min
+          # timeout plus queueing); all pages are read, newest first, stopping at the first match.
           since=$(( $(date +%s) - 600 ))
-          runs=$(gh api "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?per_page=20" \
-            | jq -r --arg me "$RUN_ID" --argjson since "$since" \
-              '.workflow_runs[] | select((.id | tostring) != $me and ((.created_at | fromdateiso8601) > $since)) | .id')
+          created=$(date -u -d "@$(( $(date +%s) - 1800 ))" +%Y-%m-%dT%H:%M:%SZ)
+          runs=$(gh api --paginate "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?created=%3E%3D$created&per_page=100" \
+            | jq -rs --arg me "$RUN_ID" '[.[].workflow_runs[]] | sort_by(.created_at) | reverse | .[]
+                | select((.id | tostring) != $me and .event != "pull_request_target") | .id')
           for id in $runs; do
-            swept=$(gh api "repos/$REPO/actions/runs/$id/jobs" \
-              --jq '[.jobs[].steps[]? | select(.name == "Sweep" and .conclusion == "success")] | length')
-            if [ "$swept" -gt 0 ]; then echo "Swept in run $id within 10 minutes; skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+            swept=$(gh api "repos/$REPO/actions/runs/$id/jobs" | jq --argjson since "$since" \
+              '[.jobs[].steps[]? | select(.name == "Sweep" and .conclusion == "success" and ((.completed_at // "1970-01-01T00:00:00Z") | sub("\\.[0-9]+"; "") | fromdateiso8601) > $since)] | length')
+            if [ "$swept" -gt 0 ]; then echo "A sweep finished within 10 minutes (run $id); skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
           done
 
       - name: Sweep

@@ -180,18 +180,20 @@ deploy_tag() { # pr sha tag host comment-id
 # The PR into dev whose head is still this commit (open or closed), as JSON, or nothing. The
 # commit->pulls endpoint also lists PRs that have since moved on, so the head must match: an older
 # build must never resolve to a PR with a newer push.
-pull_of() { # sha
+pull_of() { # sha; fails if GitHub can't be asked, so callers don't mistake an outage for "superseded"
   local pull
-  pull=$(gh api "repos/$REPO/commits/$1/pulls" | jq -c --arg s "$1" '[.[] | select(.base.ref == "dev" and .head.sha == $s)][0] // empty')
+  pull=$(gh api "repos/$REPO/commits/$1/pulls" | jq -c --arg s "$1" '[.[] | select(.base.ref == "dev" and .head.sha == $s)][0] // empty') || return 1
   # Fork commits aren't linked to base-repo PRs; fall back to matching the head sha.
-  [ -n "$pull" ] || pull=$(gh api --paginate "repos/$REPO/pulls?state=open&base=dev&per_page=100" \
-    | jq -cs --arg s "$1" 'flatten | map(select(.head.sha == $s))[0] // empty')
+  if [ -z "$pull" ]; then
+    pull=$(gh api --paginate "repos/$REPO/pulls?state=open&base=dev&per_page=100" \
+      | jq -cs --arg s "$1" 'flatten | map(select(.head.sha == $s))[0] // empty') || return 1
+  fi
   printf '%s' "$pull"
 }
 
 deploy() { # head-sha image
   local sha=$1 tarball=$2 built=${3:-} pr pull org head_repo labels gate host override id st ssha shost
-  pull=$(pull_of "$sha")
+  pull=$(pull_of "$sha") || { echo "::error::Couldn't look up the PR for $sha."; return 1; }
   [ -n "$pull" ] || { echo "No PR into dev has head $sha (superseded); nothing to do."; return 0; }
   pr=$(jq -r .number <<< "$pull")
   # Closed while this build ran: a waiting close job may have been replaced by this one (same lock).
