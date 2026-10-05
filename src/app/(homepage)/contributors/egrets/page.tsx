@@ -86,7 +86,10 @@ const ContributorsPage = () => {
                 href={entry.repo}
                 target="_blank"
                 rel="noreferrer"
-                className={base + " focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"}
+                className={
+                  base +
+                  " focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                }
               >
                 {box}
               </a>
@@ -106,8 +109,20 @@ const ContributorsPage = () => {
       >
         Explore Zedu
         <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 12h14M12 5l7 7-7 7"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </span>
       </a>
