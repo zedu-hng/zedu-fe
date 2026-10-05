@@ -231,4 +231,14 @@ export const contributors: Contributor[] = [
     email: "maryukjane@gmail.com",
     avatarGradient: "from-blue-400 to-tertiary-500",
   },
+  {
+    id: "kestrel-202",
+    name: "Mercy Gatwiri",
+    username: "M-gatwiri",
+    zeduName: "M-gatwiri",
+    background: "Software Developer",
+    email: "mgatwiri806@gmail.com",
+    linkedin: "mercy-gatwiri-17454b228",
+    avatarGradient: "from-primary-500 to-secondary-400",
+  },
 ];
