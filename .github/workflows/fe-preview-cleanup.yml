@@ -22,6 +22,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: read
   packages: write
   statuses: write
@@ -61,7 +62,9 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: bash .github/scripts/fe-preview.sh close "$PR"
 
-  # A newer sweep replacing a waiting one is harmless, so all sweeps share one group.
+  # A newer sweep replacing a waiting one is harmless, so all sweeps share one group. Deploy-triggered
+  # runs only check the window and maybe dispatch, so they get their own group and never displace a
+  # waiting sweep.
   sweep:
     name: Sweep previews
     if: >-
@@ -70,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      group: fe-preview-sweep
+      group: fe-preview-sweep${{ github.event_name == 'workflow_run' && format('-handoff-{0}', github.run_id) || '' }}
       cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
@@ -88,7 +91,9 @@ jobs:
 
       # Deploy-triggered sweeps: at most one per 10-minute window, to stay inside the token's API
       # budget. A cache entry per window marks "swept"; checking it costs no REST calls (the old
-      # throttle listed recent runs and their jobs, dozens of calls per deploy).
+      # throttle listed recent runs and their jobs, dozens of calls per deploy). workflow_run runs can
+      # only read caches, so on a miss this run dispatches the sweep (workflow_dispatch can write the
+      # marker) instead of sweeping itself. The shared sweep group drops extra dispatches.
       - name: Window
         id: window
         run: echo "key=fe-preview-swept-$(( $(date +%s) / 600 ))" >> "$GITHUB_OUTPUT"
@@ -102,16 +107,20 @@ jobs:
           key: ${{ steps.window.outputs.key }}
           lookup-only: true
 
+      - name: Hand off to a dispatched sweep
+        if: github.event_name == 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        run: gh workflow run fe-preview-cleanup.yml --repo "$REPO" --ref dev
+
       - name: Sweep
-        if: steps.throttle.outputs.cache-hit != 'true'
+        if: github.event_name != 'workflow_run'
         run: bash .github/scripts/fe-preview.sh sweep
 
       - name: Mark window swept
-        if: steps.throttle.outputs.cache-hit != 'true'
+        if: github.event_name != 'workflow_run'
         run: touch .swept
 
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: steps.throttle.outputs.cache-hit != 'true'
+        if: github.event_name != 'workflow_run'
         with:
           path: .swept
           key: ${{ steps.window.outputs.key }}
