@@ -29,7 +29,8 @@ export const ArticlesSection = () => {
           The Platform for Every Type of Learning
         </h1>
         <p className="max-w-[95%] text-sm text-neutral-600 sm:max-w-[90%] sm:text-base md:max-w-[85%] lg:max-w-[65%] lg:text-lg">
-          Whether you run a small cohort, a bootcamp, a school, or a large institution, Zedu grows with your learning community.
+          Whether you run a small cohort, a bootcamp, a school, or a large
+          institution, Zedu grows with your learning community.
         </p>
       </div>
 
