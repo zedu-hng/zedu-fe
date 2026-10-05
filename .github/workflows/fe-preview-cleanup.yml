@@ -1,0 +1,55 @@
+name: FE preview cleanup
+
+# Removes a PR's Coolify preview and image tags when it closes, and every 15 minutes expires idle
+# previews, starts queued ones and settles deployments the deploy job didn't see finish.
+# Logic: .github/scripts/fe-preview.sh. Never checks out PR code. Inert until configured.
+
+on:
+  pull_request_target:
+    branches:
+      - dev
+    types:
+      - closed
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  statuses: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: fe-preview-state
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Clean up previews
+    if: github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_PREVIEW_APP: ${{ vars.COOLIFY_PREVIEW_APP }}
+      PREVIEW_CAP: ${{ vars.PREVIEW_CAP || '30' }}
+      PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '48' }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Clean up
+        run: |
+          if [ -n "$PR" ]; then
+            bash .github/scripts/fe-preview.sh close "$PR"
+          else
+            bash .github/scripts/fe-preview.sh sweep
+          fi

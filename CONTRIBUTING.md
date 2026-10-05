@@ -575,10 +575,15 @@ The short version:
 
 > Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → your fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
 
+Reviewers and team leads: [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) has the org and fork settings and the sync/release runbook.
+
 ### 1. Ground rules
 
 - **Every change needs an approved ticket** in ClickUp or Linear. Nothing starts from an untracked chat request.
 - **One ticket per PR, one person per PR.** Each member opens their own PR from their own ticket branch. No team branches and no combined PRs: we review per developer, so nobody's work is held up by someone else's. If you find another problem, open another ticket.
+- **One logical change, about 400 lines.** Size PRs by scope, not time: with AI tools a day's work can be thousands of lines. A PR is one logical change of at most ~400 lines of meaningful code (lockfiles and generated files like `*.tsbuildinfo` don't count; `hotfix` PRs are exempt). Larger changes need a reviewer's `size-override` label, or they get split.
+- **Shippable slice.** After your PR merges the app must still work and nothing half-finished may be visible to users. If a feature needs several tickets, land the non-visible parts first and open each dependent PR after the previous one merges (see [Working on a ticket](#4-working-on-a-ticket)).
+- **One open PR per author.**
 - **Your team lead reviews first.** They approve on your PR; Zedu reviewers pick it up after that.
 - **Don't change protected files** (see [Protected files](#5-protected-files)) unless a reviewer has agreed first.
 - **You never push to `zedu-hng` or `zeduchat` directly.** All work happens in your fork and comes in as a PR.
@@ -599,13 +604,21 @@ zeduchat/zedu-fe              Zedu's repo. Reviewers send batches here; you neve
 
 `staging` and `main` live on `zeduchat/zedu-fe` and are owned by the in-house team. You never target them.
 
+Branches in your team's fork:
+
+| Branch in your fork         | Purpose                                                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dev`                       | Mirror of `zedu-hng:dev`. Sync only; never commit to it.                                                                                            |
+| `staging`                   | Team sandbox. Your lead merges ticket branches here to try them live on `<team>.groups.zedu.chat`. Never a PR source; reset it from `dev` any time. |
+| `<type>/<ticket-id>-<desc>` | One ticket. The only branch you open a PR from.                                                                                                     |
+
 Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **Sync fork** point at the wrong repo.
 
 ### 3. One-time setup (per team)
 
 1. Fork `zedu-hng/zedu-fe` into your team's GitHub org.
 2. In the fork, go to **Actions** and enable workflows. Forks have them off by default, and your PR builds run there.
-3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Secrets → New repository secret**, and add `APP_ENV_FILE` containing your full `.env` (the keys are listed in `env.example`). CI writes it to `.env` before building. Without it, builds succeed but the app has no backend.
+3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables → New repository variable**, and add `APP_ENV_FILE` with the **non-sensitive** values the build needs, one `KEY=value` per line (for example `NEXT_PUBLIC_API_URL=...`; the keys are in `env.example`). CI writes them to `.env` before building. Anything sensitive (tokens, certificates) must be a **secret**, never a variable: GitHub doesn't mask variable values in logs if a workflow prints them. Without this, builds succeed but the app has no backend. Full fork setup, including the preview secrets, is in [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md).
 4. Each contributor clones the **team fork** and installs with `pnpm install` (see [Getting Started](#getting-started)).
 
 `pnpm install` installs the Husky hooks. On commit, Prettier, ESLint, TypeScript and the production build run, and commitlint checks your message.
@@ -620,12 +633,12 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
    <type>/<ticket-id>-<short-description>
    ```
 
-   Types: `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `perf`, `security`. The ticket ID is either a number or a prefix plus number. Example: `feat/CHAT-142-typing-indicator` or `fix/245-login-redirect`.
+   Types: `feat`, `fix`, `hotfix`, `test`, `docs`, `refactor`, `chore`, `perf`, `security`. The ticket ID is either a number or a prefix plus number. Example: `feat/CHAT-142-typing-indicator` or `fix/245-login-redirect`.
 
 4. Commit with [Conventional Commits](https://www.conventionalcommits.org/) (see [Commit messages](#commit-messages)). The PR title must pass commitlint too, and it becomes the squashed commit message.
 5. Commit only as yourself. The **Single author** check fails a PR with commits from more than one person. If you commit from several emails, add all of them to your GitHub account, or they count as different authors. Credit a collaborator with a `Co-authored-by:` trailer instead.
 
-**Dependent tickets:** if ticket B needs ticket A, open B's PR after A merges, then update B from `dev`. Don't stack B on top of A's unmerged branch.
+**Multi-ticket features:** GitHub doesn't support stacked PRs across forks, and a PR's base must be a branch in `zedu-hng`, so you can't base one ticket's PR on another's fork branch. Order the tickets so the additive, non-visible parts land first, and open each dependent PR after the previous one merges: sync `dev`, branch from it, and use the next ticket. The **PR title** check requires the PR's ticket to match its branch.
 
 **Testing combinations:** you can merge ticket branches into a private branch in your fork to test them together. Never open a PR from that branch.
 
@@ -663,7 +676,13 @@ Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to
 - On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
 - No build showing at all? Check that Actions is enabled in your fork and that it's synced.
 
-If your team deploys a preview (for example Vercel), link it in the PR so reviewers can click through the change. The build gate proves it compiles; a preview proves it works.
+**Previews.** Every PR from a registered team org gets a preview at `https://<PR number>.preview.groups.zedu.chat`, rebuilt on every push. Zedu builds it on GitHub's runners and hosts it, so your team sets nothing up. PRs from other forks get one when a reviewer adds the `preview` label.
+
+- The **Preview** check links to it (Details) once it's live, and a bot comment shows the link, the commit and the backend it uses.
+- It runs against the shared `dev` backend, exactly what reviewers test. If your PR needs backend work that isn't on `dev` yet, add a `Backend URL:` line to the PR description with that backend's host (for example `https://api.<team>.groups.zedu.chat`). The **Backend dependency** check then fails until the backend lands on `dev` and you delete the line, so the PR can't merge against unreleased backend code.
+- It's removed when the PR closes or after 48 hours without a push; the link comes back on your next push. Google sign-in and calls don't work in previews; use email login.
+
+Before you open the PR, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
 The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
 
@@ -679,9 +698,9 @@ The other checks (lint, types, build, security scans, **Commitlint**, **Branch n
 
 After merge, reviewers promote `dev` → `central-staging` with a merge commit, and send `central-staging` to `zeduchat` in batches. Sync your fork's `dev` (**Sync fork**) to pull in what's merged. The ticket goes **MERGED → VERIFIED → CLOSED** once the change is verified.
 
-### 9. Feature flags
+### 9. Shippable slices
 
-New routes and large features must be wrapped in a feature flag, default `OFF`, so we can merge safely and turn things on deliberately. Flags use the `NEXT_PUBLIC_FF_` prefix and are read through the helper in `src/lib/feature-flags.ts`. Name the flag in the PR template. Small, low-risk UI tweaks don't need one.
+Zedu has no feature-flag system, so every PR must be safe to merge on its own: after it merges, the app still works and nothing half-finished is visible to users. If a feature needs several tickets, split it so the additive, non-visible parts (backend, database) land first and the visible UI change lands last, opening each ticket's PR after the previous one merges (see [Working on a ticket](#4-working-on-a-ticket)).
 
 ### 10. AI usage
 
