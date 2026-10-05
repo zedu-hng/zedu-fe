@@ -1,6 +1,6 @@
 name: Lead approval
 
-# Sets the "Lead approval" commit status: green once one of the PR author's team leads has an
+# Sets the "Lead approved" commit status: green once one of the PR author's team leads has an
 # approving review, red otherwise. Reads teams.yml from the base branch, so a PR can't change it.
 #
 # A review on a fork PR runs with a read-only token and cannot set a status, so reviews are picked
@@ -39,13 +39,13 @@ concurrency:
 env:
   GH_TOKEN: ${{ github.token }}
   REPO: ${{ github.repository }}
-  CONTEXT: Lead approval
+  CONTEXT: Lead approved
 
 jobs:
   # Scheduled: re-dispatch the check for open contributor PRs whose status isn't green yet.
   sweep:
     name: Re-check pending PRs
-    if: github.event_name == 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -66,7 +66,7 @@ jobs:
 
   approval:
     name: Check lead approval
-    if: github.event_name != 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +88,7 @@ jobs:
             echo "sha=$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)"
             echo "author=$(gh api "repos/$REPO/pulls/$pr" --jq .user.login)"
             echo "head_repo=$(gh api "repos/$REPO/pulls/$pr" --jq .head.repo.full_name)"
+            echo "labels=$(gh api "repos/$REPO/pulls/$pr" --jq '[.labels[].name] | join(",")')"
           } >> "$GITHUB_OUTPUT"
 
       - name: Resolve leads
@@ -126,8 +127,14 @@ jobs:
           SKIP: ${{ steps.leads.outputs.skip }}
           MAPPED: ${{ steps.leads.outputs.mapped }}
           LEADS: ${{ steps.leads.outputs.leads }}
+          LABELS: ${{ steps.pr.outputs.labels }}
         run: |
           setstatus() { gh api "repos/$REPO/statuses/$SHA" -f state="$1" -f context="$CONTEXT" -f description="$2" >/dev/null; }
+          case ",$LABELS," in
+            *,sync,*|*,hotfix,*)
+              setstatus success "Sync/hotfix PR; lead approval not enforced"
+              exit 0 ;;
+          esac
           if [ "$SKIP" = "true" ]; then
             setstatus success "Same-repo or bot PR; lead approval not enforced"
             exit 0
