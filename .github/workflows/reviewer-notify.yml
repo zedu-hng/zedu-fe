@@ -102,10 +102,12 @@ jobs:
             }' |
           jq -rs --arg repo "$REPO" '
             [.[].data.repository.pullRequests.nodes[]]
-            | if any(.[]; .labels.pageInfo.hasNextPage) then error("a PR has over 100 labels; queue labels may be missing") else . end
             | map(select((.baseRefName == "dev" or .baseRefName == "central-staging")
                 and .headRepository.nameWithOwner != $repo))
             | .[]
+            # Over 100 labels: queue labels may be on a page we did not read, so leave this PR out
+            # (stderr warning) rather than misjudge it or stop the whole queue.
+            | if .labels.pageInfo.hasNextPage then ("::warning::PR #\(.number) has over 100 labels; skipped\n" | stderr | empty) else . end
             | ([.commits.nodes[0].commit.status.contexts[]? | {(.context): .state}] | add // {}) as $st
             | [.number, (.headRepositoryOwner.login // "deleted"), .createdAt, (.isDraft | tostring),
                ([.labels.nodes[].name] | join(",")), (.assignees.totalCount | tostring),
