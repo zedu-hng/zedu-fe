@@ -27,14 +27,50 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: fe-preview-build-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 jobs:
+  # Filters events before anything takes the per-PR build lock. A title edit, an unrelated label or a
+  # body edit that leaves the Backend URL line alone (ticking template checkboxes) used to join the
+  # lock and cancel the real build in progress.
+  relevant:
+    name: Preview-relevant event
+    if: github.repository == 'zedu-hng/zedu-fe' && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+    env:
+      ACTION: ${{ github.event.action }}
+      LABEL: ${{ github.event.label.name }}
+      BODY: ${{ github.event.pull_request.body }}
+      BODY_FROM: ${{ github.event.changes.body.from }}
+      BODY_CHANGED: ${{ github.event.changes.body != null }}
+    steps:
+      - id: check
+        run: |
+          # Same as bline() in fe-preview.sh: "none" when absent, so removing the line counts as a change.
+          bline() {
+            local l
+            l=$(printf '%s\n' "$1" | tr -d '\r' | grep -iE '^[[:space:]]*backend url:' | head -1 || true)
+            [ -n "$l" ] || { echo none; return 0; }
+            echo "line:$(sed -E 's/^[[:space:]]*[Bb][Aa][Cc][Kk][Ee][Nn][Dd] [Uu][Rr][Ll]:[[:space:]]*//; s/[[:space:]`<>]//g; s#/+$##' <<< "$l")"
+          }
+          go=true
+          case "$ACTION" in
+            labeled) [ "$LABEL" = preview ] || go=false ;;
+            edited)
+              if [ "$BODY_CHANGED" != true ] || [ "$(bline "$BODY_FROM")" = "$(bline "$BODY")" ]; then go=false; fi ;;
+          esac
+          echo "Event $ACTION: preview-relevant=$go"
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build preview image
-    if: github.repository == 'zedu-hng/zedu-fe' && github.event.pull_request.draft == false
+    needs: relevant
+    if: needs.relevant.outputs.go == 'true'
+    # Per PR, and only for relevant events: a newer push still cancels the older build.
+    concurrency:
+      group: fe-preview-build-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -56,10 +92,6 @@ jobs:
       - name: Decide
         id: meta
         run: |
-          # Only body edits can change the backend; other edits (title) don't need a rebuild.
-          if [ "$ACTION" = edited ] && [ "$BODY_CHANGED" != true ]; then echo "Title-only edit; nothing to do."; exit 0; fi
-          if [ "$ACTION" = labeled ] && [ "$LABEL" != preview ]; then echo "Label $LABEL doesn't affect previews."; exit 0; fi
-
           cfg="$RUNNER_TEMP/cfg"; mkdir -p "$cfg"
           git fetch -q --no-tags --depth=1 origin "$BASE_REF"
           for f in preview.env preview-orgs preview/Dockerfile; do
