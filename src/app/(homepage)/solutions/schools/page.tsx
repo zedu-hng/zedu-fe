@@ -69,7 +69,7 @@ const higherEducationCards = [
   },
   {
     title: "Engaged Students",
-    desc: "Students participate in discussions and collaborate easily.",
+    desc: "Students engage in discussions and collaborate easily.",
   },
   {
     title: "Less Administrative Overhead",
