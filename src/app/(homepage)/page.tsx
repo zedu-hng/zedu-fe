@@ -33,7 +33,7 @@ const HomePage = () => {
       <FAQSection />
       <DynamicFooter
         text="Run Your Next Cohort Without Limits"
-        description="Join thousands of educators building better learning experiences."
+        description="Join thousands of educators building better learning experiences with Zedu."
       />
     </section>
   );

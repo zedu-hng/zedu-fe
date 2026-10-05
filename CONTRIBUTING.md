@@ -742,6 +742,55 @@ Ask in your team's channel first, then the project channel. For a blocker, inclu
 
 ---
 
+## HNG15 Lesson 3 Team Requirement
+
+This section applies specifically to the HNG15 Lesson 3 team task.
+
+### Team Presentation Requirement
+
+Every team member must make at least one meaningful text/content change to Zedu.
+
+A valid contribution must:
+
+1. Be made by the individual team member.
+2. Change visible text/content in the Zedu frontend.
+3. Be committed from that contributor's own ticket branch.
+4. Be submitted through the normal PR workflow.
+5. Be reviewed and merged into `zedu-hng/zedu-fe:dev`.
+6. Be promoted to `central-staging`.
+7. Be deployed to production.
+8. Be verified as visible on the production website.
+
+### Important: Production Is the Final Requirement
+
+A text change does **not** count for Stage 2 eligibility merely because:
+
+- it exists on a contributor's branch;
+- a PR was opened;
+- the PR was approved;
+- the PR was merged into `dev`;
+- the change exists in `central-staging`;
+- the contributor has a screenshot of their local development environment.
+
+The change must be **live in production**.
+
+Only contributors whose individual text changes are visible in the production deployment will qualify for Stage 2.
+
+### Recommended Individual Workflow
+
+Each team member should:
+
+1. Receive or create an approved ticket for their text change.
+2. Create their own ticket branch.
+3. Make one clearly identifiable text change.
+4. Test the change locally.
+5. Run the required checks:
+
+   ```sh
+   pnpm test-all
+   
+---
+
 ## Testing
 
 ### Required checks
