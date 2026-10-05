@@ -16,6 +16,8 @@ name: Reviewer notify
 # ~260 calls a run and used up the repo's hourly API budget.
 # Triggers: PR events that change eligibility or slots, a Lead approval or Fork build run finishing
 # (their statuses decide "green", and a status write fires no event), and a 15-minute sweep.
+# Fork build runs started by a dispatch are ignored: those are its 3-minute re-checks, and the relay
+# dispatches this workflow itself when its result changes.
 
 on:
   pull_request_target:
@@ -66,6 +68,8 @@ jobs:
     # Label events only matter for the labels this queue reads.
     if: >-
       vars.IS_BOOTCAMP == 'true' &&
+      !(github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Fork build' &&
+        github.event.workflow_run.event == 'workflow_dispatch') &&
       (!contains(fromJSON('["labeled", "unlabeled"]'), github.event.action) ||
        contains(fromJSON('["ready-for-review", "queued", "sync", "hotfix"]'), github.event.label.name))
     runs-on: ubuntu-latest
