@@ -67,14 +67,17 @@ jobs:
             --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | select(.head.repo.full_name != "'"$REPO"'") | [.number, .user.login, .created_at, (.draft|tostring), (.head.repo.owner.login // "deleted"), ([.labels[].name]|join(",")), (([.assignees[]]|length)|tostring), .head.sha] | map(tostring) | join("|")' |
           while IFS='|' read -r num author created draft owner labels na sha; do
             case ",$labels," in *,sync,*|*,hotfix,*) continue ;; esac
-            # The team is the fork's owner; skip forks that aren't a registered team.
-            grep -qixF "$owner" teams.txt || continue
+            # The team is the fork's owner. Only registered forks can be queued, but forks that
+            # aren't registered are still written through with green=false so the queue step can
+            # strip any stale ready-for-review/queued labels from them.
             team="$owner"
-            state() { gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" --jq ".[] | select(.context == \"$1\") | .state" | head -1; }
-            lead=$(state "$LEAD_CONTEXT")
-            build=$(state "$BUILD_CONTEXT")
             green=false
-            [ "$lead" = "success" ] && [ "$build" = "success" ] && green=true
+            if grep -qixF "$owner" teams.txt; then
+              state() { gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" --jq ".[] | select(.context == \"$1\") | .state" | head -1; }
+              lead=$(state "$LEAD_CONTEXT")
+              build=$(state "$BUILD_CONTEXT")
+              [ "$lead" = "success" ] && [ "$build" = "success" ] && green=true
+            fi
             printf '%s|%s|%s|%s|%s|%s|%s|%s\n' \
               "$num" "$team" "$created" "$draft" "$labels" "$na" "$green" "$sha" >> rows.tsv
           done

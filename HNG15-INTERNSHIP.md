@@ -31,7 +31,7 @@ synced with `zedu-hng`; you just pull before branching.
 5. The team fork builds the PR (**Fork build**), and a **Preview** link appears when it's ready.
 6. Your **team lead** reviews the diff and the preview, then approves — **Lead approved** goes green.
 7. A Zedu reviewer claims it (`/claim`), reviews the diff and the preview, then **squash merges**.
-8. Your team syncs its fork; your change is on `dev` and travels to `staging` and `main` in batches.
+8. Your team syncs its fork's `dev`. Reviewers then promote `dev` → `central-staging` and release that to `zeduchat` in batches, on to `staging` and `main`.
 
 ## 3. Who does what
 
