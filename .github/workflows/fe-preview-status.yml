@@ -30,7 +30,11 @@ concurrency:
 jobs:
   status:
     name: Preview status
-    if: github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != ''
+    # Unrelated labels and title-only edits can't change the preview, so they take no runner.
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'preview') &&
+      (github.event.action != 'edited' || github.event.changes.body != null)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:

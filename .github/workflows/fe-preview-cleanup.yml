@@ -86,28 +86,32 @@ jobs:
           ref: dev
           persist-credentials: false
 
-      # Deploy-triggered sweeps: at most one per 10 minutes, to stay inside the token's API budget.
-      # Counts only runs whose Sweep step actually succeeded (not throttled skips, not closes).
+      # Deploy-triggered sweeps: at most one per 10-minute window, to stay inside the token's API
+      # budget. A cache entry per window marks "swept"; checking it costs no REST calls (the old
+      # throttle listed recent runs and their jobs, dozens of calls per deploy).
+      - name: Window
+        id: window
+        run: echo "key=fe-preview-swept-$(( $(date +%s) / 600 ))" >> "$GITHUB_OUTPUT"
+
       - name: Throttle
         id: throttle
         if: github.event_name == 'workflow_run'
-        env:
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          # A sweep counts from when its Sweep step finished, not when its run was created. Runs created
-          # in the last 30 minutes cover every sweep that can have finished in the last 10 (15 min
-          # timeout plus queueing); all pages are read, newest first, stopping at the first match.
-          since=$(( $(date +%s) - 600 ))
-          created=$(date -u -d "@$(( $(date +%s) - 1800 ))" +%Y-%m-%dT%H:%M:%SZ)
-          runs=$(gh api --paginate "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?created=%3E%3D$created&per_page=100" \
-            | jq -rs --arg me "$RUN_ID" '[.[].workflow_runs[]] | sort_by(.created_at) | reverse | .[]
-                | select((.id | tostring) != $me and .event != "pull_request_target") | .id')
-          for id in $runs; do
-            swept=$(gh api "repos/$REPO/actions/runs/$id/jobs" | jq --argjson since "$since" \
-              '[.jobs[].steps[]? | select(.name == "Sweep" and .conclusion == "success" and ((.completed_at // "1970-01-01T00:00:00Z") | sub("\\.[0-9]+"; "") | fromdateiso8601) > $since)] | length')
-            if [ "$swept" -gt 0 ]; then echo "A sweep finished within 10 minutes (run $id); skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          done
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .swept
+          key: ${{ steps.window.outputs.key }}
+          lookup-only: true
 
       - name: Sweep
-        if: steps.throttle.outputs.skip != 'true'
+        if: steps.throttle.outputs.cache-hit != 'true'
         run: bash .github/scripts/fe-preview.sh sweep
+
+      - name: Mark window swept
+        if: steps.throttle.outputs.cache-hit != 'true'
+        run: touch .swept
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: steps.throttle.outputs.cache-hit != 'true'
+        with:
+          path: .swept
+          key: ${{ steps.window.outputs.key }}

@@ -23,6 +23,9 @@ permissions:
 jobs:
   commitlint:
     name: Validate commit messages
+    # Edits only matter when they change the title (body edits, like ticking template boxes, re-ran
+    # a full pnpm install for nothing).
+    if: github.event.action != 'edited' || github.event.changes.title != null
     runs-on: ubuntu-latest
 
     steps:

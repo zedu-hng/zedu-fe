@@ -33,7 +33,12 @@ jobs:
   # lock and cancel the real build in progress.
   relevant:
     name: Preview-relevant event
-    if: github.repository == 'zedu-hng/zedu-fe' && github.event.pull_request.draft == false
+    # Coarse filter first, so unrelated labels and title-only edits take no runner at all; this job
+    # then compares the Backend URL line for body edits.
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && github.event.pull_request.draft == false &&
+      (github.event.action != 'labeled' || github.event.label.name == 'preview') &&
+      (github.event.action != 'edited' || github.event.changes.body != null)
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
