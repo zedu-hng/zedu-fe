@@ -132,9 +132,28 @@ queued() { # pr; env ACTION, LABEL, BODY_CHANGED from the event
   fi
   read -r host _ < <(backend "$1") || return 0   # an invalid Backend URL is reported by the deploy side
   read -r id st ssha _ shost _ <<< "$(read_state "$1")"
-  # Same commit and backend already live: the build will be a no-op, so don't flip Preview to pending.
-  if [ "$st" = active ] && [ "$ssha" = "$sha" ] && [ "$shost" = "$host" ] && [ "${ACTION:-}" != labeled ]; then return 0; fi
+  # Same commit and backend already live: the build will be a no-op (labels included), so don't flip
+  # Preview to pending. Expired, evicted and failed previews aren't active, so the label still revives them.
+  if [ "$st" = active ] && [ "$ssha" = "$sha" ] && [ "$shost" = "$host" ]; then return 0; fi
   status "$sha" Preview pending "Building on a GitHub runner (backend $host)"
+}
+
+# The deploy job only runs after a successful build, so a failed or cancelled build would leave the
+# "Building" status from `queued` pending forever. Only that marker is replaced.
+buildend() { # sha conclusion run-url
+  local cur
+  cur=$(gh api "repos/$REPO/commits/$1/status" | jq -r '[.statuses[] | select(.context == "Preview")][0] | "\(.state)|\(.description)"')
+  [[ "$cur" == "pending|Building"* ]] || return 0
+  if [ "$2" = cancelled ]; then
+    # Cancelled because a newer event restarted the build for this commit: that run reports instead.
+    local running
+    running=$(gh api "repos/$REPO/actions/workflows/fe-preview-build.yml/runs?head_sha=$1&per_page=20" \
+      --jq '[.workflow_runs[] | select(.status != "completed")] | length')
+    (( running == 0 )) || return 0
+    status "$1" Preview failure "Preview build was cancelled; push or add the preview label to retry" "$3"
+  else
+    status "$1" Preview failure "Preview build $2; see the build log" "$3"
+  fi
 }
 
 deploy_tag() { # pr sha tag host comment-id
@@ -315,6 +334,7 @@ sweep() {
 
 case "${1:-}" in
   deploy) deploy "${2:?head sha}" "${3:--}" "${4:-}" ;;
+  buildend) buildend "${2:?sha}" "${3:?conclusion}" "${4:-}" ;;
   queued) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Usage: $0 queued <pr>" >&2; exit 1; }; queued "$2" ;;
   watch) watch "${2:?deployment}" ;;
   settle) settle "${2:?pr}" "${3:?sha}" "${4:?deployment}" "${5:?result}" ;;
