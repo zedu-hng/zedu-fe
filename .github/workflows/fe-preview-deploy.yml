@@ -1,0 +1,100 @@
+name: FE preview deploy
+
+# Trusted half of FE PR previews. Runs after "FE preview build" with the base repo's token and
+# secrets; never checks out PR code. It recomputes the PR, gate and backend itself (the build's
+# meta.json sits next to PR code, so it isn't trusted), pushes the built image to GHCR and asks
+# Coolify to deploy it as a preview. Logic: .github/scripts/fe-preview.sh.
+#
+# Inert until configured: vars.COOLIFY_URL, vars.COOLIFY_PREVIEW_APP, secrets.COOLIFY_TOKEN.
+# Optional: vars.PREVIEW_CAP (30), vars.PREVIEW_TTL_HOURS (48).
+
+on:
+  workflow_run:
+    workflows: ["FE preview build"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+  packages: write
+  statuses: write
+  issues: write
+  pull-requests: write
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
+  COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+  COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+  COOLIFY_PREVIEW_APP: ${{ vars.COOLIFY_PREVIEW_APP }}
+  PREVIEW_CAP: ${{ vars.PREVIEW_CAP || '30' }}
+  PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '48' }}
+
+jobs:
+  deploy:
+    name: Deploy preview
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Cap counting and state comments assume one writer at a time.
+    concurrency:
+      group: fe-preview-state
+      cancel-in-progress: false
+    outputs:
+      deployment: ${{ steps.deploy.outputs.deployment }}
+      pr: ${{ steps.deploy.outputs.pr }}
+      sha: ${{ steps.deploy.outputs.sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      # Skipped builds upload nothing; a missing artifact just means there's nothing to deploy.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        continue-on-error: true
+        with:
+          name: fe-preview
+          path: ${{ runner.temp }}/artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Log in to GHCR
+        env:
+          ACTOR: ${{ github.actor }}
+        run: echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+
+      - name: Deploy
+        id: deploy
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          ARTIFACT: ${{ runner.temp }}/artifact
+        run: |
+          [ -f "$ARTIFACT/meta.json" ] || { echo "Build uploaded nothing; previews off or not needed."; exit 0; }
+          image="$ARTIFACT/image.tar.gz"; [ -f "$image" ] || image=-
+          # meta.json is untrusted; its backend host is only compared, never used.
+          built=$(jq -r '.backend_host // empty' "$ARTIFACT/meta.json" 2>/dev/null || true)
+          bash .github/scripts/fe-preview.sh deploy "$SHA" "$image" "$built"
+
+  watch:
+    name: Wait for Coolify
+    needs: deploy
+    if: needs.deploy.outputs.deployment != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Watch deployment
+        env:
+          PR: ${{ needs.deploy.outputs.pr }}
+          SHA: ${{ needs.deploy.outputs.sha }}
+          DEPLOYMENT: ${{ needs.deploy.outputs.deployment }}
+        run: bash .github/scripts/fe-preview.sh watch "$PR" "$SHA" "$DEPLOYMENT"

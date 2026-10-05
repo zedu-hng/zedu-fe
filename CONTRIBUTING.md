@@ -676,13 +676,13 @@ Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to
 - On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
 - No build showing at all? Check that Actions is enabled in your fork and that it's synced.
 
-**Previews.** Once your team lead approves, a preview of your PR deploys automatically at `https://<PR number>.hng.groups.zedu.chat` and a bot comments the link. Reviewers can also request one with the `preview` label. Previews:
+**Previews.** Every PR from a registered team org gets a preview at `https://<PR number>.preview.groups.zedu.chat`, rebuilt on every push. Zedu builds it on GitHub's runners and hosts it, so your team sets nothing up. PRs from other forks get one when a reviewer adds the `preview` label.
 
-- run against the shared `dev` backend, so they show exactly what reviewers will test;
-- rebuild on every push while active;
-- are removed when the PR closes, after 24 hours without a push, or when the running-preview cap is reached (oldest first). Push a commit or ask a reviewer to bring one back.
+- The **Preview** check links to it (Details) once it's live, and a bot comment shows the link, the commit and the backend it uses.
+- It runs against the shared `dev` backend, exactly what reviewers test. If your PR needs backend work that isn't on `dev` yet, add a `Backend URL:` line to the PR description with that backend's host (for example `https://api.<team>.groups.zedu.chat`). The **Backend dependency** check then fails until the backend lands on `dev` and you delete the line, so the PR can't merge against unreleased backend code.
+- It's removed when the PR closes or after 48 hours without a push; the link comes back on your next push. Google sign-in and calls don't work in previews; use email login.
 
-Before approval, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
+Before you open the PR, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
 The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
 

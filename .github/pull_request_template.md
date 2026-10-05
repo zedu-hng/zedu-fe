@@ -29,6 +29,13 @@
 
 <!-- The expected behaviour after following the steps above. -->
 
+## Backend
+
+<!-- Leave this section empty: your preview runs against the dev backend.
+     Only if this PR needs backend work that isn't on dev yet, add a line here starting with "Backend URL:"
+     followed by that backend's host, for example https://api.<team>.groups.zedu.chat. The Backend dependency
+     check then blocks merging until the backend lands on dev and you delete the line. -->
+
 ## Test evidence
 
 <!-- The Fork build check reports the build result automatically. Say which backend you tested against,
