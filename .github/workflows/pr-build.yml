@@ -8,6 +8,8 @@ name: PR build
 #
 # First build after opening a PR: Actions -> PR build -> Run workflow on the branch (or push a commit).
 # Only runs when the fork sets FORK_BUILD_ENABLED=true; repo variables are not copied to forks.
+# If the fork also sets the Vercel secrets, the build deploys a preview and records it as the
+# `zedu/preview` commit status, which the review repo's fork-build.yml relays onto the PR.
 
 on:
   push:
@@ -19,6 +21,7 @@ concurrency:
 
 permissions:
   contents: read
+  statuses: write
 
 jobs:
   gate:
@@ -92,3 +95,30 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+      # Optional: only if the fork set the Vercel secrets. A failed deploy does not fail the build.
+      - name: Deploy preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          status() { gh api "repos/$REPO/statuses/$SHA" -f state="$1" -f context="zedu/preview" -f description="$2" ${3:+-f target_url="$3"} >/dev/null; }
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::Vercel secrets not set; skipping preview deploy."
+            exit 0
+          fi
+          npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
+          npx --yes vercel@latest build --token="$VERCEL_TOKEN"
+          if ! npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN" > deploy.out 2>&1; then
+            tail -50 deploy.out
+            status failure "Preview deploy failed"
+            echo "::warning::Vercel preview deploy failed; the build gate still passed."
+            exit 0
+          fi
+          url=$(tail -1 deploy.out)
+          echo "Preview: $url"
+          status success "Preview deployed" "$url"
