@@ -69,7 +69,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-07",
-    name: "Ihejirika Blessing Onyinyechukwu",
+    name: "Ihejirika Blessing Onyinye",
     username: "Onyinyechukwu",
     zeduName: "Onyinyechukwu",
     background: "Backend Developer",
