@@ -57,9 +57,9 @@ Cypress is already a dev dependency (`pnpm cypress`). An editor with ESLint and 
 
 ## Getting Started
 
-### 1. Fork and clone
+### 1. Clone the team fork
 
-Fork **`zedu-hng/zedu-fe`** into your team's GitHub org (the review repo, not `zeduchat`), then clone **your team's fork**:
+Your team org already forked **`zedu-hng/zedu-fe`** into GitHub (the review repo, not `zeduchat`) — a one-time setup by your lead. You don't create your own fork; clone **the team fork**:
 
 ```sh
 git clone git@github.com:<your-team>/zedu-fe.git
@@ -573,9 +573,9 @@ Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in 
 
 The short version:
 
-> Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → your fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
+> Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → the team fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
 
-Reviewers and team leads: [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) has the org and fork settings and the sync/release runbook.
+New to the internship? [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) is a one-page overview of how a ticket flows from the team fork to `dev`.
 
 ### 1. Ground rules
 
@@ -586,7 +586,7 @@ Reviewers and team leads: [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) has the
 - **One open PR per author.**
 - **Your team lead reviews first.** They approve on your PR; Zedu reviewers pick it up after that.
 - **Don't change protected files** (see [Protected files](#5-protected-files)) unless a reviewer has agreed first.
-- **You never push to `zedu-hng` or `zeduchat` directly.** All work happens in your fork and comes in as a PR.
+- **You never push to `zedu-hng` or `zeduchat` directly.** All work happens in your team's fork and comes in as a PR.
 - **AI is a tool, not an authority.** You own everything you submit. If you can't explain it, don't submit it.
 
 ### 2. Repositories and branches
@@ -606,7 +606,7 @@ zeduchat/zedu-fe              Zedu's repo. Reviewers send batches here; you neve
 
 Branches in your team's fork:
 
-| Branch in your fork         | Purpose                                                                                                                                             |
+| Branch in the team fork     | Purpose                                                                                                                                             |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dev`                       | Mirror of `zedu-hng:dev`. Sync only; never commit to it.                                                                                            |
 | `staging`                   | Team sandbox. Your lead merges ticket branches here to try them live on `<team>.groups.zedu.chat`. Never a PR source; reset it from `dev` any time. |
@@ -618,7 +618,7 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
 
 1. Fork `zedu-hng/zedu-fe` into your team's GitHub org.
 2. In the fork, go to **Actions** and enable workflows. Forks have them off by default, and your PR builds run there.
-3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables → New repository variable**, and add `APP_ENV_FILE` with the **non-sensitive** values the build needs, one `KEY=value` per line (for example `NEXT_PUBLIC_API_URL=...`; the keys are in `env.example`). CI writes them to `.env` before building. Anything sensitive (tokens, certificates) must be a **secret**, never a variable: GitHub doesn't mask variable values in logs if a workflow prints them. Without this, builds succeed but the app has no backend. Full fork setup, including the preview secrets, is in [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md).
+3. Point CI at your team's backend: in the fork, go to **Settings → Secrets and variables → Actions → Variables → New repository variable**, and add `APP_ENV_FILE` with the **non-sensitive** values the build needs, one `KEY=value` per line (for example `NEXT_PUBLIC_API_URL=...`; the keys are in `env.example`). CI writes them to `.env` before building. Anything sensitive (tokens, certificates) must be a **secret**, never a variable: GitHub doesn't mask variable values in logs if a workflow prints them. Without this, builds succeed but the app has no backend.
 4. Each contributor clones the **team fork** and installs with `pnpm install` (see [Getting Started](#getting-started)).
 
 `pnpm install` installs the Husky hooks. On commit, Prettier, ESLint, TypeScript and the production build run, and commitlint checks your message.
@@ -626,7 +626,7 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
 ### 4. Working on a ticket
 
 1. Move the ticket to **IN PROGRESS**.
-2. Sync your fork's `dev` from `zedu-hng` (GitHub **Sync fork** button), then pull.
+2. Pull the latest `dev` from your team's fork. Your team lead keeps it synced with `zedu-hng` (**Sync fork**); you don't create or sync a fork yourself.
 3. Branch from `dev` using the ticket ID:
 
    ```
@@ -640,7 +640,7 @@ Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **
 
 **Multi-ticket features:** GitHub doesn't support stacked PRs across forks, and a PR's base must be a branch in `zedu-hng`, so you can't base one ticket's PR on another's fork branch. Order the tickets so the additive, non-visible parts land first, and open each dependent PR after the previous one merges: sync `dev`, branch from it, and use the next ticket. The **PR title** check requires the PR's ticket to match its branch.
 
-**Testing combinations:** you can merge ticket branches into a private branch in your fork to test them together. Never open a PR from that branch.
+**Testing combinations:** you can merge ticket branches into a private branch in the team fork to test them together. Never open a PR from that branch.
 
 ### 5. Protected files
 
@@ -655,7 +655,7 @@ These files are owned by the reviewers. The **Protected files** check fails any 
 
 ### 6. Opening a PR
 
-1. Open a PR from your fork's ticket branch into **`zedu-hng/zedu-fe:dev`**. Open it from the ticket branch, not your fork's `dev`: that would drag in everything else merged there.
+1. Open a PR from your team fork's ticket branch into **`zedu-hng/zedu-fe:dev`**. Open it from the ticket branch, not the team fork's `dev`: that would drag in everything else merged there.
 2. Fill in [`.github/pull_request_template.md`](.github/pull_request_template.md) completely:
    - the ticket link;
    - what changed and why;
@@ -669,12 +669,12 @@ These files are owned by the reviewers. The **Protected files** check fails any 
 
 ### 7. How your PR gets built
 
-Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to your team's backend. Zedu never holds your config or secrets.
+The team fork builds your PR, with the team fork's `APP_ENV_FILE`, so the build talks to your team's backend. Zedu never holds your config or secrets.
 
 - **Builds run only while your PR is open.** Pushes to a ticket branch without an open PR skip the build. Docs-only pushes never build.
-- **First build:** opening the PR doesn't trigger one. In your fork, go to **Actions → PR build → Run workflow** on your branch, or push a commit. After that, every push builds automatically.
+- **First build:** opening the PR doesn't trigger one. In the team fork, go to **Actions → PR build → Run workflow** on your branch, or push a commit. After that, every push builds automatically.
 - On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
-- No build showing at all? Check that Actions is enabled in your fork and that it's synced.
+- No build showing at all? Check that Actions is enabled in the team fork and that it's synced.
 
 **Previews.** Every PR from a registered team org gets a preview at `https://<PR number>.preview.groups.zedu.chat`, rebuilt on every push. Zedu builds it on GitHub's runners and hosts it, so your team sets nothing up. PRs from other forks get one when a reviewer adds the `preview` label.
 
@@ -682,7 +682,7 @@ Your fork builds your PR, with your fork's `APP_ENV_FILE`, so the build talks to
 - It runs against the shared `dev` backend, exactly what reviewers test. If your PR needs backend work that isn't on `dev` yet, add a `Backend URL:` line to the PR description with that backend's host (for example `https://api.<team>.groups.zedu.chat`). The **Backend dependency** check then fails until the backend lands on `dev` and you delete the line, so the PR can't merge against unreleased backend code.
 - It's removed when the PR closes or after 48 hours without a push; the link comes back on your next push. Google sign-in and calls don't work in previews; use email login.
 
-Before you open the PR, check your work locally, or ask your lead to merge your branch into your fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
+Before you open the PR, check your work locally, or ask your lead to merge your branch into the team fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
 The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
 
@@ -696,7 +696,7 @@ The other checks (lint, types, build, security scans, **Commitlint**, **Branch n
 - Reviewers **squash-merge** into `dev`. Your PR title becomes the commit message, so keep it conventional.
 - Contributors don't merge their own PRs.
 
-After merge, reviewers promote `dev` → `central-staging` with a merge commit, and send `central-staging` to `zeduchat` in batches. Sync your fork's `dev` (**Sync fork**) to pull in what's merged. The ticket goes **MERGED → VERIFIED → CLOSED** once the change is verified.
+After merge, reviewers promote `dev` → `central-staging` with a merge commit, and send `central-staging` to `zeduchat` in batches. Your lead syncs the team fork's `dev` (**Sync fork**); you pull to pick up what's merged. The ticket goes **MERGED → VERIFIED → CLOSED** once the change is verified.
 
 ### 9. Shippable slices
 
