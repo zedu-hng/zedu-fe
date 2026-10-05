@@ -218,7 +218,10 @@ settle() { # pr sha deployment result
     finished)
       write_state "$1" active "$sha" "$tag" "$host" - "$(url "$1") serves ${sha:0:7} against \`$host\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$id"
       status "$sha" Preview success "Preview is live" "$(url "$1")" ;;
-    failed|cancelled*) status "$sha" Preview failure "Coolify deployment $4; see the Coolify logs" ;;
+    # Not active any more, so the next push or `preview` label redeploys instead of skipping.
+    failed|cancelled*)
+      write_state "$1" error "$sha" "$tag" "$host" - "Preview deployment $4 in Coolify. Push a commit or ask a reviewer for the \`preview\` label to retry." "$id"
+      status "$sha" Preview failure "Coolify deployment $4; push or add the preview label to retry" ;;
     *) echo "PR #$1: deployment $3 still $4; the sweep settles it." ;;
   esac
 }
@@ -249,7 +252,9 @@ sweep() {
           case "$s" in
             finished) status "$sha" Preview success "Preview is live" "$(url "$n")"
                       write_state "$n" active "$sha" "$tag" "$host" - "$(url "$n") serves ${sha:0:7} against \`$host\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$id" ;;
-            failed|cancelled*) status "$sha" Preview failure "Coolify deployment $s; see the Coolify logs" ;;
+            failed|cancelled*)
+              write_state "$n" error "$sha" "$tag" "$host" - "Preview deployment $s in Coolify. Push a commit or ask a reviewer for the \`preview\` label to retry." "$id"
+              status "$sha" Preview failure "Coolify deployment $s; push or add the preview label to retry" ;;
           esac
         fi ;;
       queued)
