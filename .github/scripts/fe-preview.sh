@@ -2,6 +2,7 @@
 # Trusted half of FE PR previews. Never runs PR code; the build artifact is only ever loaded as an image.
 #
 #   fe-preview.sh deploy <head-sha> <image.tar.gz|-> [built-host]   after a build: gate, push, deploy, statuses
+#   fe-preview.sh queued <pr>                          on a PR event: Preview=pending "building", or "no preview"
 #   fe-preview.sh watch <deployment-uuid>              wait for Coolify; prints result= to GITHUB_OUTPUT
 #   fe-preview.sh settle <pr> <sha> <deployment> <result>  set Preview, only if that deployment is current
 #   fe-preview.sh close <pr>                           PR closed: delete preview and image tags
@@ -113,6 +114,48 @@ gate_of() { # head-repo labels-json -> reviewer|registered|label|skip
   else echo skip; fi
 }
 
+# Runs on the PR event itself (trusted, pull_request_target), so Preview shows up next to the other
+# checks while the build is still running instead of only once the deploy starts.
+queued() { # pr; env ACTION, LABEL, BODY_CHANGED from the event
+  [ "$(cfg PREVIEW_ENABLED)" = true ] || return 0
+  case "${ACTION:-}" in
+    edited) [ "${BODY_CHANGED:-}" = true ] || return 0 ;;
+    labeled) [ "${LABEL:-}" = preview ] || return 0 ;;
+  esac
+  local pull sha org gate host id st ssha shost
+  pull=$(gh api "repos/$REPO/pulls/$1")
+  [ "$(jq -r .draft <<< "$pull")" = false ] || return 0
+  sha=$(jq -r .head.sha <<< "$pull"); org=$(jq -r '.head.repo.full_name // "" | split("/")[0]' <<< "$pull")
+  gate=$(gate_of "$(jq -r '.head.repo.full_name // ""' <<< "$pull")" "$(jq -c '[.labels[].name]' <<< "$pull")")
+  if [ "$gate" = skip ]; then
+    status "$sha" Preview success "No automatic preview for $org forks; a reviewer can add the preview label"; return 0
+  fi
+  read -r host _ < <(backend "$1") || return 0   # an invalid Backend URL is reported by the deploy side
+  read -r id st ssha _ shost _ <<< "$(read_state "$1")"
+  # Same commit and backend already live: the build will be a no-op (labels included), so don't flip
+  # Preview to pending. Expired, evicted and failed previews aren't active, so the label still revives them.
+  if [ "$st" = active ] && [ "$ssha" = "$sha" ] && [ "$shost" = "$host" ]; then return 0; fi
+  status "$sha" Preview pending "Building on a GitHub runner (backend $host)"
+}
+
+# The deploy job only runs after a successful build, so a failed or cancelled build would leave the
+# "Building" status from `queued` pending forever. Only that marker is replaced.
+buildend() { # sha conclusion run-url
+  local cur
+  cur=$(gh api "repos/$REPO/commits/$1/status" | jq -r '[.statuses[] | select(.context == "Preview")][0] | "\(.state)|\(.description)"')
+  [[ "$cur" == "pending|Building"* ]] || return 0
+  if [ "$2" = cancelled ]; then
+    # Cancelled because a newer event restarted the build for this commit: that run reports instead.
+    local running
+    running=$(gh api "repos/$REPO/actions/workflows/fe-preview-build.yml/runs?head_sha=$1&per_page=20" \
+      --jq '[.workflow_runs[] | select(.status != "completed")] | length')
+    (( running == 0 )) || return 0
+    status "$1" Preview failure "Preview build was cancelled; push or add the preview label to retry" "$3"
+  else
+    status "$1" Preview failure "Preview build $2; see the build log" "$3"
+  fi
+}
+
 deploy_tag() { # pr sha tag host comment-id
   local res dep
   res=$(coolify POST "/deploy?uuid=$COOLIFY_PREVIEW_APP&pr=$1&docker_tag=$3") || res=""
@@ -155,7 +198,8 @@ deploy() { # head-sha image
 
   gate=$(gate_of "$head_repo" "$labels")
   if [ "$gate" = skip ]; then
-    [ "$st" = skipped ] || write_state "$pr" skipped "$sha" - - - "No preview: \`$org\` isn't a registered team org. A reviewer can add the \`preview\` label." "$id"
+    [ "$st" = skipped ] || write_state "$pr" skipped "$sha" - - - "No automatic preview for \`$org\` forks. A reviewer can add the \`preview\` label." "$id"
+    status "$sha" Preview success "No automatic preview for $org forks; a reviewer can add the preview label"
     return 0
   fi
   # The body was edited after this build started; that edit triggered a newer build.
@@ -198,7 +242,10 @@ deploy() { # head-sha image
 watch() { # deployment-uuid -> result=<status> in GITHUB_OUTPUT; writes nothing else
   local s="" i
   for (( i = 0; i < 60; i++ )); do
-    s=$(coolify GET "/deployments/$1" | jq -r '.status // empty')
+    if ! s=$(coolify GET "/deployments/$1" | jq -r '.status // empty'); then
+      echo "::error::Coolify refused the deployment status request. COOLIFY_TOKEN needs the read permission."
+      s=unreadable; break
+    fi
     case "$s" in finished|failed|cancelled*) break ;; esac
     dry && break; sleep 15
   done
@@ -218,7 +265,11 @@ settle() { # pr sha deployment result
     finished)
       write_state "$1" active "$sha" "$tag" "$host" - "$(url "$1") serves ${sha:0:7} against \`$host\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$id"
       status "$sha" Preview success "Preview is live" "$(url "$1")" ;;
-    failed|cancelled*) status "$sha" Preview failure "Coolify deployment $4; see the Coolify logs" ;;
+    # Not active any more, so the next push or `preview` label redeploys instead of skipping.
+    failed|cancelled*)
+      write_state "$1" error "$sha" "$tag" "$host" - "Preview deployment $4 in Coolify. Push a commit or ask a reviewer for the \`preview\` label to retry." "$id"
+      status "$sha" Preview failure "Coolify deployment $4; push or add the preview label to retry" ;;
+    unreadable) status "$sha" Preview pending "Deploying; status unreadable (COOLIFY_TOKEN needs read)" "$(url "$1")" ;;
     *) echo "PR #$1: deployment $3 still $4; the sweep settles it." ;;
   esac
 }
@@ -249,7 +300,9 @@ sweep() {
           case "$s" in
             finished) status "$sha" Preview success "Preview is live" "$(url "$n")"
                       write_state "$n" active "$sha" "$tag" "$host" - "$(url "$n") serves ${sha:0:7} against \`$host\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$id" ;;
-            failed|cancelled*) status "$sha" Preview failure "Coolify deployment $s; see the Coolify logs" ;;
+            failed|cancelled*)
+              write_state "$n" error "$sha" "$tag" "$host" - "Preview deployment $s in Coolify. Push a commit or ask a reviewer for the \`preview\` label to retry." "$id"
+              status "$sha" Preview failure "Coolify deployment $s; push or add the preview label to retry" ;;
           esac
         fi ;;
       queued)
@@ -281,6 +334,8 @@ sweep() {
 
 case "${1:-}" in
   deploy) deploy "${2:?head sha}" "${3:--}" "${4:-}" ;;
+  buildend) buildend "${2:?sha}" "${3:?conclusion}" "${4:-}" ;;
+  queued) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Usage: $0 queued <pr>" >&2; exit 1; }; queued "$2" ;;
   watch) watch "${2:?deployment}" ;;
   settle) settle "${2:?pr}" "${3:?sha}" "${4:?deployment}" "${5:?result}" ;;
   close) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Usage: $0 close <pr>" >&2; exit 1; }; close "$2" ;;
