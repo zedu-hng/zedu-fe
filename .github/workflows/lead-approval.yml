@@ -1,6 +1,6 @@
 name: Lead approval
 
-# Sets the "Lead approval" commit status: green once one of the PR author's team leads has an
+# Sets the "Lead approved" commit status: green once one of the PR author's team leads has an
 # approving review, red otherwise. Reads teams.yml from the base branch, so a PR can't change it.
 #
 # A review on a fork PR runs with a read-only token and cannot set a status, so reviews are picked
@@ -39,13 +39,13 @@ concurrency:
 env:
   GH_TOKEN: ${{ github.token }}
   REPO: ${{ github.repository }}
-  CONTEXT: Lead approval
+  CONTEXT: Lead approved
 
 jobs:
   # Scheduled: re-dispatch the check for open contributor PRs whose status isn't green yet.
   sweep:
     name: Re-check pending PRs
-    if: github.event_name == 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name == 'schedule'
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -66,7 +66,7 @@ jobs:
 
   approval:
     name: Check lead approval
-    if: github.event_name != 'schedule'
+    if: vars.IS_BOOTCAMP == 'true' && github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +88,8 @@ jobs:
             echo "sha=$(gh api "repos/$REPO/pulls/$pr" --jq .head.sha)"
             echo "author=$(gh api "repos/$REPO/pulls/$pr" --jq .user.login)"
             echo "head_repo=$(gh api "repos/$REPO/pulls/$pr" --jq .head.repo.full_name)"
+            echo "head_owner=$(gh api "repos/$REPO/pulls/$pr" --jq '.head.repo.owner.login // ""')"
+            echo "labels=$(gh api "repos/$REPO/pulls/$pr" --jq '[.labels[].name] | join(",")')"
           } >> "$GITHUB_OUTPUT"
 
       - name: Resolve leads
@@ -96,6 +98,7 @@ jobs:
         env:
           AUTHOR: ${{ steps.pr.outputs.author }}
           HEAD_REPO: ${{ steps.pr.outputs.head_repo }}
+          HEAD_OWNER: ${{ steps.pr.outputs.head_owner }}
         run: |
           if [ "$HEAD_REPO" = "$REPO" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -108,8 +111,8 @@ jobs:
           esac
           ruby -ryaml -e '
             cfg = YAML.load_file(".github/teams.yml") || {}
-            author = ENV.fetch("AUTHOR")
-            team = (cfg["teams"] || {}).values.find { |v| Array(v["members"]).include?(author) }
+            owner = ENV.fetch("HEAD_OWNER", "").downcase
+            name, team = (cfg["teams"] || {}).find { |k, _| k.to_s.downcase == owner }
             if team
               puts "mapped=true"
               puts "leads=#{Array(team["leads"]).join(",")}"
@@ -126,21 +129,36 @@ jobs:
           SKIP: ${{ steps.leads.outputs.skip }}
           MAPPED: ${{ steps.leads.outputs.mapped }}
           LEADS: ${{ steps.leads.outputs.leads }}
+          HEAD_OWNER: ${{ steps.pr.outputs.head_owner }}
+          LABELS: ${{ steps.pr.outputs.labels }}
         run: |
           setstatus() { gh api "repos/$REPO/statuses/$SHA" -f state="$1" -f context="$CONTEXT" -f description="$2" >/dev/null; }
+          case ",$LABELS," in
+            *,sync,*|*,hotfix,*)
+              setstatus success "Sync/hotfix PR; lead approval not enforced"
+              exit 0 ;;
+          esac
           if [ "$SKIP" = "true" ]; then
             setstatus success "Same-repo or bot PR; lead approval not enforced"
             exit 0
           fi
-          if [ "$MAPPED" != "true" ] || [ -z "$LEADS" ]; then
-            setstatus success "No team mapping; lead approval not enforced"
+          if [ "$MAPPED" != "true" ]; then
+            setstatus failure "Fork '$HEAD_OWNER' isn't a registered team; a maintainer must add it to .github/teams.yml"
+            exit 0
+          fi
+          if [ -z "$LEADS" ]; then
+            setstatus failure "Team '$HEAD_OWNER' has no leads in .github/teams.yml"
             exit 0
           fi
           # The effective review state per person is their latest non-comment review, across all pages.
+          # gh can't combine --slurp with --jq (every run failed), so the pages are piped into jq.
+          # pipefail: an API failure must fail the step, not read as "no approvals".
+          set -o pipefail
           approved=$(gh api --paginate --slurp "repos/$REPO/pulls/$PR/reviews?per_page=100" \
-            --jq 'flatten | map(select(.state != "COMMENTED")) | group_by(.user.login) | map(.[-1]) | map(select(.state == "APPROVED")) | .[].user.login')
+            | jq -r 'flatten | map(select(.state != "COMMENTED" and .state != "PENDING")) | group_by(.user.login | ascii_downcase) | map(.[-1]) | map(select(.state == "APPROVED")) | .[].user.login')
           leads_list=$(printf '%s\n' "$LEADS" | tr ',' '\n' | grep -v '^$')
-          hit=$(printf '%s\n' "$approved" | grep -Fxf <(printf '%s\n' "$leads_list") | head -1 || true)
+          # Logins are case-insensitive on GitHub; teams.yml is typed by hand.
+          hit=$(printf '%s\n' "$approved" | grep -Fxif <(printf '%s\n' "$leads_list") | head -1 || true)
           printf 'Leads: %s\nApprovals: %s\n' "$(printf '%s ' $leads_list)" "$(printf '%s ' $approved)"
           if [ -n "$hit" ]; then
             setstatus success "Approved by team lead @$hit"

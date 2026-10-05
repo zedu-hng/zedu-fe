@@ -1,0 +1,113 @@
+name: FE preview cleanup
+
+# Removes a PR's Coolify preview and image tags when it closes. The sweep (cron, and after preview
+# deploys at most every 10 minutes) expires idle previews, starts queued ones and settles
+# deployments the deploy job didn't see finish.
+# Logic: .github/scripts/fe-preview.sh. Never checks out PR code. Inert until configured.
+
+on:
+  pull_request_target:
+    branches:
+      - dev
+    types:
+      - closed
+  # GitHub drops scheduled runs under load (zero ran in this repo's first hours), so the sweep also
+  # runs after every preview deploy. The cron, off the round minutes, covers quiet periods.
+  workflow_run:
+    workflows: ["FE preview deploy"]
+    types:
+      - completed
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  statuses: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  # Same lock as that PR's deploy and settle, so a close can't finish before a running deploy
+  # creates the preview. If a deploy replaces this waiting job, the deploy sees the PR is closed and
+  # cleans up itself.
+  close:
+    name: Remove closed PR's preview
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
+      github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: fe-preview-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_PREVIEW_APP: ${{ vars.COOLIFY_PREVIEW_APP }}
+      PREVIEW_CAP: ${{ vars.PREVIEW_CAP || '30' }}
+      PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '48' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Close
+        env:
+          PR: ${{ github.event.pull_request.number }}
+        run: bash .github/scripts/fe-preview.sh close "$PR"
+
+  # A newer sweep replacing a waiting one is harmless, so all sweeps share one group.
+  sweep:
+    name: Sweep previews
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
+      github.event_name != 'pull_request_target'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: fe-preview-sweep
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+      COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+      COOLIFY_PREVIEW_APP: ${{ vars.COOLIFY_PREVIEW_APP }}
+      PREVIEW_CAP: ${{ vars.PREVIEW_CAP || '30' }}
+      PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '48' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      # Deploy-triggered sweeps: at most one per 10 minutes, to stay inside the token's API budget.
+      # Counts only runs whose Sweep step actually succeeded (not throttled skips, not closes).
+      - name: Throttle
+        id: throttle
+        if: github.event_name == 'workflow_run'
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          # A sweep counts from when its Sweep step finished, not when its run was created. Runs created
+          # in the last 30 minutes cover every sweep that can have finished in the last 10 (15 min
+          # timeout plus queueing); all pages are read, newest first, stopping at the first match.
+          since=$(( $(date +%s) - 600 ))
+          created=$(date -u -d "@$(( $(date +%s) - 1800 ))" +%Y-%m-%dT%H:%M:%SZ)
+          runs=$(gh api --paginate "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?created=%3E%3D$created&per_page=100" \
+            | jq -rs --arg me "$RUN_ID" '[.[].workflow_runs[]] | sort_by(.created_at) | reverse | .[]
+                | select((.id | tostring) != $me and .event != "pull_request_target") | .id')
+          for id in $runs; do
+            swept=$(gh api "repos/$REPO/actions/runs/$id/jobs" | jq --argjson since "$since" \
+              '[.jobs[].steps[]? | select(.name == "Sweep" and .conclusion == "success" and ((.completed_at // "1970-01-01T00:00:00Z") | sub("\\.[0-9]+"; "") | fromdateiso8601) > $since)] | length')
+            if [ "$swept" -gt 0 ]; then echo "A sweep finished within 10 minutes (run $id); skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          done
+
+      - name: Sweep
+        if: steps.throttle.outputs.skip != 'true'
+        run: bash .github/scripts/fe-preview.sh sweep
