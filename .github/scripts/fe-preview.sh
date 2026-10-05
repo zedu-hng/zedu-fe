@@ -2,7 +2,8 @@
 # Trusted half of FE PR previews. Never runs PR code; the build artifact is only ever loaded as an image.
 #
 #   fe-preview.sh deploy <head-sha> <image.tar.gz|-> [built-host]   after a build: gate, push, deploy, statuses
-#   fe-preview.sh watch <pr> <sha> <deployment-uuid>   wait for Coolify, then set the Preview status
+#   fe-preview.sh watch <deployment-uuid>              wait for Coolify; prints result= to GITHUB_OUTPUT
+#   fe-preview.sh settle <pr> <sha> <deployment> <result>  set Preview, only if that deployment is current
 #   fe-preview.sh close <pr>                           PR closed: delete preview and image tags
 #   fe-preview.sh sweep                                expire idle previews, start queued ones
 #
@@ -98,6 +99,13 @@ remove() { # pr new-state message -> 0 when Coolify confirmed the delete
   [ "$2" = removed ] || status "$sha" Preview success "Stopped: $3" ""
 }
 
+gate_of() { # head-repo labels-json -> reviewer|registered|label|skip
+  if [ "$1" = "$REPO" ]; then echo reviewer
+  elif grep -v '^#' .github/preview-orgs | grep -qixF "${1%%/*}"; then echo registered
+  elif jq -e 'index("preview") != null' <<< "$2" >/dev/null; then echo label
+  else echo skip; fi
+}
+
 deploy_tag() { # pr sha tag host comment-id
   local res dep
   res=$(coolify POST "/deploy?uuid=$COOLIFY_PREVIEW_APP&pr=$1&docker_tag=$3") || res=""
@@ -108,8 +116,9 @@ deploy_tag() { # pr sha tag host comment-id
     write_state "$1" error "$2" "$3" "$4" - "Preview failed to start: $why" "$5"
     return 1
   fi
-  status "$2" Preview pending "Deploying in Coolify (backend $4)"
+  # Record the deployment before posting pending, so an older watch can tell it's been superseded.
   write_state "$1" active "$2" "$3" "$4" "$dep" "$(url "$1") is deploying ${2:0:7} against \`$4\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$5"
+  status "$2" Preview pending "Deploying in Coolify (backend $4)"
   [ -n "${GITHUB_OUTPUT:-}" ] && { echo "deployment=$dep"; echo "pr=$1"; echo "sha=$2"; } >> "$GITHUB_OUTPUT"
   return 0
 }
@@ -137,10 +146,7 @@ deploy() { # head-sha image
     status "$sha" "Backend dependency" success "Uses the dev backend"
   fi
 
-  if [ "$head_repo" = "$REPO" ]; then gate=reviewer
-  elif grep -v '^#' .github/preview-orgs | grep -qixF "$org"; then gate=registered
-  elif jq -e 'index("preview") != null' <<< "$labels" >/dev/null; then gate=label
-  else gate=skip; fi
+  gate=$(gate_of "$head_repo" "$labels")
   if [ "$gate" = skip ]; then
     [ "$st" = skipped ] || write_state "$pr" skipped "$sha" - - - "No preview: \`$org\` isn't a registered team org. A reviewer can add the \`preview\` label." "$id"
     return 0
@@ -182,17 +188,31 @@ deploy() { # head-sha image
   deploy_tag "$pr" "$sha" "$tag" "$host" "$id"
 }
 
-watch() { # pr sha deployment-uuid
+watch() { # deployment-uuid -> result=<status> in GITHUB_OUTPUT; writes nothing else
   local s="" i
   for (( i = 0; i < 60; i++ )); do
-    s=$(coolify GET "/deployments/$3" | jq -r '.status // empty')
+    s=$(coolify GET "/deployments/$1" | jq -r '.status // empty')
     case "$s" in finished|failed|cancelled*) break ;; esac
     dry && break; sleep 15
   done
-  case "$s" in
-    finished) status "$2" Preview success "Preview is live" "$(url "$1")" ;;
-    failed|cancelled*) status "$2" Preview failure "Coolify deployment $s; see the Coolify logs" ;;
-    *) status "$2" Preview pending "Still deploying; the next sweep updates this" ;;
+  echo "Deployment $1: ${s:-unknown}"
+  [ -n "${GITHUB_OUTPUT:-}" ] && echo "result=${s:-unknown}" >> "$GITHUB_OUTPUT"
+  return 0
+}
+
+# Runs under the fe-preview-state lock: a newer deployment for the same PR wins.
+settle() { # pr sha deployment result
+  local id st sha tag host dep at
+  read -r id st sha tag host dep at <<< "$(read_state "$1")"
+  if [ "$st" != active ] || [ "$dep" != "$3" ]; then
+    echo "PR #$1: deployment $3 was superseded or removed; leaving Preview alone."; return 0
+  fi
+  case "$4" in
+    finished)
+      write_state "$1" active "$sha" "$tag" "$host" - "$(url "$1") serves ${sha:0:7} against \`$host\`. It's removed when the PR closes, or after ${TTL_H}h without a push." "$id"
+      status "$sha" Preview success "Preview is live" "$(url "$1")" ;;
+    failed|cancelled*) status "$sha" Preview failure "Coolify deployment $4; see the Coolify logs" ;;
+    *) echo "PR #$1: deployment $3 still $4; the sweep settles it." ;;
   esac
 }
 
@@ -226,15 +246,28 @@ sweep() {
           esac
         fi ;;
       queued)
-        if (( $(active_previews | wc -l) < CAP )); then deploy_tag "$n" "$sha" "$tag" "$host" "$id" || true; fi ;;
+        (( $(active_previews | wc -l) < CAP )) || continue
+        # Re-check what was true at queue time: head, gate and backend may have changed since.
+        local pull why="" bhost
+        pull=$(gh api "repos/$REPO/pulls/$n")
+        if [ "$(jq -r .head.sha <<< "$pull")" != "$sha" ]; then why="a newer push superseded it"
+        elif [ "$(gate_of "$(jq -r '.head.repo.full_name // ""' <<< "$pull")" "$(jq -c '[.labels[].name]' <<< "$pull")")" = skip ]; then why="the PR no longer qualifies for a preview"
+        elif ! read -r bhost _ < <(backend "$n") || [ "$bhost" != "$host" ]; then why="its Backend URL changed"
+        fi
+        if [ -n "$why" ]; then
+          write_state "$n" removed "$sha" "$tag" "$host" - "Queue entry dropped: $why. The next build re-queues it if it still qualifies." "$id"
+        else
+          deploy_tag "$n" "$sha" "$tag" "$host" "$id" || true
+        fi ;;
     esac
   done
 }
 
 case "${1:-}" in
   deploy) deploy "${2:?head sha}" "${3:--}" "${4:-}" ;;
-  watch) watch "${2:?pr}" "${3:?sha}" "${4:?deployment}" ;;
+  watch) watch "${2:?deployment}" ;;
+  settle) settle "${2:?pr}" "${3:?sha}" "${4:?deployment}" "${5:?result}" ;;
   close) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "Usage: $0 close <pr>" >&2; exit 1; }; close "$2" ;;
   sweep) sweep ;;
-  *) echo "Usage: $0 deploy <sha> <image> | watch <pr> <sha> <deployment> | close <pr> | sweep" >&2; exit 1 ;;
+  *) echo "Usage: $0 deploy <sha> <image> [host] | watch <deployment> | settle <pr> <sha> <deployment> <result> | close <pr> | sweep" >&2; exit 1 ;;
 esac

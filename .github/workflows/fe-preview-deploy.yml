@@ -80,12 +80,15 @@ jobs:
           built=$(jq -r '.backend_host // empty' "$ARTIFACT/meta.json" 2>/dev/null || true)
           bash .github/scripts/fe-preview.sh deploy "$SHA" "$image" "$built"
 
+  # Waits without the lock, so a slow deployment doesn't hold up other PRs.
   watch:
     name: Wait for Coolify
     needs: deploy
     if: needs.deploy.outputs.deployment != ''
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      result: ${{ steps.watch.outputs.result }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -93,8 +96,30 @@ jobs:
           persist-credentials: false
 
       - name: Watch deployment
+        id: watch
+        env:
+          DEPLOYMENT: ${{ needs.deploy.outputs.deployment }}
+        run: bash .github/scripts/fe-preview.sh watch "$DEPLOYMENT"
+
+  # Writes Preview under the lock, and only if this deployment is still the PR's current one.
+  settle:
+    name: Settle preview status
+    needs: [deploy, watch]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: fe-preview-state
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Settle
         env:
           PR: ${{ needs.deploy.outputs.pr }}
           SHA: ${{ needs.deploy.outputs.sha }}
           DEPLOYMENT: ${{ needs.deploy.outputs.deployment }}
-        run: bash .github/scripts/fe-preview.sh watch "$PR" "$SHA" "$DEPLOYMENT"
+          RESULT: ${{ needs.watch.outputs.result }}
+        run: bash .github/scripts/fe-preview.sh settle "$PR" "$SHA" "$DEPLOYMENT" "$RESULT"
