@@ -203,4 +203,14 @@ export const contributors: Contributor[] = [
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
   },
+  {
+    id: "kestrel-20",
+    name: "Adewumi Oluwasanmi",
+    username: "AdewumiOluwasanmi",
+    zeduName: "AdewumiOluwasanmi",
+    background: "Backend Developer",
+    email: "oluwasanmiadewumi7@gmail.com",
+    linkedin: "oluwasanmi-adewumi-b53799268",
+    avatarGradient: "from-secondary-500 to-tertiary-400",
+  },
 ];
