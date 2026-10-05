@@ -212,3 +212,4 @@ export const contributors: Contributor[] = [
     email: "oyelamionaopemipo@gmail.com",
     avatarGradient: "from-primary-500 to-blue-400",
   },
+];
