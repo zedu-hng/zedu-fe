@@ -37,21 +37,21 @@ jobs:
       - name: Re-run failed reviews for open PRs
         run: |
           set -o pipefail
-          # Two list calls instead of one or two per open PR: open PR heads, then the latest 200 review
-          # runs. A head whose newest review run failed gets that run re-run.
+          # A fixed handful of list calls instead of one or two per open PR: open PR heads, the newest
+          # failed / cancelled / timed-out review runs (filtered by the API, so age doesn't matter),
+          # and the latest 100 review runs to spot heads that have since passed.
           gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
             --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.head.sha) \(.number)"' > heads.txt
-          for page in 1 2; do
-            gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?event=pull_request&per_page=100&page=$page" \
-              --jq '.workflow_runs[] | "\(.head_sha) \(.id) \(.status) \(.conclusion // "")"'
-          done > runs.txt
-          # runs.txt is newest first, so the first line per head is its latest run.
-          awk 'NR == FNR { pr[$1] = $2; next } ($1 in pr) && !seen[$1]++ { print pr[$1], $2, $3, $4 }' heads.txt runs.txt |
-          while read -r number run_id status conclusion; do
-            case "$status:$conclusion" in
-              completed:failure|completed:cancelled|completed:timed_out)
-                echo "PR #$number: re-running review run $run_id"
-                gh run rerun "$run_id" --repo "$REPO" --failed || true ;;
-              *) echo "PR #$number: review run $run_id is ${conclusion:-$status}; nothing to do" ;;
-            esac
+          runs="repos/$REPO/actions/workflows/pr-review.yml/runs?event=pull_request&per_page=100"
+          for status in failure cancelled timed_out; do
+            gh api "$runs&status=$status" --jq '.workflow_runs[] | "\(.head_sha) \(.id) \(.created_at)"'
+          done | sort -k3 -r > failed.txt
+          gh api "$runs" --jq '.workflow_runs[] | select(.conclusion != "failure" and .conclusion != "cancelled" and .conclusion != "timed_out") | "\(.head_sha) \(.created_at)"' > newer.txt
+          # Newest failed run per open head, unless a later run for that head didn't fail.
+          awk 'FILENAME == ARGV[1] { pr[$1] = $2; next }
+               FILENAME == ARGV[2] { if (!($1 in ok) || $2 > ok[$1]) ok[$1] = $2; next }
+               ($1 in pr) && !seen[$1]++ && !(($1 in ok) && ok[$1] > $3) { print pr[$1], $2 }' heads.txt newer.txt failed.txt |
+          while read -r number run_id; do
+            echo "PR #$number: re-running review run $run_id"
+            gh run rerun "$run_id" --repo "$REPO" --failed || true
           done

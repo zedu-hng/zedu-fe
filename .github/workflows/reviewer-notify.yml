@@ -93,7 +93,7 @@ jobs:
                     number createdAt isDraft baseRefName headRefOid
                     headRepository { nameWithOwner }
                     headRepositoryOwner { login }
-                    labels(first: 50) { nodes { name } }
+                    labels(first: 100) { pageInfo { hasNextPage } nodes { name } }
                     assignees { totalCount }
                     commits(last: 1) { nodes { commit { status { contexts { context state } } } } }
                   }
@@ -102,6 +102,7 @@ jobs:
             }' |
           jq -rs --arg repo "$REPO" '
             [.[].data.repository.pullRequests.nodes[]]
+            | if any(.[]; .labels.pageInfo.hasNextPage) then error("a PR has over 100 labels; queue labels may be missing") else . end
             | map(select((.baseRefName == "dev" or .baseRefName == "central-staging")
                 and .headRepository.nameWithOwner != $repo))
             | .[]
