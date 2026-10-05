@@ -1,7 +1,8 @@
 name: Team routing
 
-# Routes a contributor PR to their team lead(s) for review. Runs on pull_request_target and reads
-# teams.yml from the base branch only, so a PR can't change who reviews it.
+# Requests review from a contributor PR's team lead(s), read from teams.yml on the base branch, so
+# a PR can't change who reviews it. Reviewers are not assigned here: once a PR is lead-approved and
+# its checks pass, reviewer-notify.yml mentions @zedu-hng/reviewers and any reviewer can claim it.
 
 on:
   pull_request_target:
@@ -59,10 +60,8 @@ jobs:
               puts "found=true"
               puts "team=#{name}"
               puts "leads=#{Array(team["leads"]).join(",")}"
-              puts "reviewer=#{team["reviewer"]}"
             else
               puts "found=false"
-              puts "fallback=#{cfg["fallback_reviewer"]}"
             end
           ' >> "$GITHUB_OUTPUT"
 
@@ -72,25 +71,17 @@ jobs:
           FOUND: ${{ steps.team.outputs.found }}
           TEAM: ${{ steps.team.outputs.team }}
           LEADS: ${{ steps.team.outputs.leads }}
-          REVIEWER: ${{ steps.team.outputs.reviewer }}
-          FALLBACK: ${{ steps.team.outputs.fallback }}
         run: |
-          if [ "$FOUND" = "true" ]; then
-            leads=$(printf '%s' "$LEADS" | tr ',' '\n' | grep -v '^$' || true)
-            if [ -z "$leads" ]; then
-              gh pr comment "$PR" --body "Team routing: **$TEAM** has no leads in \`.github/teams.yml\`. Add at least one lead so this PR can be reviewed."
-              exit 0
-            fi
-            printf '%s\n' "$leads" | while read -r handle; do
-              gh pr edit "$PR" --add-reviewer "$handle" || gh pr comment "$PR" --body "Team routing: couldn't request review from @$handle (not a collaborator yet?)."
-            done
-            gh pr comment "$PR" --body "Team routing: **$TEAM** — requested review from the team lead(s): $(printf '@%s ' $leads). Zedu reviewer: @${REVIEWER:-unassigned}."
-          elif [ -n "$FALLBACK" ]; then
-            if gh pr edit "$PR" --add-reviewer "$FALLBACK"; then
-              gh pr comment "$PR" --body "Team routing: @$AUTHOR isn't listed under any team in \`.github/teams.yml\`; requested @$FALLBACK instead."
-            else
-              gh pr comment "$PR" --body "Team routing: @$AUTHOR isn't listed under any team in \`.github/teams.yml\`, and requesting a review from @$FALLBACK failed (not a collaborator yet?)."
-            fi
-          else
-            gh pr comment "$PR" --body "Team routing: @$AUTHOR isn't listed under any team in \`.github/teams.yml\`, and no \`fallback_reviewer\` is set. Add them to a team."
+          if [ "$FOUND" != "true" ]; then
+            gh pr comment "$PR" --body "Team routing: @$AUTHOR isn't listed under any team in \`.github/teams.yml\`. A team lead should add them under their team's \`members\`."
+            exit 0
           fi
+          leads=$(printf '%s' "$LEADS" | tr ',' '\n' | grep -v '^$' || true)
+          if [ -z "$leads" ]; then
+            gh pr comment "$PR" --body "Team routing: **$TEAM** has no leads in \`.github/teams.yml\`. Add at least one lead so this PR can be reviewed."
+            exit 0
+          fi
+          printf '%s\n' "$leads" | while read -r handle; do
+            gh pr edit "$PR" --add-reviewer "$handle" || gh pr comment "$PR" --body "Team routing: couldn't request review from @$handle (not a collaborator yet?)."
+          done
+          gh pr comment "$PR" --body "Team routing: **$TEAM** — requested review from the team lead(s): $(printf '@%s ' $leads)"
