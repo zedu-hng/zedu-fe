@@ -53,3 +53,4 @@ pnpm dev
 Please see [CONTRIBUTING](./CONTRIBUTING.md)
 
 <!-- FE preview pilot: throwaway change, do not merge. -->
+<!-- pilot recheck 2026-10-05T13:27:32Z -->
