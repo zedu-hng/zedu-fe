@@ -203,4 +203,14 @@ export const contributors: Contributor[] = [
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
   },
+  {
+    id: "kestrel-202",
+    name: "Mercy Gatwiri",
+    username: "M-gatwiri",
+    zeduName: "M-gatwiri",
+    background: "Software Developer",
+    email: "mgatwiri806@gmail.com",
+    linkedin: "mercy-gatwiri-17454b228",
+    avatarGradient: "from-primary-500 to-secondary-400",
+  },
 ];
