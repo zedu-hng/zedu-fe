@@ -15,8 +15,9 @@
 # gate and backend are recomputed from the GitHub API and the base branch config.
 # State: one bot comment per PR, edited in place:
 #   <!-- fe-preview state=active|queued|expired|evicted|removed|error|skipped sha= tag= host= dep= at= -->
-# `at` is when this commit first got a state, i.e. the last push. Rewrites for the same commit
-# (settle, sweep, label or body-edit redeploys) keep it, so TTL and eviction count from the push.
+# `at` is the expiry baseline: when this commit last became active or queued (a push, or a
+# revival by the `preview` label). Rewrites while it stays active or queued (settle, sweep,
+# body-edit redeploys) keep it, so TTL and eviction don't drift.
 # A preview only leaves `active` once Coolify confirms the delete, so a failed delete is retried.
 set -euo pipefail
 
@@ -59,10 +60,11 @@ read_state() {
 }
 
 write_state() { # pr state sha tag host dep message [comment id]
-  local body prev psha pat at=$NOW
+  local body prev pst psha pat at=$NOW
   prev=$(read_state "$1")
-  read -r _ _ psha _ _ _ pat <<< "${prev:-- - - - - - -}"
-  [ "$psha" = "${3:--}" ] && [[ "$pat" =~ ^[0-9]+$ ]] && at=$pat
+  read -r _ pst psha _ _ _ pat <<< "${prev:-- - - - - - -}"
+  # Same commit and still live: keep the baseline. Coming back from expired/evicted resets it.
+  [ "$psha" = "${3:--}" ] && [[ "$pst" =~ ^(active|queued)$ ]] && [[ "$pat" =~ ^[0-9]+$ ]] && at=$pat
   body=$(printf '%s state=%s sha=%s tag=%s host=%s dep=%s at=%s -->\n### Preview\n\n%s\n' \
     "$MARK" "$2" "${3#-}" "${4#-}" "${5#-}" "${6#-}" "$at" "$7")
   if dry; then echo "  [dry-run] PR #$1 state=$2: $7" >&2; return 0; fi
@@ -267,8 +269,10 @@ sweep() {
     esac
   done
   # A failed delete on close leaves a closed PR's preview active; retry those for two weeks.
-  for n in $(gh api "repos/$REPO/pulls?state=closed&base=dev&sort=updated&direction=desc&per_page=50" \
-    --jq '.[] | select((.closed_at | fromdateiso8601) > (now - 1209600)) | .number'); do
+  # Hourly only (first sweep of the hour): ~100+ closed PRs cost one API call each.
+  (( 10#$(date -u +%M) < 15 )) || [ -n "${SWEEP_CLOSED:-}" ] || return 0
+  for n in $(gh api --paginate "repos/$REPO/pulls?state=closed&base=dev&per_page=100" \
+    --jq '.[] | select(.closed_at and ((.closed_at | fromdateiso8601) > (now - 1209600))) | .number'); do
     read -r _ st _ <<< "$(read_state "$n")"
     [ "$st" = active ] && { remove "$n" removed "Removed: PR closed." || true; }
   done
