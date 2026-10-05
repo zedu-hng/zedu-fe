@@ -73,6 +73,7 @@ const supportLinks: FooterLink[] = [
 
 const resourcesLinks: FooterLink[] = [
   { id: 0, label: "Blogs", href: "/resources" },
+  { id: 1, label: "Contributors", href: "/contributors" },
   { id: 2, label: "Privacy Policy", href: "/policy" },
   { id: 3, label: "Terms of Service", href: "/terms-of-service" },
 ];
