@@ -51,15 +51,13 @@ jobs:
     if: vars.IS_BOOTCAMP == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Map authors to teams
+      - name: Load registered teams
         run: |
           gh api "repos/$REPO/contents/.github/teams.yml" --jq .content | base64 -d > teams.yml
           ruby -ryaml -e '
             cfg = YAML.load_file("teams.yml") || {}
-            (cfg["teams"] || {}).each do |name, t|
-              Array(t["members"]).each { |m| puts "#{m}\t#{name}" }
-            end
-          ' > author_team.tsv
+            puts (cfg["teams"] || {}).keys
+          ' > teams.txt
 
       - name: Collect PRs
         run: |
@@ -69,13 +67,17 @@ jobs:
             --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | select(.head.repo.full_name != "'"$REPO"'") | [.number, .user.login, .created_at, (.draft|tostring), (.head.repo.owner.login // "deleted"), ([.labels[].name]|join(",")), (([.assignees[]]|length)|tostring), .head.sha] | map(tostring) | join("|")' |
           while IFS='|' read -r num author created draft owner labels na sha; do
             case ",$labels," in *,sync,*|*,hotfix,*) continue ;; esac
-            team=$(awk -F'\t' -v a="$author" '$1==a{print $2; exit}' author_team.tsv)
-            [ -n "$team" ] || team="$owner"
-            state() { gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" --jq ".[] | select(.context == \"$1\") | .state" | head -1; }
-            lead=$(state "$LEAD_CONTEXT")
-            build=$(state "$BUILD_CONTEXT")
+            # The team is the fork's owner. Only registered forks can be queued, but forks that
+            # aren't registered are still written through with green=false so the queue step can
+            # strip any stale ready-for-review/queued labels from them.
+            team="$owner"
             green=false
-            [ "$lead" = "success" ] && [ "$build" = "success" ] && green=true
+            if grep -qixF "$owner" teams.txt; then
+              state() { gh api --paginate "repos/$REPO/commits/$sha/statuses?per_page=100" --jq ".[] | select(.context == \"$1\") | .state" | head -1; }
+              lead=$(state "$LEAD_CONTEXT")
+              build=$(state "$BUILD_CONTEXT")
+              [ "$lead" = "success" ] && [ "$build" = "success" ] && green=true
+            fi
             printf '%s|%s|%s|%s|%s|%s|%s|%s\n' \
               "$num" "$team" "$created" "$draft" "$labels" "$na" "$green" "$sha" >> rows.tsv
           done

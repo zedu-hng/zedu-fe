@@ -32,17 +32,42 @@ env:
   PREVIEW_TTL_HOURS: ${{ vars.PREVIEW_TTL_HOURS || '48' }}
 
 jobs:
-  deploy:
-    name: Deploy preview
+  # Finds the PR so later jobs can lock per PR. GitHub keeps only one waiting job per concurrency
+  # group and cancels older ones, so a single global lock silently dropped deploys and settles.
+  resolve:
+    name: Resolve PR
     if: >-
       github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      pr: ${{ steps.pr.outputs.pr }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Find PR
+        id: pr
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        # Fail loudly: a swallowed API error here used to look like "no PR" and skip the deploy.
+        run: |
+          pr=$(bash .github/scripts/fe-preview.sh prnum "$SHA") || { echo "::error::Couldn't look up the PR for $SHA."; exit 1; }
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy preview
+    needs: resolve
+    if: needs.resolve.outputs.pr != ''
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Cap counting and state comments assume one writer at a time.
+    # One writer per PR: a newer event for the same PR replacing a waiting one is what we want.
     concurrency:
-      group: fe-preview-state
+      group: fe-preview-pr-${{ needs.resolve.outputs.pr }}
       cancel-in-progress: false
     outputs:
       deployment: ${{ steps.deploy.outputs.deployment }}
@@ -80,6 +105,29 @@ jobs:
           built=$(jq -r '.backend_host // empty' "$ARTIFACT/meta.json" 2>/dev/null || true)
           bash .github/scripts/fe-preview.sh deploy "$SHA" "$image" "$built"
 
+  # A failed or cancelled build never reaches the deploy job; replace its pending "Building" status.
+  build-end:
+    name: Report unsuccessful build
+    if: >-
+      github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion != 'success' &&
+      github.event.workflow_run.conclusion != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: dev
+          persist-credentials: false
+
+      - name: Report
+        env:
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: bash .github/scripts/fe-preview.sh buildend "$SHA" "$CONCLUSION" "$RUN_URL"
+
   # Waits without the lock, so a slow deployment doesn't hold up other PRs.
   watch:
     name: Wait for Coolify
@@ -108,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
-      group: fe-preview-state
+      group: fe-preview-pr-${{ needs.deploy.outputs.pr }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
