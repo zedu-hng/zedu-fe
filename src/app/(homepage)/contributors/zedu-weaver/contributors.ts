@@ -4,8 +4,8 @@ export type Contributor = {
 };
 
 export const zeduWeaverContributors: Contributor[] = [
-  { name: "Omotomiwa Afonja", username: "S.F Tommy" },
-  { name: "Owai Owai", username: "thisOx2" },
+  { name: "Omotomiwa Abdulraheem Afonja", username: "S.F Tommy" },
+  { name: "Owai E. Owai", username: "thisOx2" },
   { name: "Kallay Ummi M", username: "Khay" },
   { name: "Peace Ihendi", username: "Pearl" },
   { name: "Abimbola Soneye", username: "The Product Girlie" },
@@ -22,10 +22,10 @@ export const zeduWeaverContributors: Contributor[] = [
   { name: "Okeke Raphael", username: "roktech" },
   { name: "Emmanuel Umeogu", username: "Emmalaka" },
   { name: "Paschal Obiorah", username: "Maazi" },
-  { name: "Opeyemi Folorunsho", username: "Pleasure" },
+  { name: "Folorunsho Opeyemi", username: "Pleasure" },
   { name: "Murewa Raji", username: "Murewa Raji" },
   { name: "Pearl Akpaka", username: "PearlAkpaka" },
-  { name: "Oluchi Onyedikachi", username: "Jemi" },
+  { name: "Onyedikachi Oluchi", username: "Jemi" },
   { name: "Stephen Okoro", username: "venson" },
   { name: "Quell", username: "Quell" },
   { name: "Ndifreke Samuel", username: "Freksam" },
@@ -34,5 +34,5 @@ export const zeduWeaverContributors: Contributor[] = [
   { name: "Ubah Delight Okechukwu", username: "DOUG" },
   { name: "Helen Efebe", username: "HelenGift" },
   { name: "Kharimah", username: "Kharimah" },
-  { name: "Victor Ugwoke", username: "victech-1" },
+  { name: "Ugwoke Victor", username: "victech-1" },
 ];
