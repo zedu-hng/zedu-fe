@@ -71,13 +71,13 @@ export const contributors: Contributor[] = [
     name: "Okolie Chinonso Grace",
     githubUsername: "chinonsograce",
   },
-  { name: "Olatunji Mafe", githubUsername: "toondji-ix" },
-  { name: "Olayeni Ibrahim", githubUsername: "Oluwa555" },
-  { name: "Oluboye Adekunle", githubUsername: "Boyeadelo" },
   {
     name: "Olabanji Bunmie-Omotoye Dave",
     githubUsername: "davex-ai",
   },
+  { name: "Olatunji Mafe", githubUsername: "toondji-ix" },
+  { name: "Olayeni Ibrahim", githubUsername: "Oluwa555" },
+  { name: "Oluboye Adekunle", githubUsername: "Boyeadelo" },
   {
     name: "Onatade Abdulmajeed Adeyincka",
     githubUsername: "Spider1201",
