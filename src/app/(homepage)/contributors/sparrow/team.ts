@@ -271,5 +271,13 @@ export const TEAM: Team = {
       githubUsername: "elsie456",
       role: "Member",
     },
+    {
+      fullName: "Abdulmuiz Abdulsalam Olalekan",
+      zeduUsername: "Abdulmuiz Abdulsalam Olalekan",
+      githubEmail: "aoabdulsalam90@student.lauech.edu.ng",
+      githubUsername: "Iampeace001",
+      primaryField: " UI/UX Design",
+      role: "Member",
+    },
   ],
 };
