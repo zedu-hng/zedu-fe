@@ -178,7 +178,7 @@ export const contributors: Contributor[] = [
     name: "Liberty Joseph",
     username: "Mrwayne",
     zeduName: "Mrwayne",
-    background: "Software Engineer",
+    background: "Software Engineer, Web Browser",
     email: "Wayneliberty33@gmail.com",
     linkedin: "liberty-wayne-787081440",
     avatarGradient: "from-blue-500 to-secondary-400",
