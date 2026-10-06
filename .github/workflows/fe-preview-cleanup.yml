@@ -20,6 +20,11 @@ on:
   schedule:
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
+    inputs:
+      handoff:
+        description: Set by a deploy-triggered run; re-checks the window before sweeping
+        type: boolean
+        default: false
 
 permissions:
   actions: write
@@ -98,9 +103,11 @@ jobs:
         id: window
         run: echo "key=fe-preview-swept-$(( $(date +%s) / 600 ))" >> "$GITHUB_OUTPUT"
 
+      # Deploy-triggered runs and their hand-offs check the window; scheduled and manual sweeps always
+      # run. A hand-off re-checks because two deploys can both miss before the first sweep saves it.
       - name: Throttle
         id: throttle
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_run' || inputs.handoff
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .swept
@@ -109,18 +116,18 @@ jobs:
 
       - name: Hand off to a dispatched sweep
         if: github.event_name == 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
-        run: gh workflow run fe-preview-cleanup.yml --repo "$REPO" --ref dev
+        run: gh workflow run fe-preview-cleanup.yml --repo "$REPO" --ref dev -f handoff=true
 
       - name: Sweep
-        if: github.event_name != 'workflow_run'
+        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
         run: bash .github/scripts/fe-preview.sh sweep
 
       - name: Mark window swept
-        if: github.event_name != 'workflow_run'
+        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
         run: touch .swept
 
       - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        if: github.event_name != 'workflow_run'
+        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
         with:
           path: .swept
           key: ${{ steps.window.outputs.key }}

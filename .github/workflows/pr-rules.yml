@@ -181,6 +181,11 @@ jobs:
           if { wants protected || wants size; } && [ "$sync" != true ]; then
             files=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[] | "\(.additions + .deletions) \(.filename)"') \
               || files=ERROR
+            # GitHub lists at most 3,000 files per PR, so a list that long may be missing paths.
+            if [ "$files" != ERROR ] && [ "$(grep -c . <<< "$files")" -ge 3000 ]; then
+              echo "::error::This PR changes 3,000+ files, more than GitHub lists, so its files can't all be checked. Split it."
+              files=TOO_MANY
+            fi
           fi
 
           if wants protected; then
@@ -188,6 +193,7 @@ jobs:
             { has config-change-approved || [ "$AUTHOR" = "dependabot[bot]" ]; } && approved=true
             protected='^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
             if [ "$sync" = true ]; then waived "Protected files"
+            elif [ "$files" = TOO_MANY ]; then report "Protected files" failure "3,000+ files: more than GitHub lists, so not all can be checked. Split the PR"
             elif [ "$files" = ERROR ]; then
               echo "::error::Couldn't read the PR's files (API error). Re-run this job."
               report "Protected files" failure "Couldn't read files (API error); re-run PR rules"
@@ -210,6 +216,7 @@ jobs:
             if [ "$sync" = true ]; then waived "Size"
             elif has hotfix; then report "Size" success "Hotfix PR; size check waived"
             elif has size-override; then report "Size" success "size-override label applied"
+            elif [ "$files" = TOO_MANY ]; then report "Size" failure "3,000+ files changed. Split the PR"
             elif [ "$files" = ERROR ]; then
               echo "::error::Couldn't read the PR's files (API error). Re-run this job."
               report "Size" failure "Couldn't read files (API error); re-run PR rules"
