@@ -21,7 +21,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-02",
-    name: "Collins Odogwu",
+    name: "Collins Adimabuia Odogwu",
     username: "Collins Odogwu",
     zeduName: "Collins Odogwu",
     background: "Data Analysis",
@@ -221,5 +221,24 @@ export const contributors: Contributor[] = [
     email: "oluwasanmiadewumi7@gmail.com",
     linkedin: "oluwasanmi-adewumi-b53799268",
     avatarGradient: "from-secondary-500 to-tertiary-400",
+  },
+  {
+    id: "kestrel-093",
+    name: "Maryjane Okafor (Emjay)",
+    username: "Emjay",
+    zeduName: "maryjane_okafor",
+    background: "Software Engineer",
+    email: "maryukjane@gmail.com",
+    avatarGradient: "from-blue-400 to-tertiary-500",
+  },
+  {
+    id: "kestrel-202",
+    name: "Mercy Gatwiri",
+    username: "M-gatwiri",
+    zeduName: "M-gatwiri",
+    background: "Software Developer",
+    email: "mgatwiri806@gmail.com",
+    linkedin: "mercy-gatwiri-17454b228",
+    avatarGradient: "from-primary-500 to-secondary-400",
   },
 ];
