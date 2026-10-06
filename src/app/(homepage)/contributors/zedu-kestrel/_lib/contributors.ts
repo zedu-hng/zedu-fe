@@ -69,7 +69,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-07",
-    name: "Ihejirika Blessing Onyinyechukwu",
+    name: "Ihejirika Blessing Onyinye",
     username: "Onyinyechukwu",
     zeduName: "Onyinyechukwu",
     background: "Backend Developer",
@@ -202,6 +202,15 @@ export const contributors: Contributor[] = [
     email: "fabbenco97@gmail.com",
     linkedin: "fabian-muoghalu-37aa7a1a9",
     avatarGradient: "from-secondary-500 to-tertiary-400",
+  },
+  {
+    id: "kestrel-022",
+    name: "Onaopemipo Oyelami",
+    username: "Nopylyn",
+    zeduName: "Nopylyn",
+    background: "Product Management",
+    email: "oyelamionaopemipo@gmail.com",
+    avatarGradient: "from-primary-500 to-blue-400",
   },
   {
     id: "kestrel-20",

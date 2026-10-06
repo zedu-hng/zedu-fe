@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { siteUrl } from "~/lib/env-urls";
-import { zeduOspreyContributors } from "./contributors";
-import { ContributorCard } from "../../_components/contributors/ContributorCard";
+import { ContributorCard } from "./_components/contributor-card";
+import { zeduOspreyContributors } from "./_lib/contributors";
 
 export const metadata: Metadata = {
   title: "Zedu Osprey Contributors",
