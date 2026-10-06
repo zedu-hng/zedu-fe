@@ -1,6 +1,6 @@
 name: FE preview deploy
 
-# Trusted half of FE PR previews. Runs after "FE preview build" with the base repo's token and
+# Trusted half of FE PR previews. Runs after "PR checks" with the base repo's token and
 # secrets; never checks out PR code. It recomputes the PR, gate and backend itself (the build's
 # meta.json sits next to PR code, so it isn't trusted), pushes the built image to GHCR and asks
 # Coolify to deploy it as a preview. Logic: .github/scripts/fe-preview.sh.
@@ -10,7 +10,7 @@ name: FE preview deploy
 
 on:
   workflow_run:
-    workflows: ["FE preview build"]
+    workflows: ["PR checks"]
     types:
       - completed
 
@@ -39,7 +39,7 @@ jobs:
     if: >-
       github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
       github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' || github.event.workflow_run.conclusion == 'failure')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -54,7 +54,10 @@ jobs:
         id: pr
         env:
           SHA: ${{ github.event.workflow_run.head_sha }}
-        run: echo "pr=$(bash .github/scripts/fe-preview.sh prnum "$SHA")" >> "$GITHUB_OUTPUT"
+        # Fail loudly: a swallowed API error here used to look like "no PR" and skip the deploy.
+        run: |
+          pr=$(bash .github/scripts/fe-preview.sh prnum "$SHA") || { echo "::error::Couldn't look up the PR for $SHA."; exit 1; }
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Deploy preview
@@ -95,20 +98,35 @@ jobs:
         env:
           SHA: ${{ github.event.workflow_run.head_sha }}
           ARTIFACT: ${{ runner.temp }}/artifact
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
         run: |
-          [ -f "$ARTIFACT/meta.json" ] || { echo "Build uploaded nothing; previews off or not needed."; exit 0; }
+          # No meta.json: previews are off, or the run died before the preview gate. buildend only
+          # replaces a Preview still pending "Building", so it's a no-op when no preview was expected.
+          if [ ! -f "$ARTIFACT/meta.json" ]; then
+            echo "Build uploaded nothing; previews off, not needed, or the run failed early."
+            bash .github/scripts/fe-preview.sh buildend "$SHA" failure "$RUN_URL"
+            exit 0
+          fi
           image="$ARTIFACT/image.tar.gz"; [ -f "$image" ] || image=-
+          # PR checks fails as a whole when any check fails, so the run's conclusion says nothing about
+          # the preview: a preview was wanted but no image came out means the build itself failed.
+          if [ "$(jq -r '.wanted // false' "$ARTIFACT/meta.json" 2>/dev/null)" = true ] && [ "$image" = - ]; then
+            bash .github/scripts/fe-preview.sh buildend "$SHA" failure "$RUN_URL"
+            exit 0
+          fi
           # meta.json is untrusted; its backend host is only compared, never used.
           built=$(jq -r '.backend_host // empty' "$ARTIFACT/meta.json" 2>/dev/null || true)
           bash .github/scripts/fe-preview.sh deploy "$SHA" "$image" "$built"
 
-  # A failed or cancelled build never reaches the deploy job; replace its pending "Building" status.
+  # A cancelled or timed-out run never reaches the deploy job; replace its pending "Building" status.
+  # (A failed build in a finished run is reported by the deploy job from meta.json.)
   build-end:
     name: Report unsuccessful build
     if: >-
       github.repository == 'zedu-hng/zedu-fe' && vars.COOLIFY_PREVIEW_APP != '' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion != 'success' &&
+      github.event.workflow_run.conclusion != 'failure' &&
       github.event.workflow_run.conclusion != 'skipped'
     runs-on: ubuntu-latest
     timeout-minutes: 5

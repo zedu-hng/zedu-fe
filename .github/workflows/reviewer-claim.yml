@@ -126,25 +126,22 @@ jobs:
       - name: Sweep the ready-for-review queue
         run: |
           now=$(date +%s)
+          # The issues list already carries assignees and labels, so no per-PR fetch for them.
           gh api --paginate "repos/$REPO/issues?state=open&labels=$REVIEW_LABEL&per_page=100" \
-            --jq '.[] | select(.pull_request) | .number' | while read -r pr; do
+            --jq '.[] | select(.pull_request) | "\(.number)|\([.assignees[].login] | join(","))|\([.labels[].name] | join(","))"' |
+          while IFS='|' read -r pr assignees labels; do
             [ -n "$pr" ] || continue
-            assignees=$(gh api "repos/$REPO/pulls/$pr" --jq '[.assignees[].login] | join(",")')
             if [ -z "$assignees" ]; then
+              case ",$labels," in *,"$ESCALATED_LABEL",*) echo "PR #$pr: already escalated"; continue ;; esac
               labeled_at=$(gh api --paginate "repos/$REPO/issues/$pr/timeline?per_page=100" |
                 jq -s "[flatten[] | select(.event==\"labeled\" and .label.name==\"$REVIEW_LABEL\")] | last | .created_at // empty")
               [ -n "$labeled_at" ] || continue
               age=$(( now - $(date -d "$labeled_at" +%s) ))
-              labels=$(gh api "repos/$REPO/pulls/$pr" --jq '[.labels[].name] | join(",")')
-              case ",$labels," in
-                *,"$ESCALATED_LABEL",*) echo "PR #$pr: already escalated" ;;
-                *)
-                  if [ "$age" -ge $(( STALE_HOURS * 3600 )) ]; then
-                    gh pr edit "$pr" --add-label "$ESCALATED_LABEL"
-                    gh pr comment "$pr" --body "Still unclaimed after ${STALE_HOURS}h. @$REVIEWERS_TEAM please pick this up, or comment \`/claim\` to take it."
-                    echo "PR #$pr: escalated"
-                  fi ;;
-              esac
+              if [ "$age" -ge $(( STALE_HOURS * 3600 )) ]; then
+                gh pr edit "$pr" --add-label "$ESCALATED_LABEL"
+                gh pr comment "$pr" --body "Still unclaimed after ${STALE_HOURS}h. @$REVIEWERS_TEAM please pick this up, or comment \`/claim\` to take it."
+                echo "PR #$pr: escalated"
+              fi
             else
               who=$(printf '%s' "$assignees" | cut -d, -f1)
               claimed_at=$(gh api --paginate "repos/$REPO/issues/$pr/timeline?per_page=100" |
