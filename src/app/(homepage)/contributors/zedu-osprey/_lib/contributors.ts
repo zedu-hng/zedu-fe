@@ -41,7 +41,7 @@ export const zeduOspreyContributors: Contributor[] = [
   { name: "Oluwanifemi Adeyemi", username: "Rondo" },
   { name: "Oshin Samuel", username: "bobbysam" },
   { name: "Oyindamola Adewole", username: "Oyindamola Adewole" },
-  { name: "Pauline Banye", username: "Lynn B" },
+  { name: "Pauline Banye", username: "Lynn Bee" },
   { name: "PcNerd", username: "new_here" },
   { name: "Pulse Analytics", username: "Pulse Analytics" },
   { name: "Samson Bakare", username: "Samjean" },
