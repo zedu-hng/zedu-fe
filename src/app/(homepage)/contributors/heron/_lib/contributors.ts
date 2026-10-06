@@ -11,7 +11,7 @@ export const TEAM_NAME = "Heron";
 // Order doesn't matter: the page sorts by name, so add your entry anywhere.
 export const contributors: Contributor[] = [
   {
-    name: "Tolulope Ogungbemi",
+    name: "Ogungbemi Tolulope",
     role: "Team Lead",
     zeduUsername: "Dave Tolu",
   },
@@ -19,7 +19,7 @@ export const contributors: Contributor[] = [
   { name: "Gbadebo Wale", zeduUsername: "Gbadebo Wale" },
   { name: "Samuel Okwelogu", zeduUsername: "samuel Okwelogu" },
   { name: "Joshua Akuma", zeduUsername: "joshua akuma" },
-  { name: "Oluwaseyifunmi", zeduUsername: "Oluwaseyifunmi" },
+  { name: "Oluwaseyifunmi Akinlabi", zeduUsername: "Oluwaseyifunmi" },
   { name: "Egbukwu trinity Faith", zeduUsername: "Chloe egbukwu" },
   { name: "Dean Ukanah", zeduUsername: "ukanah15thdean" },
   { name: "Bello Muhammed", zeduUsername: "Sallah" },
@@ -37,7 +37,7 @@ export const contributors: Contributor[] = [
   { name: "Nwabueze Jeremiah Nwite", zeduUsername: "nwabueze jeremiah nwite" },
   { name: "Ayotomiwa Ayorinde", zeduUsername: "zamaar" },
   { name: "Kesiena Cruz Ohwots", zeduUsername: "kesiena_cruz" },
-  { name: "Fikayo Olorode", zeduUsername: "fikayo olorode" },
+  { name: "Olorode Fikayo", zeduUsername: "fikayo olorode" },
   { name: "Abdulazeez yusuf", zeduUsername: "Ola Yusuf" },
   { name: "Ukanna Raymond", zeduUsername: "ukanna raymond" },
   { name: "Molly", zeduUsername: "Remaswoman" },
@@ -45,7 +45,7 @@ export const contributors: Contributor[] = [
   { name: "Taiwo Francis", zeduUsername: "taiwofrancis001" },
   { name: "Adenike Bamigbade", zeduUsername: "Adenike_Bamigbade" },
   { name: "Timi Abiola", zeduUsername: "tecnine" },
-  { name: "Nana", zeduUsername: "Lanfear" },
+  { name: "Amal", zeduUsername: "Lanfear" },
   { name: "Adesanya Sofiyyah", zeduUsername: "Sophia" },
   { name: "Chinaza Jessica Mbah", zeduUsername: "ZamEpkere" },
 ];
