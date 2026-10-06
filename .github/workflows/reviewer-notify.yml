@@ -47,8 +47,13 @@ permissions:
   pull-requests: write
   statuses: read
 
+# Dispatch-started Fork build completions are skipped below; they get their own group so they can't
+# replace a waiting queue run.
 concurrency:
-  group: reviewer-notify
+  group: >-
+    ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'Fork build' &&
+        github.event.workflow_run.event == 'workflow_dispatch' &&
+        format('reviewer-notify-ignored-{0}', github.run_id) || 'reviewer-notify' }}
   cancel-in-progress: false
 
 env:
@@ -109,9 +114,9 @@ jobs:
             | map(select((.baseRefName == "dev" or .baseRefName == "central-staging")
                 and .headRepository.nameWithOwner != $repo))
             | .[]
-            # Over 100 labels: queue labels may be on a page we did not read, so leave this PR out
-            # (stderr warning) rather than misjudge it or stop the whole queue.
-            | if .labels.pageInfo.hasNextPage then ("::warning::PR #\(.number) has over 100 labels; skipped\n" | stderr | empty) else . end
+            # Over 100 labels: queue labels may be on a page we did not read, and leaving the PR out
+            # would miscount its team's slots, so stop this run. Only reviewers can add labels.
+            | if .labels.pageInfo.hasNextPage then error("PR #\(.number) has over 100 labels; queue run stopped") else . end
             | ([.commits.nodes[0].commit.status.contexts[]? | {(.context): .state}] | add // {}) as $st
             | [.number, (.headRepositoryOwner.login // "deleted"), .createdAt, (.isDraft | tostring),
                ([.labels.nodes[].name] | join(",")), (.assignees.totalCount | tostring),
