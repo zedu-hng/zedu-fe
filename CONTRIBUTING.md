@@ -565,7 +565,7 @@ fix(buzz): resolve mute state after reconnect
 docs: expand contributing guide
 ```
 
-Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in CI on your PR title.
+Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in CI on every commit in your PR (**Commit messages**). **PR rules** checks the PR title.
 
 ---
 
@@ -661,8 +661,7 @@ These files are owned by the reviewers. The **Protected files** check fails any 
    - what changed and why;
    - how to test and what to expect;
    - your team lead's GitHub handle;
-   - screenshots or a recording for visible changes;
-   - the AI-usage line.
+   - screenshots or a recording for visible changes.
 3. Ask your team lead to review it and leave an **Approve** review.
 4. Trigger the first build (see [How your PR gets built](#7-how-your-pr-gets-built)).
 5. Move the ticket to **IN REVIEW**.
@@ -684,7 +683,7 @@ The team fork builds your PR, with the team fork's `APP_ENV_FILE`, so the build 
 
 Before you open the PR, check your work locally, or ask your lead to merge your branch into the team fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
-The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
+The other checks run on the PR itself. **PR checks** runs file policy, Gitleaks, malware heuristics, commit messages, dependency audit, Prettier, ESLint, TypeScript, the review bot and the build in one job; **PR scans** runs Semgrep and ClamAV. Each check shows as its own status on the PR (ESLint, TypeScript, Build, ...), with the run's summary table listing every result. **PR rules** adds **Branch name**, **Single author**, **Protected files**, **Size**, **PR title** and **PR template**.
 
 ### 8. Review and merge
 
@@ -702,26 +701,13 @@ After merge, reviewers promote `dev` → `central-staging` with a merge commit, 
 
 Zedu has no feature-flag system, so every PR must be safe to merge on its own: after it merges, the app still works and nothing half-finished is visible to users. If a feature needs several tickets, split it so the additive, non-visible parts (backend, database) land first and the visible UI change lands last, opening each ticket's PR after the previous one merges (see [Working on a ticket](#4-working-on-a-ticket)).
 
-### 10. AI usage
-
-AI is fine for explaining code, drafting implementations, tests, debugging, refactoring and docs.
-
-Don't:
-
-- paste generated code you haven't read;
-- submit code you can't explain;
-- give AI tools secrets or user data;
-- treat AI output as a substitute for testing or review.
-
-For significant AI-assisted changes, add one line to the PR saying how AI was used. If you use an AI coding agent, point it at [`AGENTS.md`](./AGENTS.md); it holds the repo conventions agents need, and most agents load it automatically.
-
-### 11. Security and secrets
+### 10. Security and secrets
 
 Never commit API keys, tokens, passwords, private keys, certificates, cloud or database credentials, `.env` files with real values, or user data.
 
 Anything prefixed `NEXT_PUBLIC_` is compiled into the browser bundle and readable by anyone. Treat it as public; real secrets belong on the backend, not the client. If you expose a secret, deleting it in the next commit is not enough — tell a reviewer immediately so it can be rotated. The **File policy**, **Gitleaks** and **Semgrep** checks enforce this.
 
-### 12. Definition of done
+### 11. Definition of done
 
 - Acceptance criteria met.
 - All checks green on the PR, including **Fork build**.
@@ -730,7 +716,7 @@ Anything prefixed `NEXT_PUBLIC_` is compiled into the browser bundle and readabl
 - Verified in the build or preview.
 - Ticket closed in ClickUp or Linear.
 
-### 13. Getting unstuck
+### 12. Getting unstuck
 
 Ask in your team's channel first, then the project channel. For a blocker, include:
 
@@ -816,17 +802,16 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                   | Trigger                                                                | Purpose                                          |
-| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
-| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Prettier, ESLint, TypeScript, build              |
-| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan  |
-| `security-checks.yml`      | PR → `dev`, `central-staging`, `staging`, `main`                       | File policy, dependency audit, Gitleaks, Semgrep |
-| `malware-scan.yml`         | PR → `dev`, `central-staging`, `staging`, `main`                       | ClamAV + JS heuristics                           |
-| `commitlint.yml`           | PR → `dev`, `central-staging`                                          | Commit messages + PR title                       |
-| `pr-rules.yml`             | PR → `dev`, `central-staging`                                          | Branch name, single author, protected files      |
-| `fork-build.yml`           | PR events / comment / schedule                                         | Relays the fork's PR build as **Fork build**     |
-| `deploy-staging.yml`       | Push / dispatch → `staging`                                            | Deploy staging (self-hosted runner)              |
-| `deploy-main.yml`          | Push / dispatch → `main`                                               | Deploy production (self-hosted runner)           |
+| Workflow                                                                               | Trigger                        | Purpose                                                                                                                              |
+| -------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `pr-checks.yml`                                                                        | PR → `dev`, `central-staging`  | File policy, Gitleaks, malware heuristics, commit messages, audit, Prettier, ESLint, TypeScript, review bot, build (+ preview image) |
+| `pr-scans.yml`                                                                         | PR → `dev`, `central-staging`  | Semgrep, ClamAV                                                                                                                      |
+| `pr-review-comment.yml`                                                                | After PR checks / PR scans     | Posts each check as a status, and the review bot's comment                                                                           |
+| `pr-rules.yml`                                                                         | PR → `dev`, `central-staging`  | Branch name, single author, protected files, size, title, template                                                                   |
+| `pr-pre-commit-checks.yml`, `pr-review.yml`, `security-checks.yml`, `malware-scan.yml` | Disabled in `zedu-hng`         | Zedu's originals, replaced by the two above; kept unchanged so syncs don't conflict                                                  |
+| `fork-build.yml`                                                                       | PR events / comment / schedule | Relays the fork's PR build as **Fork build**                                                                                         |
+| `deploy-staging.yml`                                                                   | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)                                                                                                  |
+| `deploy-main.yml`                                                                      | Push / dispatch → `main`       | Deploy production (self-hosted runner)                                                                                               |
 
 ### Docker
 
