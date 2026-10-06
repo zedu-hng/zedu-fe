@@ -24,7 +24,7 @@ const QuetzalContributorsPage = () => {
         </h1>
         <p className="max-w-[95%] text-xs text-neutral-600 sm:max-w-[90%] sm:text-base md:max-w-[65%] lg:max-w-[45%] lg:text-lg">
           The {zeduQuetzalContributors.length} contributors who came together to
-          design, build, and improve Zedu during HNG 15.
+          build and improve Zedu during HNG 15.
         </p>
       </section>
 
