@@ -163,7 +163,7 @@ jobs:
                   headRefOid
                   headRefName
                   headRepository { nameWithOwner }
-                  files(first: 100) { nodes { path } }
+                  files(first: 100) { totalCount nodes { path } }
                   labels(first: 100) { nodes { name } }
                 }
               }
@@ -175,12 +175,18 @@ jobs:
             fi
             sleep $((attempt * 10))
           done
+          # A missing PR resolves to pullRequest: null with a successful exit; don't run on sha=null.
+          if [ "$(jq -r '.data.repository.pullRequest // empty | .headRefOid' <<< "$data")" = "" ]; then
+            echo "::warning::PR #$PR_NUMBER not found; leaving the status unchanged."
+            exit 0
+          fi
           # Same-repo PRs (reviewer branches, bots) and upstream long-lived branches have no fork build.
           # Only contributor forks get the relay.
           jq -r --arg repo "$REPO" '
             .data.repository as $r
             | $r.pullRequest as $p
             | ($p.files.nodes // [] | map(.path)) as $files
+            | ($p.files.totalCount // 0) as $fileCount
             | ($p.labels.nodes // [] | map(.name)) as $labels
             | "sha=\($p.headRefOid)",
               "head_repo=\($p.headRepository.nameWithOwner // "")",
@@ -188,7 +194,7 @@ jobs:
                             or (($p.headRepository.nameWithOwner // "") == ($r.parent.nameWithOwner // "")
                                 and ($p.headRefName == "dev" or $p.headRefName == "central-staging"))
                           then "true" else "false" end)",
-              "docs_only=\(if (($files | length) > 0) and ($files | all(endswith(".md")))
+              "docs_only=\(if ($fileCount > 0) and ($fileCount <= 100) and ($files | all(endswith(".md")))
                             then "true" else "false" end)",
               "bypass=\(if ($labels | index("sync")) or ($labels | index("hotfix"))
                          then "true" else "false" end)"
