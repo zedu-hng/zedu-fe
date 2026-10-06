@@ -397,6 +397,11 @@ sweep() {
         else
           deploy_tag "$n" "$sha" "$tag" "$host" "$id" && free=$(( free - 1 ))
         fi ;;
+      *)
+        # Any other state (skipped, expired, evicted, removed, error, or no state comment) holds no
+        # preview: a label left behind by a failed label update would hold a slot forever.
+        if grep -qxF "$n" <<< "$live"; then free=$(( free + 1 )); fi
+        label_sync "$n" - "${st:-none}" ;;
     esac
   done
   return 0
