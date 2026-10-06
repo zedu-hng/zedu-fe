@@ -27,6 +27,7 @@ env:
   REPO: ${{ github.repository }}
   PR: ${{ github.event.pull_request.number }}
   AUTHOR: ${{ github.event.pull_request.user.login }}
+  HEAD_OWNER: ${{ github.event.pull_request.head.repo.owner.login }}
 
 jobs:
   route:
@@ -54,8 +55,8 @@ jobs:
           esac
           ruby -ryaml -e '
             cfg = YAML.load_file(".github/teams.yml") || {}
-            author = ENV.fetch("AUTHOR")
-            name, team = (cfg["teams"] || {}).find { |_, v| Array(v["members"]).include?(author) }
+            owner = ENV.fetch("HEAD_OWNER").downcase
+            name, team = (cfg["teams"] || {}).find { |k, _| k.to_s.downcase == owner }
             if team
               puts "found=true"
               puts "team=#{name}"
@@ -73,7 +74,7 @@ jobs:
           LEADS: ${{ steps.team.outputs.leads }}
         run: |
           if [ "$FOUND" != "true" ]; then
-            gh pr comment "$PR" --body "Team routing: @$AUTHOR isn't listed under any team in \`.github/teams.yml\`. A team lead should add them under their team's \`members\`."
+            gh pr comment "$PR" --body "Team routing: fork \`$HEAD_OWNER\` isn't a registered team in \`.github/teams.yml\`. Open the PR from your team's fork, or ask a maintainer to add the team."
             exit 0
           fi
           leads=$(printf '%s' "$LEADS" | tr ',' '\n' | grep -v '^$' || true)
