@@ -45,7 +45,7 @@ const ContributorsPage = () => {
   return (
     <div className="space-y-16 pb-16">
       <section className="flex w-full flex-col items-center gap-4 px-4 pt-16 text-center sm:gap-6 sm:px-8 sm:pt-24 lg:px-12">
-        <h1 className="text-2xl font-semibold leading-tight text-neutral-900 sm:text-4xl md:text-5xl">
+        <h1 className="text-2xl font-bold italic leading-tight text-neutral-900 sm:text-4xl md:text-5xl">
           The People Behind <span className="text-primary-500">Zedu</span>
         </h1>
         <p className="max-w-[95%] text-xs text-neutral-600 sm:max-w-[80%] sm:text-base md:max-w-[60%] lg:max-w-[45%] lg:text-lg">
