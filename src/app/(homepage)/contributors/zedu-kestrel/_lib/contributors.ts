@@ -185,7 +185,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-19",
-    name: "Michael Samuel Oche (Samstar)",
+    name: "Michael O. Samuel",
     username: "samstar",
     zeduName: "samstar",
     background: "Backend Development",
