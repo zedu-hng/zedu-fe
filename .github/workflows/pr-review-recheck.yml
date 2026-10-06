@@ -50,8 +50,9 @@ jobs:
           declare -A done_runs=()
           awk 'NR == FNR { f[$1] = 1; next } ($1 in f) { print $2, $1 }' failed_heads.txt heads.txt |
           while read -r number sha; do
-            read -r run_id conclusion < <(gh api "$runs&head_sha=$sha&per_page=1" \
-              --jq '.workflow_runs[0] | "\(.id) \(.conclusion // .status)"')
+            # Captured first: a failure inside a process substitution wouldn't stop the step.
+            result=$(gh api "$runs&head_sha=$sha&per_page=1" --jq '.workflow_runs[0] | "\(.id) \(.conclusion // .status)"')
+            read -r run_id conclusion <<< "$result"
             case "$conclusion" in
               failure|cancelled|timed_out)
                 # PRs sharing a head share the run; re-run it once.
