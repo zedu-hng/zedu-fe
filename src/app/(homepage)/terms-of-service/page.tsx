@@ -227,9 +227,9 @@ function TermsOfService() {
               Subscription and Payment
             </h2>
             <p className="text-[#5C5C5C] text-sm lg:text-xl">
-              Zedu offers membership-based services or features. By
-              subscribing, you agree to pay the applicable fees as described at
-              the time of purchase. All payments are non-refundable.
+              Zedu offers membership-based services or features. By subscribing,
+              you agree to pay the applicable fees as described at the time of
+              purchase. All payments are non-refundable.
             </p>
           </section>
 
