@@ -47,4 +47,5 @@ export const contributors: Contributor[] = [
   { name: "Amal", zeduUsername: "Lanfear" },
   { name: "Adesanya Sofiyyah", zeduUsername: "Sophia" },
   { name: "Chinaza Jessica Mbah", zeduUsername: "ZamEpkere" },
+  { name: "Tayo Jubril", zeduUsername: "tayo jubril" },
 ];
