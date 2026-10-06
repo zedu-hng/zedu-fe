@@ -20,8 +20,14 @@ on:
   schedule:
     - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
+    inputs:
+      handoff:
+        description: Set by a deploy-triggered run; re-checks the window before sweeping
+        type: boolean
+        default: false
 
 permissions:
+  actions: write
   contents: read
   packages: write
   statuses: write
@@ -61,7 +67,9 @@ jobs:
           PR: ${{ github.event.pull_request.number }}
         run: bash .github/scripts/fe-preview.sh close "$PR"
 
-  # A newer sweep replacing a waiting one is harmless, so all sweeps share one group.
+  # A newer sweep replacing a waiting one is harmless, so all sweeps share one group. Deploy-triggered
+  # runs only check the window and maybe dispatch, so they get their own group and never displace a
+  # waiting sweep.
   sweep:
     name: Sweep previews
     if: >-
@@ -70,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      group: fe-preview-sweep
+      group: fe-preview-sweep${{ github.event_name == 'workflow_run' && format('-handoff-{0}', github.run_id) || '' }}
       cancel-in-progress: false
     env:
       GH_TOKEN: ${{ github.token }}
@@ -86,28 +94,47 @@ jobs:
           ref: dev
           persist-credentials: false
 
-      # Deploy-triggered sweeps: at most one per 10 minutes, to stay inside the token's API budget.
-      # Counts only runs whose Sweep step actually succeeded (not throttled skips, not closes).
+      # Deploy-triggered sweeps: at most one per 10-minute window, to stay inside the token's API
+      # budget. A cache entry per window marks "swept"; checking it costs no REST calls (the old
+      # throttle listed recent runs and their jobs, dozens of calls per deploy). workflow_run runs can
+      # only read caches, so on a miss this run dispatches the sweep (workflow_dispatch can write the
+      # marker) instead of sweeping itself. The shared sweep group drops extra dispatches.
+      - name: Window
+        id: window
+        run: echo "key=fe-preview-swept-$(( $(date +%s) / 600 ))" >> "$GITHUB_OUTPUT"
+
+      # Deploy-triggered runs and their hand-offs check the window; scheduled and manual sweeps always
+      # run. A hand-off re-checks because two deploys can both miss before the first sweep saves it.
       - name: Throttle
         id: throttle
-        if: github.event_name == 'workflow_run'
-        env:
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          # A sweep counts from when its Sweep step finished, not when its run was created. Runs created
-          # in the last 30 minutes cover every sweep that can have finished in the last 10 (15 min
-          # timeout plus queueing); all pages are read, newest first, stopping at the first match.
-          since=$(( $(date +%s) - 600 ))
-          created=$(date -u -d "@$(( $(date +%s) - 1800 ))" +%Y-%m-%dT%H:%M:%SZ)
-          runs=$(gh api --paginate "repos/$REPO/actions/workflows/fe-preview-cleanup.yml/runs?created=%3E%3D$created&per_page=100" \
-            | jq -rs --arg me "$RUN_ID" '[.[].workflow_runs[]] | sort_by(.created_at) | reverse | .[]
-                | select((.id | tostring) != $me and .event != "pull_request_target") | .id')
-          for id in $runs; do
-            swept=$(gh api "repos/$REPO/actions/runs/$id/jobs" | jq --argjson since "$since" \
-              '[.jobs[].steps[]? | select(.name == "Sweep" and .conclusion == "success" and ((.completed_at // "1970-01-01T00:00:00Z") | sub("\\.[0-9]+"; "") | fromdateiso8601) > $since)] | length')
-            if [ "$swept" -gt 0 ]; then echo "A sweep finished within 10 minutes (run $id); skipping."; echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
-          done
+        if: github.event_name == 'workflow_run' || inputs.handoff
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .swept
+          key: ${{ steps.window.outputs.key }}
+          lookup-only: true
+
+      # If the dispatch itself fails, this run sweeps instead (it just can't save the marker). A
+      # dispatched sweep that fails before saving leaves the window unmarked, so the next deploy
+      # hands off again.
+      - name: Hand off to a dispatched sweep
+        id: handoff
+        if: github.event_name == 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: gh workflow run fe-preview-cleanup.yml --repo "$REPO" --ref dev -f handoff=true
 
       - name: Sweep
-        if: steps.throttle.outputs.skip != 'true'
+        if: >-
+          (github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true') ||
+          steps.handoff.outcome == 'failure'
         run: bash .github/scripts/fe-preview.sh sweep
+
+      - name: Mark window swept
+        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        run: touch .swept
+
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        with:
+          path: .swept
+          key: ${{ steps.window.outputs.key }}
