@@ -191,7 +191,7 @@ buildend() { # sha conclusion run-url
   if [ "$2" = cancelled ]; then
     # Cancelled because a newer event restarted the build for this commit: that run reports instead.
     local running
-    running=$(gh api "repos/$REPO/actions/workflows/fe-preview-build.yml/runs?head_sha=$1&per_page=20" \
+    running=$(gh api "repos/$REPO/actions/workflows/pr-checks.yml/runs?head_sha=$1&per_page=20" \
       --jq '[.workflow_runs[] | select(.status != "completed")] | length')
     (( running == 0 )) || return 0
     status "$1" Preview failure "Preview build was cancelled; push or add the preview label to retry" "$3"
@@ -351,10 +351,12 @@ close() { # pr
 }
 
 sweep() {
-  local n id st sha tag host dep at s live queue free pstate
+  local n id st sha tag host dep at s live queue free pstate entry
+  local -a waiting=()
   live=$(labelled "$LIVE"); queue=$(labelled "$QUEUED")
   free=$(( CAP - $(grep -c . <<< "$live" || true) ))
-  # Oldest PR first, so queued previews start in order.
+  # Two passes, oldest PR first in each: first everything that can free a slot (closed, expired,
+  # stale labels), then queued previews, so a queued PR never misses a slot freed by a newer one.
   for n in $(printf '%s\n%s\n' "$live" "$queue" | grep . | sort -nu); do
     read -r id st sha tag host dep at <<< "$(read_state "$n")"
     # A failed lookup must never read as "closed": skip the PR rather than delete a live preview.
@@ -383,21 +385,29 @@ sweep() {
               status "$sha" Preview failure "Coolify deployment $s; push or add the preview label to retry" ;;
           esac
         fi ;;
-      queued)
-        (( free > 0 )) || continue
-        # Re-check what was true at queue time: head, gate and backend may have changed since.
-        local pull why="" bhost
-        pull=$(gh api "repos/$REPO/pulls/$n")
-        if [ "$(jq -r .head.sha <<< "$pull")" != "$sha" ]; then why="a newer push superseded it"
-        elif [ "$(gate_of "$(jq -r '.head.repo.full_name // ""' <<< "$pull")" "$(jq -c '[.labels[].name]' <<< "$pull")")" = skip ]; then why="the PR no longer qualifies for a preview"
-        elif ! read -r bhost _ < <(backend "$n") || [ "$bhost" != "$host" ]; then why="its Backend URL changed"
-        fi
-        if [ -n "$why" ]; then
-          write_state "$n" removed "$sha" "$tag" "$host" - "Queue entry dropped: $why. The next build re-queues it if it still qualifies." "$id"
-        else
-          deploy_tag "$n" "$sha" "$tag" "$host" "$id" && free=$(( free - 1 ))
-        fi ;;
+      queued) waiting+=("$n $id $sha $tag $host") ;;
+      *)
+        # Any other state (skipped, expired, evicted, removed, error, or no state comment) holds no
+        # preview: a label left behind by a failed label update would hold a slot forever.
+        if grep -qxF "$n" <<< "$live"; then free=$(( free + 1 )); fi
+        label_sync "$n" - "${st:-none}" ;;
     esac
+  done
+  for entry in "${waiting[@]}"; do
+    read -r n id sha tag host <<< "$entry"
+    (( free > 0 )) || break
+    # Re-check what was true at queue time: head, gate and backend may have changed since.
+    local pull why="" bhost
+    pull=$(gh api "repos/$REPO/pulls/$n")
+    if [ "$(jq -r .head.sha <<< "$pull")" != "$sha" ]; then why="a newer push superseded it"
+    elif [ "$(gate_of "$(jq -r '.head.repo.full_name // ""' <<< "$pull")" "$(jq -c '[.labels[].name]' <<< "$pull")")" = skip ]; then why="the PR no longer qualifies for a preview"
+    elif ! read -r bhost _ < <(backend "$n") || [ "$bhost" != "$host" ]; then why="its Backend URL changed"
+    fi
+    if [ -n "$why" ]; then
+      write_state "$n" removed "$sha" "$tag" "$host" - "Queue entry dropped: $why. The next build re-queues it if it still qualifies." "$id"
+    else
+      deploy_tag "$n" "$sha" "$tag" "$host" "$id" && free=$(( free - 1 ))
+    fi
   done
   return 0
 }
