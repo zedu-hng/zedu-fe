@@ -245,7 +245,8 @@ jobs:
             status success "Fork build passed for ${SHA:0:7}" "$url"
             preview=$(gh api "repos/$HEAD_REPO/commits/$SHA/status" \
               --jq '.statuses[] | select(.context == "zedu/preview") | .target_url' | head -1)
-            [ -n "$preview" ] && echo "preview=$preview" >> "$GITHUB_OUTPUT"
+            # An if, not `[ ] &&`: as the step's last command, a false test would fail the step.
+            if [ -n "$preview" ]; then echo "preview=$preview" >> "$GITHUB_OUTPUT"; fi
           else
             status failure "Fork build $conclusion for ${SHA:0:7}" "$url"
           fi
