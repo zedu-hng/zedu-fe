@@ -1,0 +1,8 @@
+{
+  "name": "Zedu",
+  "description": "Zedu - Seamless Video Meetings & Learning Communities platform for teams, classrooms, and cohorts.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
