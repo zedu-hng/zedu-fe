@@ -136,13 +136,15 @@ jobs:
 
           # Post each rule as a commit status, only when it changes.
           current=$(gh api "repos/$REPO/commits/$SHA/status" --jq '.statuses[] | "\(.context)|\(.state)|\(.description)"' || true)
-          failed=0
+          failed=0; post_failed=0
           report() { # context state description
             local desc=${3:0:140}
             [ "$2" = failure ] && failed=$((failed + 1))
             if grep -qxF "$1|$2|$desc" <<< "$current"; then return 0; fi
-            gh api "repos/$REPO/statuses/$SHA" -f context="$1" -f state="$2" -f description="$desc" -f target_url="$RUN_URL" >/dev/null \
-              || echo "::warning::Couldn't post the $1 status."
+            if ! gh api "repos/$REPO/statuses/$SHA" -f context="$1" -f state="$2" -f description="$desc" -f target_url="$RUN_URL" >/dev/null; then
+              echo "::error::Couldn't post the $1 status (API error). Re-run this job."
+              post_failed=1
+            fi
           }
           waived() { report "$1" success "Sync PR; waived"; }
 
@@ -284,3 +286,4 @@ jobs:
           fi
 
           [ "$failed" -eq 0 ] || { echo "$failed rule(s) failed; see the statuses on the PR."; exit 1; }
+          [ "$post_failed" -eq 0 ] || { echo "A rule status couldn't be posted; re-run this job."; exit 1; }
