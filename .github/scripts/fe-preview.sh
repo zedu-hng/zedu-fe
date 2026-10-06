@@ -191,7 +191,7 @@ buildend() { # sha conclusion run-url
   if [ "$2" = cancelled ]; then
     # Cancelled because a newer event restarted the build for this commit: that run reports instead.
     local running
-    running=$(gh api "repos/$REPO/actions/workflows/fe-preview-build.yml/runs?head_sha=$1&per_page=20" \
+    running=$(gh api "repos/$REPO/actions/workflows/pr-checks.yml/runs?head_sha=$1&per_page=20" \
       --jq '[.workflow_runs[] | select(.status != "completed")] | length')
     (( running == 0 )) || return 0
     status "$1" Preview failure "Preview build was cancelled; push or add the preview label to retry" "$3"
