@@ -4,7 +4,7 @@ export type Contributor = {
 };
 
 export const zeduWeaverContributors: Contributor[] = [
-  { name: "Omotomiwa Afonja", username: "S.F Tommy" },
+  { name: "Omotomiwa Abdulraheem Afonja", username: "S.F Tommy" },
   { name: "Owai Owai", username: "thisOx2" },
   { name: "Kallay Ummi M", username: "Khay" },
   { name: "Peace Ihendi", username: "Pearl" },
@@ -19,10 +19,10 @@ export const zeduWeaverContributors: Contributor[] = [
   { name: "Abiodun Adeleke", username: "Tearsmith" },
   { name: "Naomi Okoro", username: "Nayohmee" },
   { name: "Ugonwa Ohagwasi", username: "nwa" },
-  { name: "Raphael Okeke", username: "roktech" },
+  { name: "Okeke Raphael", username: "roktech" },
   { name: "Emmanuel Umeogu", username: "Emmalaka" },
   { name: "Paschal Obiorah", username: "Maazi" },
-  { name: "Opeyemi Folorunsho", username: "Pleasure" },
+  { name: "Folorunsho Opeyemi", username: "Pleasure" },
   { name: "Murewa Raji", username: "Murewa Raji" },
   { name: "Pearl Akpaka", username: "PearlAkpaka" },
   { name: "Onyedikachi Oluchi", username: "Jemi" },
