@@ -76,7 +76,7 @@ const EgretContributorsPage = () => {
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-50 text-sm font-bold text-primary-500">
                   {initialsOf(entry.name)}
                 </span>
-                <span className="block truncate text-base font-semibold text-neutral-900">
+                <span className="block whitespace-normal break-words text-base font-semibold text-neutral-900">
                   {entry.name}
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
