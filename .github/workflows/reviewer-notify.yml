@@ -115,7 +115,7 @@ jobs:
                 and .headRepository.nameWithOwner != $repo))
             | .[]
             # Over 100 labels: queue labels may be on a page we did not read, and leaving the PR out
-            # would miscount its team's slots, so stop this run. Only reviewers can add labels.
+            # would miscount the slots of its team, so stop this run. Only reviewers can add labels.
             | if .labels.pageInfo.hasNextPage then error("PR #\(.number) has over 100 labels; queue run stopped") else . end
             | ([.commits.nodes[0].commit.status.contexts[]? | {(.context): .state}] | add // {}) as $st
             | [.number, (.headRepositoryOwner.login // "deleted"), .createdAt, (.isDraft | tostring),
