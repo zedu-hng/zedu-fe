@@ -64,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       actions: write
+      contents: read
       pull-requests: read
       statuses: read
     env:
@@ -78,17 +79,34 @@ jobs:
             gh api --paginate "repos/$REPO/actions/workflows/fork-build.yml/runs?status=$st&per_page=100" \
               --jq '.workflow_runs[].display_title | capture("#(?<n>[0-9]+)$").n'
           done | sort -u > active.txt
-          # Paginate: gh pr list stops at 30 PRs, and there can be one open PR per ticket across every team.
-          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.sha)"' |
-          while read -r number sha; do
+          # One GraphQL read gives every open PR's head statuses, instead of a REST status call per PR.
+          # shellcheck disable=SC2016 # $owner etc. are GraphQL variables, not shell
+          gh api graphql --paginate -F owner="${REPO%%/*}" -F name="${REPO#*/}" -f query='
+            query($owner: String!, $name: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                pullRequests(states: OPEN, first: 100, after: $endCursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    number baseRefName
+                    commits(last: 1) { nodes { commit { status { contexts { context description } } } } }
+                  }
+                }
+              }
+            }' |
+          jq -rs '
+            [.[].data.repository.pullRequests.nodes[]][]
+            | select(.baseRefName == "dev" or .baseRefName == "central-staging")
+            | ([.commits.nodes[0].commit.status.contexts[]? | select(.context == "Fork build")][0].description // "") as $desc
+            | "\(.number) \($desc)"' |
+          while read -r number desc; do
             if grep -qxF "$number" active.txt; then echo "PR #$number: relay already active; skipped"; continue; fi
-            desc=$(gh api "repos/$REPO/commits/$sha/status" --jq '.statuses[] | select(.context == "Fork build") | .description' | head -1)
             case "$desc" in
               "No build yet"*|"Fork build running"*)
                 echo "PR #$number: re-checking ($desc)"
                 # One final check: an attempt above both re-check limits never starts a new chain.
-                gh workflow run fork-build.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" -f pr="$number" -f attempt=100 ;;
+                # Stop at the first failure so a rate-limited sweep doesn't fire a dispatch per PR.
+                gh workflow run fork-build.yml --repo "$REPO" --ref "$DEFAULT_BRANCH" -f pr="$number" -f attempt=100 || {
+                  echo "::warning::Dispatch failed (likely API rate limit); stopping the sweep."; break; } ;;
             esac
           done
 
@@ -133,32 +151,54 @@ jobs:
         id: pr
         run: |
           [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "Invalid PR number"; exit 1; }
-          gh api "repos/$REPO/pulls/$PR_NUMBER" > pr.json
-          {
-            echo "sha=$(jq -r .head.sha pr.json)"
-            echo "head_repo=$(jq -r .head.repo.full_name pr.json)"
-          } >> "$GITHUB_OUTPUT"
+          # One GraphQL read instead of three REST calls (PR, repo parent, changed files). The
+          # installation token is shared across the whole repo, so the per-run request count matters.
+          owner=${REPO%/*}; name=${REPO#*/}
+          attempt=0
+          until data=$(gh api graphql -f query='
+            query($owner: String!, $name: String!, $pr: Int!) {
+              repository(owner: $owner, name: $name) {
+                parent { nameWithOwner }
+                pullRequest(number: $pr) {
+                  headRefOid
+                  headRefName
+                  headRepository { nameWithOwner }
+                  files(first: 100) { totalCount nodes { path } }
+                  labels(first: 100) { nodes { name } }
+                }
+              }
+            }' -f owner="$owner" -f name="$name" -F pr="$PR_NUMBER"); do
+            attempt=$((attempt + 1))
+            if [ "$attempt" -ge 3 ]; then
+              echo "::warning::Could not resolve PR #$PR_NUMBER after $attempt attempts (API error); leaving the status unchanged."
+              exit 0
+            fi
+            sleep $((attempt * 10))
+          done
+          # A missing PR resolves to pullRequest: null with a successful exit; don't run on sha=null.
+          if [ "$(jq -r '.data.repository.pullRequest // empty | .headRefOid' <<< "$data")" = "" ]; then
+            echo "::warning::PR #$PR_NUMBER not found; leaving the status unchanged."
+            exit 0
+          fi
           # Same-repo PRs (reviewer branches, bots) and upstream long-lived branches have no fork build.
           # Only contributor forks get the relay.
-          head_repo=$(jq -r .head.repo.full_name pr.json); head_ref=$(jq -r .head.ref pr.json)
-          upstream=$(gh api "repos/$REPO" --jq '.parent.full_name // ""')
-          if [ "$head_repo" = "$REPO" ] \
-             || { [ "$head_repo" = "$upstream" ] && { [ "$head_ref" = dev ] || [ "$head_ref" = central-staging ]; }; }; then
-            echo "internal=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "internal=false" >> "$GITHUB_OUTPUT"
-          fi
-          files=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
-          if [ -n "$files" ] && ! echo "$files" | grep -qvE '\.md$'; then
-            echo "docs_only=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "docs_only=false" >> "$GITHUB_OUTPUT"
-          fi
-          labels=$(jq -r '[.labels[].name] | join(",")' pr.json)
-          case ",$labels," in
-            *,sync,*|*,hotfix,*) echo "bypass=true" >> "$GITHUB_OUTPUT" ;;
-            *) echo "bypass=false" >> "$GITHUB_OUTPUT" ;;
-          esac
+          jq -r --arg repo "$REPO" '
+            .data.repository as $r
+            | $r.pullRequest as $p
+            | ($p.files.nodes // [] | map(.path)) as $files
+            | ($p.files.totalCount // 0) as $fileCount
+            | ($p.labels.nodes // [] | map(.name)) as $labels
+            | "sha=\($p.headRefOid)",
+              "head_repo=\($p.headRepository.nameWithOwner // "")",
+              "internal=\(if ($p.headRepository.nameWithOwner // "") == $repo
+                            or (($p.headRepository.nameWithOwner // "") == ($r.parent.nameWithOwner // "")
+                                and ($p.headRefName == "dev" or $p.headRefName == "central-staging"))
+                          then "true" else "false" end)",
+              "docs_only=\(if ($fileCount > 0) and ($fileCount <= 100) and ($files | all(endswith(".md")))
+                            then "true" else "false" end)",
+              "bypass=\(if ($labels | index("sync")) or ($labels | index("hotfix"))
+                         then "true" else "false" end)"
+          ' <<< "$data" >> "$GITHUB_OUTPUT"
 
       - name: No fork build needed
         id: none_needed
