@@ -10,7 +10,7 @@ export const zeduToucanContributors: Contributor[] = [
   { name: "awanat2020", username: "awanat2020" },
   { name: "Hamzat Adebayo Hamzat", username: "Blackburn0" },
   { name: "Chiedozie Nduagwuike", username: "cjaynduagwuike" },
-  { name: "Damonte-11", username: "Damonte-11" },
+  { name: "Christopher Oladejo", username: "Damonte-11" },
   { name: "Kingsley Solomon", username: "gh-i19n" },
   { name: "Jubril Tayo", username: "jubriltayo" },
   { name: "KARIMAT SHUTTI", username: "KarimatShutti" },
