@@ -1,7 +1,7 @@
 name: FE preview status
 
 # Posts the Preview status the moment a PR event happens, so it sits next to the other checks while
-# "FE preview build" runs: pending "Building on a GitHub runner", or "No automatic preview" for forks
+# "PR checks" builds the preview: pending "Building on a GitHub runner", or "No automatic preview" for forks
 # that don't get one. fe-preview-deploy.yml takes it from there. Never checks out PR code.
 # Logic: `fe-preview.sh queued`.
 
