@@ -1,13 +1,13 @@
 name: PR Review recheck
 
-# GitHub does not re-run pull_request workflows when the base branch changes, so a fix merged to
-# dev would leave open PRs showing a stale, often false, "Structure, reuse, URLs, and secrets"
-# failure until someone nudges the PR. On every push to a protected branch this re-runs the latest
-# failed PR Review Bot run for each open PR, so the check reflects the new base.
-#
-# A re-run uses the workflow file from the original run's commit, so it only picks up the base
-# branch's review rules for runs created after .github/workflows/pr-review.yml gained the
-# "Use the base branch's review rules" step.
+# GitHub does not re-run pull_request workflows when the base branch changes, so a review-rule fix
+# merged to dev would leave open PRs showing a stale, often false, "PR review" failure until someone
+# pushes. On every push to a protected branch this re-runs the latest failed "PR checks" run for each
+# open PR whose only failing check is "PR review" (from the statuses pr-review-comment.yml posts,
+# read for every open PR in one GraphQL query).
+# PRs failing anything else (lint, types, build) wait for the contributor's push: a re-run would
+# rebuild for nothing. The review step fetches the base branch's rules when it runs, so a re-run
+# picks up the fix.
 
 on:
   push:
@@ -34,29 +34,36 @@ jobs:
     name: Re-run stale reviews
     runs-on: ubuntu-latest
     steps:
-      - name: Re-run failed reviews for open PRs
+      - name: Re-run checks that failed only on PR review
         run: |
-          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.sha)"' |
+          set -o pipefail
+          # One GraphQL read (about 2 points per 100 PRs) gives every open PR's head statuses; a
+          # run lookup follows only for PRs whose sole failing check is PR review.
+          # shellcheck disable=SC2016 # $owner etc. are GraphQL variables, not shell
+          gh api graphql --paginate -F owner="${REPO%%/*}" -F name="${REPO#*/}" -f query='
+            query($owner: String!, $name: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                pullRequests(states: OPEN, first: 100, after: $endCursor) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    number baseRefName headRefOid
+                    commits(last: 1) { nodes { commit { status { contexts { context state } } } } }
+                  }
+                }
+              }
+            }' |
+          jq -rs '
+            ["File policy","Gitleaks","Malware heuristics","Commit messages","Dependency audit","Prettier","ESLint","TypeScript","PR review","Build"] as $checks
+            | [.[].data.repository.pullRequests.nodes[]][]
+            | select(.baseRefName == "dev" or .baseRefName == "central-staging")
+            | select([.commits.nodes[0].commit.status.contexts[]?
+                      | select((.context as $c | $checks | index($c)) and .state == "FAILURE") | .context] == ["PR review"])
+            | "\(.number) \(.headRefOid)"' > candidates.txt
+          echo "$(grep -c . candidates.txt || true) open PRs fail only on PR review"
+          runs="repos/$REPO/actions/workflows/pr-checks.yml/runs?event=pull_request"
           while read -r number sha; do
-            # head_sha is the PR's head commit (identical to .head.sha), so this selects the PR's
-            # own review runs. The runs API has no PR-number filter, and a run's pull_requests
-            # array is empty for fork PRs, so head_sha is the only usable server-side filter.
-            run_id=$(gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?head_sha=$sha&per_page=20" \
-              --jq '[.workflow_runs[] | select(.event == "pull_request")] | sort_by(.created_at) | last | .id // empty' 2>/dev/null || true)
+            run_id=$(gh api "$runs&head_sha=$sha&status=failure&per_page=1" --jq '.workflow_runs[0].id // empty')
             [ -n "$run_id" ] || continue
-            conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion' 2>/dev/null || true)
-            case "$conclusion" in
-              failure|cancelled|timed_out)
-                # Re-run the run instead of forcing a fresh merge commit. pr-review.yml re-reads
-                # the base branch's config and review script at run time, so a re-run evaluates
-                # the current base rules; the head commit under review is unchanged. Forcing a new
-                # event (close/reopen) would re-trigger every other PR workflow as well.
-                echo "PR #$number: re-running review run $run_id"
-                gh run rerun "$run_id" --repo "$REPO" --failed || true
-                ;;
-              *)
-                echo "PR #$number: review run $run_id is $conclusion; nothing to do"
-                ;;
-            esac
-          done
+            echo "PR #$number: re-running run $run_id"
+            gh run rerun "$run_id" --repo "$REPO" --failed || true
+          done < candidates.txt
