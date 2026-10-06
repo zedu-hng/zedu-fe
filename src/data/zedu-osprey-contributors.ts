@@ -29,7 +29,7 @@ export const zeduOspreyContributors: Contributor[] = [
   { name: "Irfat-code", username: "Irfat-code" },
   { name: "Isaac Gideon", username: "vxrcel" },
   { name: "Iyola Oyabiyi", username: "iyoolaoyabiyi" },
-  { name: "Joshua Adebisi", username: "Forty Eight" },
+  { name: "Joshua O. Adebisi", username: "Forty Eight" },
   { name: "Leo", username: "Beelzebub" },
   { name: "Marizu Esther", username: "High Babe" },
   { name: "Maureen Obiekwe", username: "Human AI" },
