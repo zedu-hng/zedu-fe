@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 import { DynamicFooter } from "../../_components/footer/dynamic-footer";
-import { FlamingoTable } from "../../_components/contributors/flamingo-table";
-import { getFlamingoContributors } from "../_data/flamingo-contributors";
+import { FlamingoTable } from "./_components/flamingo-table";
+import { getFlamingoContributors } from "./_lib/contributors";
 
 export default async function FlamingoBoardPage() {
   const contributors = await getFlamingoContributors();
