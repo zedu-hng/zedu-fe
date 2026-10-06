@@ -262,6 +262,7 @@ export const TEAM: Team = {
       zeduUsername: "Godscovenant Patrick Udofe",
       githubEmail: "covenantudofe@gmail.com",
       githubUsername: "covenantudofe-creator",
+      primaryField: "Frontend Development",
       role: "Member",
     },
     {
