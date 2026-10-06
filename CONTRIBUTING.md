@@ -565,7 +565,7 @@ fix(buzz): resolve mute state after reconnect
 docs: expand contributing guide
 ```
 
-Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in CI on your PR title.
+Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in CI on every commit in your PR (**Commit messages**). **PR rules** checks the PR title.
 
 ---
 
@@ -684,7 +684,7 @@ The team fork builds your PR, with the team fork's `APP_ENV_FILE`, so the build 
 
 Before you open the PR, check your work locally, or ask your lead to merge your branch into the team fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
 
-The other checks (lint, types, build, security scans, **Commitlint**, **Branch name**, **Single author**, **Protected files**) run on the PR itself.
+The other checks run on the PR itself. **PR checks** runs file policy, Gitleaks, malware heuristics, commit messages, dependency audit, Prettier, ESLint, TypeScript, the review bot and the build in one job; **PR scans** runs Semgrep and ClamAV. Each check shows as its own status on the PR (ESLint, TypeScript, Build, ...), with the run's summary table listing every result. **PR rules** adds **Branch name**, **Single author**, **Protected files**, **Size**, **PR title** and **PR template**.
 
 ### 8. Review and merge
 
@@ -816,17 +816,16 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                   | Trigger                                                                | Purpose                                          |
-| -------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
-| `pr-pre-commit-checks.yml` | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Prettier, ESLint, TypeScript, build              |
-| `pr-review.yml`            | PR in `zedu-hng/zedu-fe` → `dev`, `central-staging`, `staging`, `main` | Structure, reuse, hardcoded-URL and secret scan  |
-| `security-checks.yml`      | PR → `dev`, `central-staging`, `staging`, `main`                       | File policy, dependency audit, Gitleaks, Semgrep |
-| `malware-scan.yml`         | PR → `dev`, `central-staging`, `staging`, `main`                       | ClamAV + JS heuristics                           |
-| `commitlint.yml`           | PR → `dev`, `central-staging`                                          | Commit messages + PR title                       |
-| `pr-rules.yml`             | PR → `dev`, `central-staging`                                          | Branch name, single author, protected files      |
-| `fork-build.yml`           | PR events / comment / schedule                                         | Relays the fork's PR build as **Fork build**     |
-| `deploy-staging.yml`       | Push / dispatch → `staging`                                            | Deploy staging (self-hosted runner)              |
-| `deploy-main.yml`          | Push / dispatch → `main`                                               | Deploy production (self-hosted runner)           |
+| Workflow                                                                               | Trigger                        | Purpose                                                                                                                              |
+| -------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `pr-checks.yml`                                                                        | PR → `dev`, `central-staging`  | File policy, Gitleaks, malware heuristics, commit messages, audit, Prettier, ESLint, TypeScript, review bot, build (+ preview image) |
+| `pr-scans.yml`                                                                         | PR → `dev`, `central-staging`  | Semgrep, ClamAV                                                                                                                      |
+| `pr-review-comment.yml`                                                                | After PR checks / PR scans     | Posts each check as a status, and the review bot's comment                                                                           |
+| `pr-rules.yml`                                                                         | PR → `dev`, `central-staging`  | Branch name, single author, protected files, size, title, template                                                                   |
+| `pr-pre-commit-checks.yml`, `pr-review.yml`, `security-checks.yml`, `malware-scan.yml` | Disabled in `zedu-hng`         | Zedu's originals, replaced by the two above; kept unchanged so syncs don't conflict                                                  |
+| `fork-build.yml`                                                                       | PR events / comment / schedule | Relays the fork's PR build as **Fork build**                                                                                         |
+| `deploy-staging.yml`                                                                   | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)                                                                                                  |
+| `deploy-main.yml`                                                                      | Push / dispatch → `main`       | Deploy production (self-hosted runner)                                                                                               |
 
 ### Docker
 
