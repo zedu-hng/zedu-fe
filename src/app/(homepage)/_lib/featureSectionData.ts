@@ -32,13 +32,13 @@ export const otherFeatures = [
   {
     title: "File Management",
     description:
-      "Organize, share, and instantly access all your learning resources in one secure, centralized hub reduces clutter, and keeps every class connected.",
+      "Organize, share, and instantly access all your learning resources in one secure, centralized hub that reduces clutter, and keeps every class connected.",
     icon: "/images/homepage/icons/file-management.png",
   },
   {
     title: "Whiteboard",
     description:
-      "Organize, share, and instantly access all your learning resources in one secure, centralized hub reduces clutter, and keeps every class connected.",
+      "Organize, share, and instantly access all your learning resources in one secure, centralized hub that reduces clutter, and keeps every class connected.",
     icon: "/images/homepage/icons/whiteboard.png",
   },
   {
