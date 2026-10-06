@@ -243,8 +243,13 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           if [ "$conclusion" = "success" ]; then
             status success "Fork build passed for ${SHA:0:7}" "$url"
-            preview=$(gh api "repos/$HEAD_REPO/commits/$SHA/status" \
-              --jq '.statuses[] | select(.context == "zedu/preview") | .target_url' | head -1)
+            # The fork's own preview link (legacy; FE previews are built here now). jq picks the first
+            # match, so an API error isn't hidden by a pipe; on one, post without the link.
+            if ! preview=$(gh api "repos/$HEAD_REPO/commits/$SHA/status" \
+                 --jq 'first(.statuses[] | select(.context == "zedu/preview") | .target_url) // empty'); then
+              echo "::warning::Couldn't read the fork's preview status; posting without a preview link."
+              preview=""
+            fi
             # An if, not `[ ] &&`: as the step's last command, a false test would fail the step.
             if [ -n "$preview" ]; then echo "preview=$preview" >> "$GITHUB_OUTPUT"; fi
           else
