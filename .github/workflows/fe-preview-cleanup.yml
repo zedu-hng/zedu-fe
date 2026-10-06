@@ -114,12 +114,19 @@ jobs:
           key: ${{ steps.window.outputs.key }}
           lookup-only: true
 
+      # If the dispatch itself fails, this run sweeps instead (it just can't save the marker). A
+      # dispatched sweep that fails before saving leaves the window unmarked, so the next deploy
+      # hands off again.
       - name: Hand off to a dispatched sweep
+        id: handoff
         if: github.event_name == 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        continue-on-error: true
         run: gh workflow run fe-preview-cleanup.yml --repo "$REPO" --ref dev -f handoff=true
 
       - name: Sweep
-        if: github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true'
+        if: >-
+          (github.event_name != 'workflow_run' && steps.throttle.outputs.cache-hit != 'true') ||
+          steps.handoff.outcome == 'failure'
         run: bash .github/scripts/fe-preview.sh sweep
 
       - name: Mark window swept
