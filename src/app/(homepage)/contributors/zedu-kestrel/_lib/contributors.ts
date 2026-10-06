@@ -12,7 +12,7 @@ export interface Contributor {
 export const contributors: Contributor[] = [
   {
     id: "kestrel-01",
-    name: "Jeff Yankson",
+    name: "Jefferson Yankson",
     username: "jeff yankson",
     zeduName: "jeff yankson",
     background: "Backend Developer",
@@ -109,7 +109,7 @@ export const contributors: Contributor[] = [
     name: "Ochuba Daniel Ifeanyi",
     username: "Daniel Ifeanyi",
     zeduName: "Daniel Ifeanyi",
-    background: "Software Engineering",
+    background: "Software Development Student",
     email: "danielifeanyi74@gmail.com",
     linkedin: "daniel-ifeanyi-b33931325",
     avatarGradient: "from-blue-500 to-primary-400",
@@ -198,9 +198,19 @@ export const contributors: Contributor[] = [
     name: "Fabian Chibuike Muoghalu",
     username: "Fabbenco",
     zeduName: "Fabbenco",
-    background: "Backend / Full-Stack / AI Developer",
+    background: "Backend / Full-Stack / AI Engineer",
     email: "fabbenco97@gmail.com",
     linkedin: "fabian-muoghalu-37aa7a1a9",
+    avatarGradient: "from-secondary-500 to-tertiary-400",
+  },
+  {
+    id: "kestrel-20",
+    name: "Adewumi Oluwasanmi",
+    username: "AdewumiOluwasanmi",
+    zeduName: "AdewumiOluwasanmi",
+    background: "Backend Developer",
+    email: "oluwasanmiadewumi7@gmail.com",
+    linkedin: "oluwasanmi-adewumi-b53799268",
     avatarGradient: "from-secondary-500 to-tertiary-400",
   },
 ];
