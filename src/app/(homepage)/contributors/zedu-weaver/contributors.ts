@@ -4,7 +4,7 @@ export type Contributor = {
 };
 
 export const zeduWeaverContributors: Contributor[] = [
-  { name: "Omotomiwa Afonja", username: "S.F Tommy" },
+  { name: "Omotomiwa Abdulraheem Afonja", username: "S.F Tommy" },
   { name: "Owai Owai", username: "thisOx2" },
   { name: "Kallay Ummi M", username: "Khay" },
   { name: "Peace Ihendi", username: "Pearl" },
