@@ -13,7 +13,7 @@ export const contributors: Contributor[] = [
   {
     name: "Swingle Rebeca",
     username: "Rebecca swingle",
-    githubUsername: "SwingleRebeca",
+    githubUsername: "Swingle-Rebeca",
   },
   {
     name: "Nkoro Fortune",
@@ -54,5 +54,15 @@ export const contributors: Contributor[] = [
     name: "Adeleye Arafat",
     username: "Arafat",
     githubUsername: "adeleyearafat339-cmd",
+  },
+  {
+    name: "NC Michael",
+    username: "chukzmiki ",
+    githubUsername: "chukzmichael",
+  },
+  {
+    name: "Ebenezer",
+    username: "Ebenezer ",
+    githubUsername: "Ukezi-Ebenezer",
   },
 ];
