@@ -75,7 +75,7 @@ jobs:
           # PRs whose relay is already running or waiting on its delay: leave their chain alone (a
           # dispatch would cancel it through the per-PR concurrency group).
           for st in queued waiting in_progress; do
-            gh api "repos/$REPO/actions/workflows/fork-build.yml/runs?status=$st&per_page=100" \
+            gh api --paginate "repos/$REPO/actions/workflows/fork-build.yml/runs?status=$st&per_page=100" \
               --jq '.workflow_runs[].display_title | capture("#(?<n>[0-9]+)$").n'
           done | sort -u > active.txt
           # Paginate: gh pr list stops at 30 PRs, and there can be one open PR per ticket across every team.
