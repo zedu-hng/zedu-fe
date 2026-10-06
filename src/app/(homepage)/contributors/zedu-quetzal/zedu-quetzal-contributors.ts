@@ -5,7 +5,7 @@ export const zeduQuetzalContributors: Contributor[] = [
   { name: "Tobiloba Adigun", username: "Tasiwewe" },
   { name: "Taiwo Tolani", username: "conversely" },
   { name: "Isaac Josiah", username: "isaac josiah" },
-  { name: "Bigtiffs", username: "Bigtiffs" },
+  { name: "Tiffany", username: "Bigtiffs" },
   { name: "Uchechukwu Samuel", username: "usamuelchukwu" },
   { name: "Abel promise", username: "Abel promise" },
   { name: "Isioma Peter", username: "isioma_peter" },
@@ -54,5 +54,4 @@ export const zeduQuetzalContributors: Contributor[] = [
   { name: "Obimba Samuel", username: "obimz" },
   { name: "Joshua Emmanuel", username: "Joshua" },
   { name: "JOSIAH ACHESE", username: "JOSIAH" },
-  { name: "Annie", username: "anniedevkiller" },
 ];
