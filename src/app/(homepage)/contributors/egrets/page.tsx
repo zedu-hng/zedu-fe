@@ -98,7 +98,7 @@ const EgretContributorsPage = () => {
         href="/"
         className="group mt-6 inline-flex items-center gap-3 rounded-full bg-primary-500 px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-primary-400"
       >
-        Explore Zedu
+        Explore Zedu-Egret
         <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">
           <svg
             width="20"
