@@ -10,7 +10,7 @@ import { DynamicFooter } from "../../_components/footer/dynamic-footer";
 export const metadata: Metadata = {
   title: "Buzz",
   description:
-    "Use Zedu Buzz to start instant voice conversations inside learning channels. Collaborate in real time, clarify lessons faster, and review AI-generated session summaries.",
+    "Use Zedu Buzz to begin instant voice conversations inside learning channels. Collaborate in real time, clarify lessons faster, and review AI-generated session summaries.",
   keywords: [
     "Zedu Buzz",
     "education voice chat",
