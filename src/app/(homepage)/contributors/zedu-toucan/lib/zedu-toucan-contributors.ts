@@ -16,7 +16,7 @@ export const zeduToucanContributors: Contributor[] = [
   { name: "KARIMAT SHUTTI", username: "KarimatShutti" },
   { name: "mjayamaj", username: "mjayamaj" },
   { name: "Mav.js", username: "NdulueMarvellous" },
-  { name: "Confidence Ndubuisi", username: "nzube123" },
+  { name: "Confidence Nzube Ndubuisi", username: "nzube123" },
   { name: "Olu Ojeniyi", username: "oluojeniyis" },
   { name: "sheddylyke", username: "sheddylyke" },
   { name: "Miracle Olorunsola", username: "Techgirli" },

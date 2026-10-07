@@ -88,7 +88,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-09",
-    name: "Adeniran Isreal Kehinde",
+    name: "Adeniran ISREAL kehinde",
     username: "Kenny Gee",
     zeduName: "Kenny Gee",
     background: "Graphics Designer",
