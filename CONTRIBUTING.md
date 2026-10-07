@@ -878,4 +878,3 @@ There is **no `LICENSE` file** in this repository at present. Ask maintainers ab
 ---
 
 Thank you for helping improve Zedu.
-Co-contributor: Ejike
