@@ -15,7 +15,7 @@ const mockArticles = [
   },
   {
     title: "Keeping K-12 Classrooms Organized, Safe, and Engaging",
-    desc: "Create teacher-managed class spaces where students can ask questions, access lesson materials, submit work, and collaborate in a focused learning environment.",
+    desc: "Create teacher-managed class spaces where students can ask questions, access lesson materials, submit work, and collaborate in a supportive learning environment.",
     tag: "K-12 Platform",
     image: "/images/homepage/articles/article-3.png",
   },
