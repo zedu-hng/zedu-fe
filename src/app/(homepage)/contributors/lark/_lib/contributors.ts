@@ -26,7 +26,7 @@ export const larkContributors: Contributor[] = [
     role: "Assistant Lead",
   },
   { name: "Abdulkareem Rukayat", email: "ab***@gmail.com", role: "Member" },
-  { name: "Agnes Orèoluwa", email: "or***@gmail.com", role: "Member" },
+  { name: "Agnes Oreoluwa", email: "or***@gmail.com", role: "Member" },
   { name: "Aidudo Anita", email: "ai***@gmail.com", role: "Member" },
   { name: "Ajoku Kingsley Kelechi", email: "aj***@gmail.com", role: "Member" },
   { name: "Amaka Dafe", email: "am***@gmail.com", role: "Member" },
