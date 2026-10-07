@@ -85,7 +85,7 @@ const ContributorsPage = () => {
 
       <section className="flex w-full flex-col items-center gap-4 px-4 text-center sm:px-8 lg:px-12">
         <h2 className="text-xl font-semibold text-neutral-900 sm:text-3xl">
-          Want to See Your Name Here?
+          Start Your Journey Here
         </h2>
         <p className="max-w-xl text-sm text-neutral-600 sm:text-base">
           Zedu is built by people like you. Join the platform and be part of
