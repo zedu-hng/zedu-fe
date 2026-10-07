@@ -66,7 +66,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "John Ureke", username: "john ureke" },
   { name: "Bamidele Salman", username: "Bamidele Salman" },
   { name: "Richard Christopher Oduh", username: "Richard oduh" },
-  { name: "Adebayo Mercy", username: "adebayo mercy" },
+  { name: "Mercy Adebayo", username: "adebayo mercy" },
   { name: "Oluwafemi Moses Oladipo", username: "Oluwafemi Oladipo" },
   { name: "Adewale Abdulmajeed Ajibola", username: "Jeedy" },
   { name: "John Nnamdi", username: "Unkle jhonie" },
