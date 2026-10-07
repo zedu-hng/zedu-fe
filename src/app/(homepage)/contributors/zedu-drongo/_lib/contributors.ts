@@ -4,7 +4,7 @@ export type Contributor = {
 };
 
 export const zeduDrongoContributors: Contributor[] = [
-  { name: "Okonkwo Emmanuel", username: "Rabbi_Manuel" },
+  { name: "Emmanuel Okonkwo", username: "Rabbi_Manuel" },
   { name: "Fashina Isaac", username: "Highzik" },
   { name: "Muhammad Mustapha Bello", username: "Muhammad Mustapha Bello" },
   { name: "Atilola Emmanuel", username: "Emmanuel Atilola" },
