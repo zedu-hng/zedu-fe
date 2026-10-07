@@ -52,8 +52,20 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
   }, [user]);
 
   const handleSave = async () => {
+    const trimmedFullName = fullName.trim();
+    const savedFullName = (user?.full_name ?? "").trim();
+    const fullNameLength = trimmedFullName.length;
+    const fullNameInvalid = fullNameLength === 1 || fullNameLength > 100;
+
+    if (fullNameInvalid && trimmedFullName !== savedFullName) {
+      showError("Name must be between 2 and 100 characters");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("full_name", fullName);
+    if (fullNameLength >= 2 && fullNameLength <= 100) {
+      formData.append("full_name", trimmedFullName);
+    }
     formData.append("display_name", displayName);
     formData.append("username", username);
     formData.append("email", email);
@@ -82,14 +94,25 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
           payload: !state?.profileCallback,
         });
         showSuccess(res?.data?.message);
+        setTimeout(() => {
+          setButtonLoading(false);
+          onClose();
+        }, 1000);
+        return;
       }
 
-      setTimeout(() => {
-        setButtonLoading(false);
-        onClose();
-      }, 1000);
+      setButtonLoading(false);
+      showError(res?.data?.message || "Failed to update profile");
     } catch (err) {
       setButtonLoading(false);
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.message
+        : undefined;
+      showError(
+        typeof message === "string" && message.length > 0
+          ? message
+          : "Failed to update profile"
+      );
     }
   };
 
