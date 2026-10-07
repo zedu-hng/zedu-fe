@@ -19,7 +19,7 @@ export const zeduQuetzalContributors: Contributor[] = [
   { name: "Increase Akinwole", username: "increaseakinwole" },
   { name: "Douye Frank", username: "douye frank" },
   { name: "Canon", username: "Canon" },
-  { name: "Cyrus", username: "Cyrus" },
+  { name: "Oluwayoyinsola Cecil", username: "Cyrus" },
   { name: "Hauwa Ismail Ahmad", username: "Hauwa Ismail" },
   { name: "Okorie winner", username: "Okorie winner" },
   { name: "Paul Folorunsho Folorunsho", username: "Paul Folorunsho" },
