@@ -51,7 +51,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-05",
-    name: "Faith Okon",
+    name: "Mbuotidem Okon",
     username: "Design Sensei",
     zeduName: "Design Sensei",
     background: "UI/UX & AI Developer",
@@ -88,7 +88,7 @@ export const contributors: Contributor[] = [
   },
   {
     id: "kestrel-09",
-    name: "Adeniran Isreal Kehinde",
+    name: "Adeniran ISREAL kehinde",
     username: "Kenny Gee",
     zeduName: "Kenny Gee",
     background: "Graphics Designer",
@@ -139,7 +139,7 @@ export const contributors: Contributor[] = [
     name: "Afolabi Abdulbasit Opeyemi",
     username: "Aphoe",
     zeduName: "Aphoe",
-    background: "Web Developer",
+    background: "Web Developer & WordPress Developer",
     email: "abdulbasitafolabi7@gmail.com",
     linkedin: "afolabi-abdulbasit-604784275",
     avatarGradient: "from-primary-500 to-blue-400",
