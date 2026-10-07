@@ -10,13 +10,11 @@ export type Contributor = {
 
 export type Team = {
   name: string;
-  image: string;
   contributors: Contributor[];
 };
 
 export const TEAM: Team = {
   name: "Zedu-Sparrow",
-  image: "https://avatars.githubusercontent.com/u/335395597?s=200&v=4",
   contributors: [
     {
       fullName: "Abraham Bishop",

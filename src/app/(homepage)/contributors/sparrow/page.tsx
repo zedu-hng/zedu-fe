@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Crown, Github, Users } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -34,12 +34,6 @@ const ZeduSparrowTeamContributorsPage = () => {
     <div className="bg-gradient-to-b from-slate-50 to-white py-20 pb-20">
       <div className="mx-auto max-w-5xl px-4 pt-12 sm:px-6 lg:px-8">
         <section className="flex flex-col items-center text-center">
-          <Avatar className="h-28 w-28 shadow-lg ring-4 ring-white">
-            <AvatarImage src={TEAM.image} alt={`${TEAM.name} team logo`} />
-            <AvatarFallback className="text-xl font-semibold">
-              {getInitials(TEAM.name.replace("-", " "))}
-            </AvatarFallback>
-          </Avatar>
           <span className="mt-6 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600">
             <Users className="h-3.5 w-3.5" />
             Contributors
@@ -102,15 +96,10 @@ const ZeduSparrowTeamContributorsPage = () => {
                         @{contributor.zeduUsername}
                       </code>
                     )}
-                    <a
-                      href={`https://github.com/${contributor.githubUsername}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-slate-600 transition-colors hover:text-slate-900"
-                    >
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-600">
                       <Github className="h-3.5 w-3.5 shrink-0" />
                       {contributor.githubUsername}
-                    </a>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -184,17 +173,12 @@ const ZeduSparrowTeamContributorsPage = () => {
                       )}
                     </TableCell>
                     <TableCell className="px-6">
-                      <a
-                        href={`https://github.com/${contributor.githubUsername}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-slate-600 transition-colors hover:text-slate-900"
-                      >
+                      <span className="inline-flex items-center gap-1.5 text-slate-600">
                         <Github className="h-4 w-4 shrink-0" />
                         <span className="break-all">
                           {contributor.githubUsername}
                         </span>
-                      </a>
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}
