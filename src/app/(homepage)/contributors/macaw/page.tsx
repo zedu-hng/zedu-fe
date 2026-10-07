@@ -81,7 +81,7 @@ const contributors: Contributor[] = [
     workspaceEmail: "oluwasegunikoya@gmail.com",
     gitHubEmail: "emmanuelikoya99@gmail.com",
     role: "member",
-    hobbies: [],
+    hobbies: ["Djing", "Music Production", "Music Mixing", "Jogging"],
   },
   {
     id: "6",
