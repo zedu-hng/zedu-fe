@@ -62,7 +62,7 @@ export const TEAM: Team = {
       fullName: "Nwaohiri Emmanuel Uzodinma",
       zeduUsername: "99PlusOne",
       githubUsername: "Emmanuel-Xs",
-      role: "Team Lead",
+      role: "Member",
       field: "Frontend Developer",
     },
   ],
