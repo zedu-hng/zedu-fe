@@ -52,6 +52,13 @@ export const TEAM: Team = {
       field: "UI/UX Design",
     },
     {
+      fullName: "Victor Adeshile",
+      zeduUsername: "Victor Adeshile",
+      githubUsername: "davik4life",
+      role: "Member",
+      field: "Full-Stack Software Engineer",
+    },
+    {
       fullName: "Lawal Muhammed Olamide",
       zeduUsername: "muhammed",
       githubUsername: "OL4MID3",
@@ -85,6 +92,13 @@ export const TEAM: Team = {
       githubUsername: "hbiit",
       role: "Member",
       field: "Backend Development",
+    },
+    {
+      fullName: "Obiageli Ezeokoli",
+      zeduUsername: "Oby Ezeokoli",
+      githubUsername: "AfrikTechie",
+      role: "Member",
+      field: "Data Analysis",
     },
   ],
 };
