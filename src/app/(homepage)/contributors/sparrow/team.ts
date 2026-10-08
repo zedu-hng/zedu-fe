@@ -79,5 +79,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "Fullstack Development",
     },
+    {
+      fullName: "Bewaji Akintomiwa O.",
+      zeduUsername: "akintomiwa_bewaji",
+      githubUsername: "Akinbewaji",
+      role: "Member",
+      field: "Frontend Developer",
+    },
   ],
 };
