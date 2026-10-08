@@ -27,7 +27,7 @@ export const homeFAQs: HomeFAQ[] = [
     id: "item-4",
     question: "Can Zedu use our institution’s information to answer questions?",
     answer:
-      "Of course! You can connect your institutional content such as course documents, policies, and internal resources so AI assistants can provide responses grounded in your own approved materials.",
+      "Yes. You can connect your institutional content such as course documents, policies, and internal resources so AI assistants can provide responses grounded in your own approved materials.",
   },
   {
     id: "item-5",
