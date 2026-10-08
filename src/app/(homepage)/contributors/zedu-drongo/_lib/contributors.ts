@@ -8,7 +8,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Fashina Isaac", username: "Highzik" },
   { name: "Muhammad Mustapha Bello", username: "Muhammad Mustapha Bello" },
   { name: "Atilola Emmanuel", username: "Emmanuel Atilola" },
-  { name: "Muftiat Bakare", username: "dev_elixir" },
+  { name: "Bakare Muftiat", username: "dev_elixir" },
   { name: "John Divine", username: "dicint" },
   { name: "Yaasir Titilope Adigun", username: "Yaasir" },
   { name: "Victor Adeshile", username: "victor_adeshile" },
@@ -22,7 +22,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Collins", username: "Collins Odogwu" },
   { name: "Moses Ogunade", username: "Cosmic Atomic" },
   { name: "Adefemiwa Damilare Quadry", username: "Dreymi" },
-  { name: "Chukwu Sunday Nwabueze", username: "Maxdesigns01" },
+  { name: "Nwabueze Chukwu Sunday", username: "Maxdesigns01" },
   {
     name: "Lasisi Oluwatimilehin Joshua",
     username: "Lasisi Oluwatimilehin Joshua",

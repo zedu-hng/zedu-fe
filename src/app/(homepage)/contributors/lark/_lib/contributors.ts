@@ -17,9 +17,17 @@ export function maskEmail(email: string): string {
 export const larkContributors: Contributor[] = [
   { name: "Michael Abu", email: "th***@gmail.com", role: "Team Lead" },
   { name: "Alexin", email: "al***@gmail.com", role: "Technical Lead" },
-  { name: "Aisha Yunus", email: "ai***@gmail.com", role: "Assistant Lead" },
+  {
+    name: "Aisha Yunus",
+    email: "ai***@gmail.com",
+    role: "Assistant Coordinator",
+  },
   { name: "Canon", email: "um***@gmail.com", role: "Assistant Lead" },
-  { name: "Chidera Nwile", email: "ch***@gmail.com", role: "Assistant Lead" },
+  {
+    name: "Chidera Nwile",
+    email: "ch***@gmail.com",
+    role: "Assistant Coordinator",
+  },
   {
     name: "Ezeike David Chukwunonso",
     email: "da***@gmail.com",
