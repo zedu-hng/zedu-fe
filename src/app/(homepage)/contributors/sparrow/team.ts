@@ -44,5 +44,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "UI/UX Design",
     },
+    {
+      fullName: "Godscovenant Patrick Udofe",
+      zeduUsername: "Godscovenant Patrick Udofe",
+      githubUsername: "covenantudofe-creator",
+      role: "Member",
+      field: "Frontend Development",
+    },
   ],
 };
