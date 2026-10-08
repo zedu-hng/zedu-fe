@@ -59,7 +59,7 @@ export default function Page() {
         {/* Header */}
         <div className="mb-12 max-w-2xl">
           <p className="mb-2 text-sm font-medium uppercase tracking-wider text-blue-600">
-            HNG Internship
+            HNG-15 Internship
           </p>
 
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
