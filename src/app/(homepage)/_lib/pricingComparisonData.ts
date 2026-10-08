@@ -33,7 +33,7 @@ export type PricingComparisonSection = {
 
 export const pricingComparisonPlans: PricingComparisonPlan[] = [
   { key: "starter", label: "Starter" },
-  { key: "growth", label: "Growth" },
+  { key: "growth", label: "Pro" },
   { key: "enterprise", label: "Enterprise" },
 ];
 
