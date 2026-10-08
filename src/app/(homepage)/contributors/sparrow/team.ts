@@ -44,6 +44,7 @@ export const TEAM: Team = {
       role: "Member",
       field: "UI/UX Design",
     },
+    {
       fullName: "Abdulmuiz Abdulsalam Olalekan",
       zeduUsername: "abdulmuiz abdulsalam olalekan",
       githubUsername: "Iampeace001",
