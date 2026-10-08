@@ -70,7 +70,7 @@ export const TEAM: Team = {
       zeduUsername: "habeebraji",
       githubUsername: "hbiit",
       role: "Member",
-      field: "Backend Developement",
+      field: "Backend Development",
     },
   ],
 };
