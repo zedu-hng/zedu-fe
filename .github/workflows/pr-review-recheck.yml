@@ -1,13 +1,8 @@
 name: PR Review recheck
 
-# GitHub does not re-run pull_request workflows when the base branch changes, so a fix merged to
-# dev would leave open PRs showing a stale, often false, "Structure, reuse, URLs, and secrets"
-# failure until someone nudges the PR. On every push to a protected branch this re-runs the latest
-# failed PR Review Bot run for each open PR, so the check reflects the new base.
-#
-# A re-run uses the workflow file from the original run's commit, so it only picks up the base
-# branch's review rules for runs created after .github/workflows/pr-review.yml gained the
-# "Use the base branch's review rules" step.
+# Caller: the logic lives in zedu-hng/zedu-ci (pr-review-recheck.yml), pinned by commit. This file sets the
+# triggers, concurrency and token permissions. Keep the file name: other workflows look it up.
+# After a push to dev or central-staging, re-runs PR checks for open PRs whose only failure is PR review.
 
 on:
   push:
@@ -16,47 +11,18 @@ on:
       - central-staging
   workflow_dispatch:
 
-permissions:
-  contents: read
-  actions: write
-  pull-requests: read
+permissions: {}
 
 concurrency:
   group: pr-review-recheck-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  GH_TOKEN: ${{ github.token }}
-  REPO: ${{ github.repository }}
-
 jobs:
   recheck:
-    name: Re-run stale reviews
-    runs-on: ubuntu-latest
-    steps:
-      - name: Re-run failed reviews for open PRs
-        run: |
-          gh api --paginate "repos/$REPO/pulls?state=open&per_page=100" \
-            --jq '.[] | select(.base.ref == "dev" or .base.ref == "central-staging") | "\(.number) \(.head.sha)"' |
-          while read -r number sha; do
-            # head_sha is the PR's head commit (identical to .head.sha), so this selects the PR's
-            # own review runs. The runs API has no PR-number filter, and a run's pull_requests
-            # array is empty for fork PRs, so head_sha is the only usable server-side filter.
-            run_id=$(gh api "repos/$REPO/actions/workflows/pr-review.yml/runs?head_sha=$sha&per_page=20" \
-              --jq '[.workflow_runs[] | select(.event == "pull_request")] | sort_by(.created_at) | last | .id // empty' 2>/dev/null || true)
-            [ -n "$run_id" ] || continue
-            conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.conclusion' 2>/dev/null || true)
-            case "$conclusion" in
-              failure|cancelled|timed_out)
-                # Re-run the run instead of forcing a fresh merge commit. pr-review.yml re-reads
-                # the base branch's config and review script at run time, so a re-run evaluates
-                # the current base rules; the head commit under review is unchanged. Forcing a new
-                # event (close/reopen) would re-trigger every other PR workflow as well.
-                echo "PR #$number: re-running review run $run_id"
-                gh run rerun "$run_id" --repo "$REPO" --failed || true
-                ;;
-              *)
-                echo "PR #$number: review run $run_id is $conclusion; nothing to do"
-                ;;
-            esac
-          done
+    name: PR Review recheck
+    if: vars.IS_BOOTCAMP == 'true'
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: zedu-hng/zedu-ci/.github/workflows/pr-review-recheck.yml@fac7608447c2fd4f4b85e8b5c295a754bbf1d40a

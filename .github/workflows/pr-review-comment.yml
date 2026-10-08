@@ -1,69 +1,24 @@
 name: PR Review comment
 
-# Trusted companion to "PR Review Bot". The review has to check out and lint PR code, so it runs on
-# pull_request with a read-only token and cannot comment on PRs from forks. This workflow is
-# triggered when that run finishes, downloads its report artifact and posts it with the base repo's
-# write token, without ever checking out PR code. See .github/workflows/pr-review.yml.
+# Caller: the logic lives in zedu-hng/zedu-ci (pr-review-comment.yml), pinned by commit. This file sets the
+# triggers, concurrency and token permissions. Keep the file name: other workflows look it up.
+# Posts each PR checks / PR scans result as a commit status, and the review bot's report as a comment.
 
 on:
   workflow_run:
-    workflows: ["PR Review Bot"]
+    workflows: ["PR checks", "PR scans"]
     types:
       - completed
 
-permissions:
-  contents: read
-  actions: read
-  pull-requests: write
-
-env:
-  GH_TOKEN: ${{ github.token }}
-  REPO: ${{ github.repository }}
-  RUN_ID: ${{ github.event.workflow_run.id }}
-  HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
-  HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+permissions: {}
 
 jobs:
   comment:
-    name: Post review comment
-    if: >-
-      github.event.workflow_run.event == 'pull_request' &&
-      (github.event.workflow_run.conclusion == 'success' ||
-       github.event.workflow_run.conclusion == 'failure')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Resolve PR number
-        id: pr
-        run: |
-          number=$(gh api -X GET "repos/$REPO/pulls" -f state=open \
-            -f head="${HEAD_REPO%%/*}:$HEAD_BRANCH" --jq '.[0].number // empty')
-          if [ -z "$number" ]; then
-            echo "::notice::No open PR for $HEAD_REPO:$HEAD_BRANCH; skipping comment."
-          fi
-          echo "number=$number" >> "$GITHUB_OUTPUT"
-
-      - name: Download review report
-        if: steps.pr.outputs.number != ''
-        uses: actions/download-artifact@v4
-        with:
-          name: pr-review-report
-          run-id: ${{ env.RUN_ID }}
-          github-token: ${{ github.token }}
-
-      - name: Check report
-        id: report
-        if: steps.pr.outputs.number != ''
-        run: |
-          if [ -s review-report.md ]; then
-            echo "found=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::notice::The review run produced no report; skipping comment."
-          fi
-
-      - name: Post PR comment
-        if: steps.pr.outputs.number != '' && steps.report.outputs.found == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: pr-review-bot
-          number: ${{ steps.pr.outputs.number }}
-          path: review-report.md
+    name: PR Review comment
+    if: vars.IS_BOOTCAMP == 'true'
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+      statuses: write
+    uses: zedu-hng/zedu-ci/.github/workflows/pr-review-comment.yml@fac7608447c2fd4f4b85e8b5c295a754bbf1d40a
