@@ -46,7 +46,7 @@ export const contributors: Contributor[] = [
   { name: "Fawaz Yusuff", githubUsername: "flawrrz" },
   { name: "Francis Anyah", githubUsername: "assisi-francis" },
   { name: "Godgift Achong", githubUsername: "giftninho" },
-  { name: "Godspower Nwwnkwo", githubUsername: "GODSPE1" },
+  { name: "Godspower Nwankwo", githubUsername: "GODSPE1" },
   {
     name: "Ibrahim Sulaimon Opeyemi",
     githubUsername: "Sulai007",
