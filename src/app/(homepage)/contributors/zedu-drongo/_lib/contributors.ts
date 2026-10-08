@@ -36,7 +36,7 @@ export const zeduDrongoContributors: Contributor[] = [
   },
   { name: "Mesode Kelly Akwe", username: "mesode_akwe" },
   { name: "Ifeanyichukwu Gideon Eloka", username: "gideoneloka" },
-  { name: "Moronke Odofin", username: "Sparklynjewel" },
+  { name: "Odofin Moronke", username: "Sparklynjewel" },
   { name: "Isaac Ogugua Eberechukwu", username: "OBA" },
   { name: "Chaydee Hilary", username: "Lahrry" },
   { name: "Umeoke Ozioma", username: "Ozioma Umeoke" },
@@ -76,5 +76,5 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Arafah Muhyideen", username: "Dhinar" },
   { name: "Anuonye Chidera Victor", username: "Victor Courage" },
   { name: "Onyedikachi Oluchi", username: "Jemi" },
-  { name: "Abubakar Sadiq Muhammad", username: "Sadiq" },
+  { name: "Muhammad Abubakar Sadiq", username: "Sadiq" },
 ];

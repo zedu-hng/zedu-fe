@@ -51,5 +51,19 @@ export const TEAM: Team = {
       role: "Member",
       field: "Full-Stack Software Engineer",
     },
+    {
+      fullName: "Lawal Muhammed Olamide",
+      zeduUsername: "muhammed",
+      githubUsername: "OL4MID3",
+      role: "Member",
+      field: "AI Product Developer",
+    },
+    {
+      fullName: "Boluwatife Adesola",
+      zeduUsername: "Adesola",
+      githubUsername: "adesolabolu",
+      role: "Member",
+      field: "Data Analysis",
+    },
   ],
 };
