@@ -44,5 +44,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "UI/UX Design",
     },
+    {
+      fullName: "Lawal Muhammed Olamide",
+      zeduUsername: "muhammed",
+      githubUsername: "OL4MID3",
+      role: "Member",
+      field: "AI Product Developer",
+    },
   ],
 };
