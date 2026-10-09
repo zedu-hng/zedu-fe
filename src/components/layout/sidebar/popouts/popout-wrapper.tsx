@@ -2,19 +2,34 @@
 
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import type { SidebarPopoutKey, SidebarPopoutProviderProps } from "./types";
+import type { ReactNode } from "react";
+import { DataContext } from "~/store/GlobalState";
+import { DmPopout, PeoplePopout } from "./dm-popout";
+import type { SidebarPopoutKey } from "./types";
+
+type PreviewTriggerHandlers = {
+  onMouseEnter: React.MouseEventHandler<HTMLAnchorElement>;
+  onFocus: React.FocusEventHandler<HTMLAnchorElement>;
+};
+
+type SidebarPopoutProviderProps = {
+  children: (controls: {
+    getPreviewHandlers: (preview: SidebarPopoutKey) => PreviewTriggerHandlers;
+    schedulePreviewClose: () => void;
+  }) => ReactNode;
+};
 
 export const SidebarPopoutProvider = ({
   children,
-  renderPreview,
-  onPreviewChange,
 }: SidebarPopoutProviderProps) => {
+  const { state } = useContext(DataContext);
   const [activePreview, setActivePreview] = useState<SidebarPopoutKey | null>(
     null
   );
@@ -38,22 +53,28 @@ export const SidebarPopoutProvider = ({
     cancelPreviewClose();
     previewCloseTimeout.current = setTimeout(() => {
       setActivePreview(null);
-      onPreviewChange(null);
       previewCloseTimeout.current = null;
     }, 150);
-  }, [cancelPreviewClose, onPreviewChange]);
+  }, [cancelPreviewClose]);
 
   const showPreview = useCallback(
     (preview: SidebarPopoutKey, element: HTMLElement) => {
       cancelPreviewClose();
       setActivePreview(preview);
-      onPreviewChange(preview);
       setPreviewTop(
         element.getBoundingClientRect().top +
           element.getBoundingClientRect().height / 2
       );
     },
-    [cancelPreviewClose, onPreviewChange]
+    [cancelPreviewClose]
+  );
+
+  const getPreviewHandlers = useCallback(
+    (preview: SidebarPopoutKey): PreviewTriggerHandlers => ({
+      onMouseEnter: (event) => showPreview(preview, event.currentTarget),
+      onFocus: (event) => showPreview(preview, event.currentTarget),
+    }),
+    [showPreview]
   );
 
   useEffect(
@@ -93,10 +114,31 @@ export const SidebarPopoutProvider = ({
     };
   }, [activePreview, previewTop]);
 
-  const popout = activePreview ? renderPreview(activePreview) : null;
+  const popout =
+    activePreview === "dms"
+      ? {
+          title: "Direct messages",
+          action: "Unreads",
+          content: (
+            <DmPopout dms={Array.isArray(state?.dms) ? state.dms : []} />
+          ),
+        }
+      : activePreview === "people"
+        ? {
+            title: "People",
+            action: "Online",
+            content: (
+              <PeoplePopout
+                people={
+                  Array.isArray(state?.orgMembers) ? state.orgMembers : []
+                }
+              />
+            ),
+          }
+        : null;
   return (
     <>
-      {children({ showPreview, schedulePreviewClose })}
+      {children({ getPreviewHandlers, schedulePreviewClose })}
       {popout &&
         activePreview &&
         typeof document !== "undefined" &&
