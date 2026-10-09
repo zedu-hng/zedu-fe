@@ -21,7 +21,7 @@ export const zeduToucanContributors: Contributor[] = [
   { name: "sheddylyke", username: "sheddylyke" },
   { name: "Miracle Olorunsola", username: "Techgirli" },
   { name: "Vivian Nduka", username: "Vivian-04" },
-  { name: "Solomon Theophilus", username: "solomontheo123" },
+  { name: "Theophilus Ojonimi Solomon", username: "solomontheo123" },
   { name: "Abdullah Abdulwahab", username: "Abdullah Abdulwahab" },
   { name: "Igbemo Olasunkanmi", username: "larry4596" },
 ];
