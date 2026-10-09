@@ -16,10 +16,12 @@ export const QRCodeDisplay = ({
   className = "",
 }: QRCodeDisplayProps) => {
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (!url) return;
 
+    setHasError(false);
     QRCode.toDataURL(url, {
       width: size * 3,
       margin: 1,
@@ -30,8 +32,25 @@ export const QRCodeDisplay = ({
       errorCorrectionLevel: "M",
     })
       .then((res) => setDataUrl(res))
-      .catch((err) => console.error("QR Code Generation Error:", err));
+      .catch((err) => {
+        console.error("QR Code Generation Error:", err);
+        setHasError(true);
+      });
   }, [url, size]);
+
+  if (hasError) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ width: size, height: size }}
+        className={`flex items-center justify-center shrink-0 rounded-lg bg-neutral-100 border border-neutral-200 p-2 text-center text-xs text-neutral-500 hover:text-neutral-900 hover:underline ${className}`}
+      >
+        Link
+      </a>
+    );
+  }
 
   if (!dataUrl) {
     return (

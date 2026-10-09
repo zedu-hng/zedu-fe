@@ -109,7 +109,7 @@ const DownLoadPage = () => {
             text="GET IT ON"
             description="Google Play"
             leftIcon="google"
-            href={PLAY_STORE_URL}
+            href={TARGET_PLAY_STORE_URL}
           />
         </div>
 
@@ -184,7 +184,7 @@ const DownLoadPage = () => {
                 text="GET IT ON"
                 description="Google Play"
                 leftIcon="google"
-                href={PLAY_STORE_URL}
+                href={TARGET_PLAY_STORE_URL}
                 dark
                 iconColor="#FFFFFF"
                 className="!px-4 !py-2 sm:!px-5"
