@@ -1,5 +1,3 @@
-/** @type {import('next').NextConfig} */
-
 const isDev = process.env.NODE_ENV === "development";
 
 function hostnameFromEnv(name) {
@@ -25,6 +23,7 @@ const imageHostnames = [
   "i.imgur.com",
 ].filter(Boolean);
 
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
   output: process.env.VERCEL ? undefined : "standalone",
@@ -44,6 +43,31 @@ const nextConfig = {
   assetPrefix: isDev ? undefined : "/mainapp",
   compiler: {
     removeConsole: isDev ? false : true,
+  },
+  async redirects() {
+    return [
+      {
+        source: "/instagram",
+        destination: "https://instagram.com/telex.im",
+        permanent: false,
+      },
+      {
+        source: "/tiktok",
+        destination: "https://tiktok.com/@telexim",
+        permanent: false,
+      },
+      {
+        source: "/facebook",
+        destination:
+          "https://www.facebook.com/share/1CyRjZC3rz/?mibextid=wwXIfr",
+        permanent: false,
+      },
+      {
+        source: "/x",
+        destination: "https://x.com/teleximapp",
+        permanent: false,
+      },
+    ];
   },
 };
 
