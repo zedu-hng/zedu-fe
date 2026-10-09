@@ -83,15 +83,7 @@ const EgretContributorsPage = () => {
                   <Github aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">
                     {entry.githubUsername
-                      ? (
-                          <a
-                            href={`https://github.com/${entry.githubUsername}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            @{entry.githubUsername}
-                          </a>
-                        )
+                      ? `@${entry.githubUsername}`
                       : "Team Egret contributor"}
                   </span>
                 </span>
