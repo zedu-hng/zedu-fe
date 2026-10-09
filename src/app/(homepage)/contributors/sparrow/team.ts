@@ -86,5 +86,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "Data Analysis",
     },
+    {
+      fullName: "Miracle Ette",
+      zeduUsername: "miracle ette",
+      githubUsername: "miracleette-lab",
+      role: "Member",
+      field: "QA Engineer",
+    },
   ],
 };
