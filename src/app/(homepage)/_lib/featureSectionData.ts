@@ -20,7 +20,7 @@ export const otherFeatures = [
   {
     title: "Class Recordings",
     description:
-      "Revisit, review, and reinforce your learning anytime. Access lessons, clarify concepts, and strengthen understanding anytime.",
+      "Revisit, review, and reinforce your learning anytime. Access lessons, clarify concepts, and strengthen understanding anywhere.",
     icon: "/images/homepage/icons/class-recordings.png",
   },
   {
