@@ -50,10 +50,13 @@ jobs:
       - name: Resolve base
         id: ctx
         run: |
+          owner="${REPO%%/*}"
           base=dev
-          pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          pr=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number,headRepositoryOwner \
+            | jq -r --arg owner "$owner" 'map(select(.headRepositoryOwner.login == $owner))[0].number // empty')
           if [ -n "$pr" ]; then
-            base=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json baseRefName --jq '.[0].baseRefName')
+            base=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json baseRefName,headRepositoryOwner \
+              | jq -r --arg owner "$owner" 'map(select(.headRepositoryOwner.login == $owner))[0].baseRefName')
           fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
           git fetch -q --no-tags origin "$base"
@@ -62,7 +65,9 @@ jobs:
       - name: File policy
         id: file_policy
         continue-on-error: true
-        run: bash .github/scripts/verify-changed-files.sh "origin/${{ steps.ctx.outputs.base }}" HEAD
+        env:
+          BASE: ${{ steps.ctx.outputs.base }}
+        run: bash .github/scripts/verify-changed-files.sh "origin/$BASE" HEAD
 
       - name: Gitleaks
         id: gitleaks
@@ -99,7 +104,9 @@ jobs:
         id: commitlint
         if: steps.install.outcome == 'success'
         continue-on-error: true
-        run: pnpm exec commitlint --from "$(git merge-base "origin/${{ steps.ctx.outputs.base }}" HEAD)" --to HEAD --verbose
+        env:
+          BASE: ${{ steps.ctx.outputs.base }}
+        run: pnpm exec commitlint --from "$(git merge-base "origin/$BASE" HEAD)" --to HEAD --verbose
 
       - name: Dependency audit
         id: audit
@@ -156,8 +163,9 @@ jobs:
             case "$2" in
               success) state=success; desc="Passed" ;;
               skipped)
-                if [ "$INSTALL" = failure ]; then state=failure; desc="Not run: dependency install failed"; failed=$((failed + 1))
-                else state=success; desc="Not needed"; fi ;;
+                if [ "$INSTALL" = failure ]; then desc="Not run: dependency install failed"
+                else desc="Not run"; fi
+                state=failure; failed=$((failed + 1)) ;;
               *) state=failure; desc="${2:-not run}"; failed=$((failed + 1)) ;;
             esac
             jq -n --arg state "$state" --arg context "$1" --arg description "$desc" --arg url "$RUN_URL" \
