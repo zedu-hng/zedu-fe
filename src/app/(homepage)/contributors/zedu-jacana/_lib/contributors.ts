@@ -28,7 +28,7 @@ export const contributors: Contributor[] = [
   {
     name: "Ejike Odoh",
     username: "ejike",
-    githubUsername: "ejikeodoh",
+    githubUsername: "EjikeOdoh",
   },
   {
     name: "Ejikeme Chinaza",
