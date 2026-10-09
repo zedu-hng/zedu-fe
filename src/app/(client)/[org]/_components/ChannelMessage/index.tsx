@@ -1,11 +1,5 @@
 "use client";
-import React, {
-  Fragment,
-  useContext,
-  useRef,
-  useEffect,
-  useState,
-} from "react";
+import React, { useContext, useRef, useEffect, useState } from "react";
 
 import UseChannel from "../../home/channels/hooks/channel-message";
 import { DataContext } from "~/store/GlobalState";
@@ -163,13 +157,13 @@ const ChannelsMessage = () => {
         style={{
           display: "flex",
           flexDirection: "column-reverse",
-          overflowY: "visible",
+          overflow: "visible",
         }}
         scrollableTarget="scrollableDivs"
         inverse={true}
       >
         {Object.entries(groupedMessages)?.map(([dateLabel, threads]: any) => (
-          <Fragment key={dateLabel}>
+          <div key={dateLabel} className="flex flex-col-reverse">
             {threads?.map((item: any, index: number) => {
               const nextMessage = threads[index + 1];
               const shouldShowAvatar =
@@ -236,7 +230,7 @@ const ChannelsMessage = () => {
               );
             })}
 
-            <div className="relative my-2">
+            <div className="sticky top-0 z-10 my-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-dotted border-[#E6EAEF]"></div>
               </div>
@@ -246,7 +240,7 @@ const ChannelsMessage = () => {
                 </span>
               </div>
             </div>
-          </Fragment>
+          </div>
         ))}
       </InfiniteScroll>
 
