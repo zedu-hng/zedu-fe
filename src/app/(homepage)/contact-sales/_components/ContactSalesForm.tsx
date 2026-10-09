@@ -248,7 +248,14 @@ export const ContactSalesForm = () => {
           >
             <SelectTrigger
               id="organization_type"
+              aria-required="true"
               aria-invalid={Boolean(errors.organization_type)}
+              aria-errormessage={
+                errors.organization_type ? "organization_type-error" : undefined
+              }
+              aria-describedby={
+                errors.organization_type ? "organization_type-error" : undefined
+              }
               className={cn(
                 "h-10 border-[#d9d9df] p-3 text-sm text-[#222] focus:ring-1 focus:ring-primary-500",
                 errors.organization_type && "border-red-500"
@@ -268,7 +275,9 @@ export const ContactSalesForm = () => {
             </SelectContent>
           </Select>
           {errors.organization_type ? (
-            <p className="text-xs text-red-500">{errors.organization_type}</p>
+            <p id="organization_type-error" className="text-xs text-red-500">
+              {errors.organization_type}
+            </p>
           ) : null}
         </div>
       </div>
