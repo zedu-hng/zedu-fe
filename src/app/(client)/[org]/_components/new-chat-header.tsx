@@ -27,9 +27,11 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(0);
   const triggerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverContentRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   const orgId =
     state.orgId ||
@@ -45,18 +47,32 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
     );
   }, [users, selectedUsers]);
 
+  // The list shrinks when a user is picked and empties while the search
+  // debounce is pending, so keep the keyboard highlight inside it.
+  useEffect(() => {
+    setHighlightIndex((prev) =>
+      Math.min(prev, Math.max(filteredUsers.length - 1, 0))
+    );
+  }, [filteredUsers.length]);
+
+  useEffect(() => {
+    rowRefs.current[highlightIndex]?.scrollIntoView({ block: "nearest" });
+  }, [highlightIndex]);
+
   useEffect(() => {
     onUsersSelected(selectedUsers);
   }, [selectedUsers, onUsersSelected]);
 
   const handleSearch = (search: string) => {
     setInputValue(search);
+    setHighlightIndex(0);
     if (!open) setOpen(true);
   };
 
   const handleSelectUser = (user: User) => {
     setSelectedUsers((prev) => [...prev, user]);
     setInputValue("");
+    setHighlightIndex(0);
     setOpen(false);
     setTimeout(() => inputRef.current?.focus(), 10);
   };
@@ -76,6 +92,49 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
       target.scrollHeight - target.scrollTop - target.clientHeight < 48;
     if (nearBottom && hasMore && !loading) {
       loadMore();
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!open) {
+        setOpen(true);
+        return;
+      }
+
+      if (event.key === "ArrowDown") {
+        const next = Math.min(highlightIndex + 1, filteredUsers.length - 1);
+        setHighlightIndex(Math.max(next, 0));
+
+        // Page more users in as the highlight reaches the last loaded row.
+        if (
+          filteredUsers.length > 0 &&
+          next === filteredUsers.length - 1 &&
+          hasMore &&
+          !loading
+        ) {
+          loadMore();
+        }
+      } else {
+        setHighlightIndex((prev) => Math.max(prev - 1, 0));
+      }
+      return;
+    }
+
+    if (!open) return;
+
+    if (event.key === "Enter") {
+      const user = filteredUsers[highlightIndex];
+      if (user) {
+        event.preventDefault();
+        handleSelectUser(user);
+      }
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setOpen(false);
     }
   };
 
@@ -140,6 +199,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
                 value={inputValue}
                 onChange={(e) => handleSearch(e.target.value)}
                 onClick={handleInputClick}
+                onKeyDown={handleKeyDown}
                 onFocus={() => {
                   setIsInputFocused(true);
                 }}
@@ -167,6 +227,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
             align="start"
             sideOffset={5}
             style={{ width: triggerRef.current?.offsetWidth || "auto" }}
+            onKeyDown={handleKeyDown}
             onInteractOutside={(e) => {
               if (inputRef.current?.contains(e.target as Node)) {
                 e.preventDefault();
@@ -178,12 +239,18 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
               onScroll={handleListScroll}
             >
               {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+                filteredUsers.map((user, index) => (
                   <div
                     key={user?.id}
+                    ref={(el) => {
+                      rowRefs.current[index] = el;
+                    }}
                     onMouseDown={(e) => e.preventDefault()}
+                    onMouseEnter={() => setHighlightIndex(index)}
                     onClick={() => handleSelectUser(user)}
-                    className="flex items-center gap-[10px] px-4 py-[10px] hover:bg-[#F1F1FE] cursor-pointer"
+                    className={`flex items-center gap-[10px] px-4 py-[10px] hover:bg-[#F1F1FE] cursor-pointer ${
+                      index === highlightIndex ? "bg-[#F1F1FE]" : ""
+                    }`}
                   >
                     <Image
                       src={
