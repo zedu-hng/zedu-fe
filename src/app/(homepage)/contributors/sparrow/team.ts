@@ -52,6 +52,13 @@ export const TEAM: Team = {
       field: "UI/UX Design",
     },
     {
+      fullName: "Victor Adeshile",
+      zeduUsername: "Victor Adeshile",
+      githubUsername: "davik4life",
+      role: "Member",
+      field: "Full-Stack Software Engineer",
+    },
+    {
       fullName: "Lawal Muhammed Olamide",
       zeduUsername: "muhammed",
       githubUsername: "OL4MID3",
