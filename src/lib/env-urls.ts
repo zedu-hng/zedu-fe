@@ -10,6 +10,13 @@ export function siteUrl(path = ""): string {
   return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+export function githubProfileUrl(username: string): string | null {
+  const base = readEnv("NEXT_PUBLIC_GITHUB_PROFILE_BASE_URL");
+  if (!base || !username) return null;
+
+  return `${base}/${encodeURIComponent(username)}`;
+}
+
 export function ogImageUrl(fileName: string): string {
   return `${readEnv("NEXT_PUBLIC_MEDIA_URL")}/telexprodbucket/public/og-images/${fileName}`;
 }

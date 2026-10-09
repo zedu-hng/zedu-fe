@@ -4,7 +4,7 @@
 import type { Metadata } from "next";
 
 import { Github } from "lucide-react";
-import { siteUrl } from "~/lib/env-urls";
+import { githubProfileUrl, siteUrl } from "~/lib/env-urls";
 import { contributorCount, contributors } from "./_lib/contributors";
 
 export const metadata: Metadata = {
@@ -71,6 +71,7 @@ const EgretContributorsPage = () => {
           {contributors.map((entry, i) => {
             const base =
               "group flex h-full w-full flex-col gap-3 rounded-2xl bg-white px-5 py-5 drop-shadow-md transition duration-200 hover:-translate-y-0.5";
+            const profileUrl = githubProfileUrl(entry.githubUsername);
             return (
               <div key={i} className={base}>
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-50 text-sm font-bold text-primary-500">
@@ -82,17 +83,19 @@ const EgretContributorsPage = () => {
                 <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
                   <Github aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">
-                    {entry.githubUsername
-                      ? (
-                          <a
-                            href={`https://github.com/${entry.githubUsername}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            @{entry.githubUsername}
-                          </a>
-                        )
-                      : "Team Egret contributor"}
+                    {profileUrl ? (
+                      <a
+                        href={profileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        @{entry.githubUsername}
+                      </a>
+                    ) : entry.githubUsername ? (
+                      `@${entry.githubUsername}`
+                    ) : (
+                      "Team Egret contributor"
+                    )}
                   </span>
                 </span>
               </div>
