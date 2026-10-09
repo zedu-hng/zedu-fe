@@ -35,7 +35,7 @@ const DeletionFAQ = () => {
     {
       question: "How do I download my data before deletion?",
       answer:
-        "You can request a copy of your data by going to Settings > Privacy > Download Your Data. We'll prepare a comprehensive archive of your account data and send you a download link via email within 48 hours.",
+        "You can request a copy of your data by contacting our support team at support@zedu.chat. We'll prepare a comprehensive archive of your account data and send you a download link via email within 48 hours.",
     },
     {
       question: "What data is retained after account deletion?",
@@ -46,7 +46,7 @@ const DeletionFAQ = () => {
       question:
         "Can I delete specific data without deleting my entire account?",
       answer:
-        "Yes! If you only want to delete certain data types, you can do so from your account settings without deleting your entire account. Go to Settings > Privacy to manage individual data categories like messages, files, or activity history.",
+        "Yes. If you only want to delete certain data, such as messages, files, or activity history, contact our support team at support@zedu.chat and we'll help you without deleting your entire account.",
     },
     {
       question: "Is my account deletion GDPR compliant?",
