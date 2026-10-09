@@ -2,7 +2,7 @@ export const otherFeatures = [
   {
     title: "Messaging System",
     description:
-      "End-to-end encrypted communication for academic collaboration.Where students and educators connect securely.",
+      "End-to-end encrypted communication for academic collaboration. Where students and educators connect securely.",
     icon: "/images/homepage/icons/messaging-system.png",
   },
   {
