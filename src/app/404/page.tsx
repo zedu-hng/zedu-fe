@@ -29,7 +29,7 @@ function NotFound() {
             Network error, Could not validate your organisation.
           </p>
           <p className="text-sm font-normal leading-5 mt-3 text-slate-600">
-            Please click the button below to retry again
+            Click the button below to retry.
           </p>
           <button
             onClick={handleRetry}
