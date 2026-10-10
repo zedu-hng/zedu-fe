@@ -26,10 +26,12 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
   onCreate,
 }) => {
   const [folderName, setFolderName] = useState("");
+  const trimmedFolderName = folderName.trim();
+  const isFolderNameValid = trimmedFolderName.length > 0;
 
   const handleCreate = () => {
-    if (folderName.trim() !== "") {
-      onCreate(folderName);
+    if (isFolderNameValid) {
+      onCreate(trimmedFolderName);
       setFolderName("");
       onClose();
     }
@@ -57,8 +59,19 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
             placeholder="Untitled folder"
             value={folderName}
             onChange={(e) => setFolderName(e.target.value)}
+            aria-describedby={
+              !isFolderNameValid ? "folderName-help" : undefined
+            }
             className="border-2 focus:border-[#7141f8]"
           />
+          {!isFolderNameValid && (
+            <p
+              id="folderName-help"
+              className="mt-2 text-sm text-muted-foreground"
+            >
+              Enter a folder name. Spaces alone are not allowed.
+            </p>
+          )}
         </div>
         <DialogFooter className="">
           <DialogClose asChild>
@@ -68,6 +81,7 @@ const CreateFolderModal: React.FC<CreateFolderModalProps> = ({
           </DialogClose>
           <Button
             onClick={handleCreate}
+            disabled={!isFolderNameValid}
             className="bg-[#7141f8] text-white hover:bg-[#7141f8]/90"
           >
             Create
