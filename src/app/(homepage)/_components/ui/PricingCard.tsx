@@ -3,12 +3,13 @@
 import { ArrowBtn, OutlineBtn } from "./Button";
 import { cn } from "~/lib/utils";
 import { useRouter } from "next/navigation";
-type PricingFeature = {
+
+export type PricingFeature = {
   text: string;
   enabled: boolean;
 };
 
-type PricingCardProps = {
+export type PricingCardProps = {
   title: string;
   description: string;
   amount: string;
@@ -59,63 +60,86 @@ export const PricingCard = ({
   return (
     <article
       className={cn(
-        "relative flex h-full w-full max-w-[350px] flex-col gap-5 rounded-2xl bg-white p-6 shadow-md sm:p-8",
-        isPopular && "bg-[#f6f3ff] sm:scale-[1.01]"
+        "relative flex h-full w-full max-w-[360px] flex-col justify-between rounded-2xl border p-6 transition-all duration-200 sm:p-8",
+        isPopular
+          ? "border-purple-300 bg-white shadow-xl ring-2 ring-purple-500/20 lg:-translate-y-2"
+          : "border-neutral-200 bg-white shadow-sm hover:shadow-md"
       )}
     >
       {badgeText ? (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary-500 px-3 py-1 text-xs font-medium text-white">
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-purple-600 px-3.5 py-1 text-xs font-semibold tracking-wide text-white shadow-sm">
           {badgeText}
         </div>
       ) : null}
 
-      <div className="mx-auto flex max-w-[90%] flex-col items-center gap-2 text-center">
-        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
-        <p className="text-sm text-neutral-600">{description}</p>
-      </div>
+      <div className="flex flex-col gap-6">
+        {/* Title & Description */}
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h2 className="text-xl font-bold text-neutral-900">{title}</h2>
+          <p className="text-sm text-neutral-500 min-h-[40px]">{description}</p>
+        </div>
 
-      <div className="flex flex-col gap-1 text-center">
-        <h3 className="flex items-end justify-center gap-2">
-          <span className="text-4xl font-bold text-neutral-900">{amount}</span>
-          {periodLabel ? (
-            <span className="text-sm text-neutral-700">{periodLabel}</span>
-          ) : null}
-        </h3>
-        {footnote ? (
-          <p className="text-sm text-neutral-600">{footnote}</p>
-        ) : null}
-      </div>
+        {/* Amount & Period */}
+        <div className="flex flex-col items-center gap-1 text-center">
+          <div className="flex items-baseline justify-center gap-1.5">
+            <span className="text-4xl font-extrabold tracking-tight text-neutral-900">
+              {amount}
+            </span>
+            {periodLabel ? (
+              <span className="text-sm font-medium text-neutral-500">
+                {periodLabel}
+              </span>
+            ) : null}
+          </div>
+          {footnote ? (
+            <p className="text-xs font-medium text-neutral-600">{footnote}</p>
+          ) : (
+            <div className="h-4" />
+          )}
+        </div>
 
-      {ctaVariant === "filled" ? (
-        <ArrowBtn
-          text={ctaText}
-          href={ctaHref}
-          className="w-full justify-center"
-          hideArrow
-        />
-      ) : (
-        <OutlineBtn
-          text={ctaText}
-          className="w-full"
-          onClick={() => {
-            if (ctaHref) router.push(ctaHref);
-          }}
-        />
-      )}
+        {/* CTA Button */}
+        <div>
+          {ctaVariant === "filled" ? (
+            <ArrowBtn
+              text={ctaText}
+              href={ctaHref}
+              className="w-full justify-center py-2.5 shadow-sm"
+              hideArrow
+            />
+          ) : (
+            <OutlineBtn
+              text={ctaText}
+              className="w-full py-2.5"
+              onClick={() => {
+                if (ctaHref) router.push(ctaHref);
+              }}
+            />
+          )}
+        </div>
 
-      <div className="flex flex-1 flex-col gap-2 text-left">
-        {features.map((feature) => (
-          <p
-            key={feature.text}
-            className={cn(
-              "flex items-center gap-2 text-sm",
-              feature.enabled ? "text-neutral-600" : "text-neutral-400"
-            )}
-          >
-            <CheckIcon />
-            <span>{feature.text}</span>
-          </p>
-        ))}
+        <div className="border-t border-neutral-100" />
+
+        {/* Features List */}
+        <div className="flex flex-col gap-3 text-left">
+          <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            Included features
+          </span>
+          {features.map((feature) => (
+            <div
+              key={feature.text}
+              className={cn(
+                "flex items-start gap-2.5 text-sm",
+                feature.enabled ? "text-neutral-700" : "text-neutral-400"
+              )}
+            >
+              <span className="mt-1 shrink-0">
+                <CheckIcon />
+              </span>
+              <span>{feature.text}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </article>
   );
