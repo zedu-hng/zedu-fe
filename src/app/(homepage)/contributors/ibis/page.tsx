@@ -77,29 +77,48 @@ export default function Page() {
 
         {/* Contributors */}
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {contributors.map((contributor) => (
-            <li
-              key={contributor}
-              className="rounded-xl border border-border bg-background p-6 transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
-                {getInitials(contributor)}
-              </div>
+          {contributors.map((contributor) => {
+            const name = formatContributorName(contributor);
 
-              <h2 className="break-words text-base font-semibold text-foreground">
-                {contributor}
-              </h2>
-            </li>
-          ))}
+            return (
+              <li
+                key={contributor}
+                className="rounded-xl border border-border bg-background p-6 transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-muted text-sm font-semibold text-foreground">
+                  {getInitials(name)}
+                </div>
+
+                <h2 className="break-words text-base font-semibold text-foreground">
+                  {name}
+                </h2>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </main>
   );
 }
 
+function formatContributorName(raw: string) {
+  const handle = raw.trim().replace(/^@+/, "");
+  const cleaned = handle
+    .replace(/[^A-Za-z0-9]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .trim();
+
+  if (!cleaned) return raw.trim();
+
+  return cleaned
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function getInitials(name: string) {
   return name
-    .replace("@", "")
     .split(" ")
     .filter(Boolean)
     .map((word) => word[0])
