@@ -88,8 +88,8 @@ const ContributorsPage = () => {
           Your Name Belongs on Our Team Page
         </h2>
         <p className="max-w-xl text-sm text-neutral-600 sm:text-base">
-          Zedu is built by people like you. Join the platform and be part of
-          what we build next.
+          Behind every update is a team of contributors learning and shipping
+          together. There's room for one more, and it could be you.
         </p>
         <Link
           href="/auth/login"
