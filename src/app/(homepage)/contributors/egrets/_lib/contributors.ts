@@ -48,6 +48,10 @@ export const contributors: Contributor[] = [
   { name: "Godgift Achong", githubUsername: "giftninho" },
   { name: "Godspower Nwankwo", githubUsername: "GODSPE1" },
   {
+    name: "Ibrahim Rukayyah",
+    githubUsername: "iamadoctorforreal",
+  },
+  {
     name: "Ibrahim Sulaimon Opeyemi",
     githubUsername: "Sulai007",
   },
@@ -85,10 +89,6 @@ export const contributors: Contributor[] = [
   { name: "Precious Nse", githubUsername: "preshnse-code" },
   { name: "Precious Nse Samuel", githubUsername: "EmkaySOL" },
   { name: "Preshnat", githubUsername: "presh27" },
-  {
-    name: "Rukayyah Ibrahim",
-    githubUsername: "iamadoctorforreal",
-  },
   { name: "Samson Eyitene", githubUsername: "eyisam" },
   { name: "Samuel Olowu", githubUsername: "samuelolowu-ET-hue" },
   {
