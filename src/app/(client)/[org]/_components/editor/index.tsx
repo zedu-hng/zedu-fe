@@ -107,13 +107,65 @@ type PopulateFn = (
   component: HTMLElement,
   query: string,
   command: (payload: { id: string; label: string }) => void,
-  clientRect: (() => DOMRect | null) | null | undefined
+  clientRect: (() => DOMRect | null) | null | undefined,
+  initialLeftRef?: { current: number | null }
 ) => void;
+
+function positionDropdown(
+  component: HTMLElement,
+  clientRect: (() => DOMRect | null) | null | undefined,
+  itemCount: number,
+  initialLeftRef?: { current: number | null }
+) {
+  const coords = typeof clientRect === "function" ? clientRect() : null;
+  if (!coords || !component) return;
+
+  const viewportWidth = window.innerWidth;
+  const isMobile = viewportWidth < 640;
+  const targetWidth = Math.min(500, Math.max(0, viewportWidth - 24));
+
+  const itemHeight = 48;
+  const maxHeight = 300;
+  const dropdownHeight = Math.min(itemCount * itemHeight, maxHeight);
+
+  const editorTop = coords.top + window.scrollY;
+  const isAbove = editorTop > dropdownHeight + itemHeight;
+  const dropdownTop = isAbove
+    ? Math.max(window.scrollY + 8, editorTop - dropdownHeight - 8)
+    : coords.bottom + window.scrollY + 8;
+
+  let dropdownLeft: number;
+  if (isMobile) {
+    dropdownLeft = window.scrollX + 12;
+  } else {
+    const rawLeft =
+      initialLeftRef && initialLeftRef.current !== null
+        ? initialLeftRef.current
+        : coords.left + window.scrollX;
+    if (initialLeftRef && initialLeftRef.current === null) {
+      initialLeftRef.current = rawLeft;
+    }
+    const minLeft = window.scrollX + 12;
+    const maxLeft = window.scrollX + viewportWidth - targetWidth - 12;
+    dropdownLeft = Math.max(minLeft, Math.min(rawLeft, maxLeft));
+  }
+
+  Object.assign(component.style, {
+    top: `${dropdownTop}px`,
+    left: `${dropdownLeft}px`,
+    maxHeight: `${maxHeight}px`,
+    width: `${targetWidth}px`,
+    maxWidth: "calc(100vw - 24px)",
+    minWidth: "0px",
+    boxSizing: "border-box",
+  });
+}
 
 function createSuggestionRender(getPopulateFn: () => PopulateFn) {
   return () => {
     let component: HTMLElement | null = null;
     let currentHoveredIndex = -1;
+    const initialLeftRef = { current: null as number | null };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!component) return;
@@ -198,6 +250,7 @@ function createSuggestionRender(getPopulateFn: () => PopulateFn) {
         component.remove();
         component = null;
         currentHoveredIndex = -1;
+        initialLeftRef.current = null;
         event.preventDefault();
         event.stopPropagation();
       }
@@ -208,21 +261,33 @@ function createSuggestionRender(getPopulateFn: () => PopulateFn) {
         component.remove();
         component = null;
         currentHoveredIndex = -1;
+        initialLeftRef.current = null;
       }
     };
 
     return {
       onStart: (props: any) => {
+        initialLeftRef.current = null;
         const { query, command: cmd, clientRect } = props;
         component = document.createElement("div");
         component.className =
           "absolute border border-gray-300 rounded-lg shadow-lg bg-[#F9FAFB] overflow-y-auto z-50";
-        component.style.minWidth = "500px";
-        component.style.width = "500px";
+        const viewportWidth = window.innerWidth;
+        const targetWidth = Math.min(500, Math.max(0, viewportWidth - 24));
+        component.style.width = `${targetWidth}px`;
+        component.style.maxWidth = "calc(100vw - 24px)";
+        component.style.minWidth = "0px";
+        component.style.boxSizing = "border-box";
         document.body.appendChild(component);
         document.addEventListener("keydown", handleKeyDown, true);
         document.addEventListener("mousedown", handleClickOutside);
-        getPopulateFn()(component, query, cmd, clientRect ?? null);
+        getPopulateFn()(
+          component,
+          query,
+          cmd,
+          clientRect ?? null,
+          initialLeftRef
+        );
         const firstButton = component.querySelector("button");
         if (firstButton) {
           firstButton.classList.add("hover");
@@ -241,7 +306,13 @@ function createSuggestionRender(getPopulateFn: () => PopulateFn) {
         const { query, command: cmd, clientRect } = props;
         if (!component) return;
         component.innerHTML = "";
-        getPopulateFn()(component, query, cmd, clientRect ?? null);
+        getPopulateFn()(
+          component,
+          query,
+          cmd,
+          clientRect ?? null,
+          initialLeftRef
+        );
         const firstButton = component.querySelector("button");
         if (firstButton) {
           firstButton.classList.add("hover");
@@ -262,6 +333,7 @@ function createSuggestionRender(getPopulateFn: () => PopulateFn) {
         document.removeEventListener("mousedown", handleClickOutside);
         component = null;
         currentHoveredIndex = -1;
+        initialLeftRef.current = null;
       },
     };
   };
@@ -286,7 +358,8 @@ const UseTextEditor = (
     component,
     query,
     command,
-    clientRect
+    clientRect,
+    initialLeftRef
   ) => {
     const queryString = String(query || "").toLowerCase();
     const mentionMembers = state?.mentionOrgMembers || state?.orgMembers || [];
@@ -306,30 +379,17 @@ const UseTextEditor = (
     }
     component.style.display = "";
 
-    const coords = typeof clientRect === "function" ? clientRect() : null;
-    if (coords && component) {
-      const editorTop = coords.top + window.scrollY;
-      const itemHeight = 48;
-      const calculatedHeight = filteredItems.length * itemHeight;
-      const maxHeight = 300;
-      const dropdownHeight = Math.min(calculatedHeight, maxHeight);
-      const isAbove = editorTop > dropdownHeight + itemHeight;
-      const dropdownTop = isAbove
-        ? editorTop - dropdownHeight - coords.height
-        : coords.bottom + window.scrollY;
-      Object.assign(component.style, {
-        top: `${dropdownTop}px`,
-        left: `${coords.left + window.scrollX}px`,
-        maxHeight: `${maxHeight}px`,
-        minWidth: "500px",
-        width: "500px",
-      });
-    }
+    positionDropdown(
+      component,
+      clientRect,
+      filteredItems.length,
+      initialLeftRef
+    );
 
     filteredItems.forEach((item: any) => {
       const button = document.createElement("button");
       button.className =
-        "group flex items-center px-3 py-2 text-left w-full gap-3";
+        "group flex items-center px-3 py-2 text-left w-full gap-3 overflow-hidden";
 
       button.addEventListener("mouseover", () => {
         const buttons = Array.from(component.querySelectorAll("button"));
@@ -375,16 +435,18 @@ const UseTextEditor = (
       avatarContainer.appendChild(img);
 
       const textContainer = document.createElement("div");
-      textContainer.className = "flex items-center gap-2";
+      textContainer.className =
+        "flex items-center gap-2 min-w-0 flex-1 overflow-hidden";
       const mainTextLine = document.createElement("div");
-      mainTextLine.className = "flex items-center gap-2";
+      mainTextLine.className = "flex items-center gap-2 min-w-0";
       const nameSpan = document.createElement("span");
       nameSpan.textContent = item.name || item.email;
       nameSpan.className =
-        "text-sm font-bold capitalize text-gray-800 name-span";
+        "text-sm font-bold capitalize text-gray-800 name-span truncate";
       const status = document.createElement("div");
       if (item.name !== "@channel") {
-        status.className = "size-2 rounded-full border border-gray-500";
+        status.className =
+          "size-2 rounded-full border border-gray-500 shrink-0";
       }
       mainTextLine.appendChild(nameSpan);
       if (item.id !== CHANNEL_MENTION_ID) mainTextLine.appendChild(status);
@@ -396,7 +458,8 @@ const UseTextEditor = (
           : item.role !== "bot"
             ? item.name
             : "";
-      secondaryTextSpan.className = "text-xs text-gray-500 secondary-span";
+      secondaryTextSpan.className =
+        "text-xs text-gray-500 secondary-span truncate";
       textContainer.appendChild(mainTextLine);
       if (secondaryTextSpan.textContent) {
         textContainer.appendChild(secondaryTextSpan);
@@ -432,7 +495,8 @@ const UseTextEditor = (
     component,
     query,
     command,
-    clientRect
+    clientRect,
+    initialLeftRef
   ) => {
     const queryString = String(query || "").toLowerCase();
     const channels = state?.channels ?? [];
@@ -448,30 +512,17 @@ const UseTextEditor = (
     }
     component.style.display = "";
 
-    const coords = typeof clientRect === "function" ? clientRect() : null;
-    if (coords && component) {
-      const editorTop = coords.top + window.scrollY;
-      const itemHeight = 48;
-      const calculatedHeight = filteredChannels.length * itemHeight;
-      const maxHeight = 300;
-      const dropdownHeight = Math.min(calculatedHeight, maxHeight);
-      const isAbove = editorTop > dropdownHeight + itemHeight;
-      const dropdownTop = isAbove
-        ? editorTop - dropdownHeight - coords.height
-        : coords.bottom + window.scrollY;
-      Object.assign(component.style, {
-        top: `${dropdownTop}px`,
-        left: `${coords.left + window.scrollX}px`,
-        maxHeight: `${maxHeight}px`,
-        minWidth: "500px",
-        width: "500px",
-      });
-    }
+    positionDropdown(
+      component,
+      clientRect,
+      filteredChannels.length,
+      initialLeftRef
+    );
 
     filteredChannels.forEach((channel: any) => {
       const button = document.createElement("button");
       button.className =
-        "group flex items-center px-3 py-2 text-left w-full gap-3";
+        "group flex items-center px-3 py-2 text-left w-full gap-3 overflow-hidden";
 
       button.addEventListener("mouseover", () => {
         const buttons = Array.from(component.querySelectorAll("button"));
@@ -504,19 +555,21 @@ const UseTextEditor = (
       avatarContainer.textContent = "#";
 
       const textContainer = document.createElement("div");
-      textContainer.className = "flex items-center gap-2";
+      textContainer.className =
+        "flex items-center gap-2 min-w-0 flex-1 overflow-hidden";
       const mainTextLine = document.createElement("div");
-      mainTextLine.className = "flex items-center gap-2";
+      mainTextLine.className = "flex items-center gap-2 min-w-0";
       const nameSpan = document.createElement("span");
       nameSpan.textContent = channel?.name || "";
       nameSpan.className =
-        "text-sm font-bold capitalize text-gray-800 name-span";
+        "text-sm font-bold capitalize text-gray-800 name-span truncate";
       mainTextLine.appendChild(nameSpan);
 
       const secondaryTextSpan = document.createElement("span");
       secondaryTextSpan.textContent =
         channel?.description || `${channel?.members_count ?? 0} members`;
-      secondaryTextSpan.className = "text-xs text-gray-500 secondary-span";
+      secondaryTextSpan.className =
+        "text-xs text-gray-500 secondary-span truncate";
       textContainer.appendChild(mainTextLine);
       textContainer.appendChild(secondaryTextSpan);
 
@@ -547,7 +600,8 @@ const UseTextEditor = (
     component,
     query,
     command,
-    clientRect
+    clientRect,
+    initialLeftRef
   ) => {
     const queryString = String(query || "").toLowerCase();
     const filtered = SLASH_COMMANDS.filter(
@@ -562,30 +616,12 @@ const UseTextEditor = (
     }
     component.style.display = "";
 
-    const coords = typeof clientRect === "function" ? clientRect() : null;
-    if (coords && component) {
-      const editorTop = coords.top + window.scrollY;
-      const itemHeight = 48;
-      const calculatedHeight = filtered.length * itemHeight;
-      const maxHeight = 300;
-      const dropdownHeight = Math.min(calculatedHeight, maxHeight);
-      const isAbove = editorTop > dropdownHeight + itemHeight;
-      const dropdownTop = isAbove
-        ? editorTop - dropdownHeight - coords.height
-        : coords.bottom + window.scrollY;
-      Object.assign(component.style, {
-        top: `${dropdownTop}px`,
-        left: `${coords.left + window.scrollX}px`,
-        maxHeight: `${maxHeight}px`,
-        minWidth: "500px",
-        width: "500px",
-      });
-    }
+    positionDropdown(component, clientRect, filtered.length, initialLeftRef);
 
     filtered.forEach((cmd) => {
       const button = document.createElement("button");
       button.className =
-        "group flex items-center px-3 py-2 text-left w-full gap-3";
+        "group flex items-center px-3 py-2 text-left w-full gap-3 overflow-hidden";
 
       button.addEventListener("mouseover", () => {
         const buttons = Array.from(component.querySelectorAll("button"));
@@ -631,17 +667,19 @@ const UseTextEditor = (
       avatarContainer.appendChild(iconImg);
 
       const textContainer = document.createElement("div");
-      textContainer.className = "flex items-center gap-2";
+      textContainer.className =
+        "flex items-center gap-2 min-w-0 flex-1 overflow-hidden";
       const mainTextLine = document.createElement("div");
-      mainTextLine.className = "flex items-center gap-2";
+      mainTextLine.className = "flex items-center gap-2 min-w-0";
       const nameSpan = document.createElement("span");
       nameSpan.textContent = `/${cmd.label}`;
-      nameSpan.className = "text-sm font-bold text-gray-800 name-span";
+      nameSpan.className = "text-sm font-bold text-gray-800 name-span truncate";
       mainTextLine.appendChild(nameSpan);
 
       const secondaryTextSpan = document.createElement("span");
       secondaryTextSpan.textContent = cmd.description;
-      secondaryTextSpan.className = "text-xs text-gray-500 secondary-span";
+      secondaryTextSpan.className =
+        "text-xs text-gray-500 secondary-span truncate";
       textContainer.appendChild(mainTextLine);
       textContainer.appendChild(secondaryTextSpan);
 
@@ -791,6 +829,10 @@ const UseTextEditor = (
     },
     onBlur: () => handleTypingRef.current?.(false),
     editorProps: {
+      attributes: {
+        class:
+          "outline-none focus:outline-none w-full min-w-0 max-w-full break-words",
+      },
       handlePaste(view, event, slice) {
         const items = event.clipboardData?.items;
 
