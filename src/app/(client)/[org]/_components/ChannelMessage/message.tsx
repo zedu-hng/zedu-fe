@@ -61,6 +61,9 @@ const Message = ({
   const params = useParams();
   const id = params.id as string;
   const isSaved = bookmarks?.some((b: any) => b.thread_id === item.thread_id);
+  const isSystemMessage =
+    item?.type === "system" ||
+    (item?.type === "message" && item?.user_type === "system");
   const [usernames, setUsernames] = useState<any>([]);
   const [showMobileActions, setShowMobileActions] = useState(false);
 
@@ -219,38 +222,40 @@ const Message = ({
       className={`relative group message-row py-1 transition-colors flex items-start px-5 gap-2`}
       onClick={handleMessageClick}
     >
-      <div className="flex items-center justify-center">
-        {shouldShowAvatar ? (
-          <>
-            <div className="relative inline-flex">
-              <UserHoverCard
-                item={item}
-                handleOpen={handleOpen}
-                isOnline={isOnline}
-              />
-            </div>
-            <div
-              className="relative flex lg:hidden cursor-pointer mb-2"
-              onClick={handleOpen}
-            >
-              <UserAvatar item={item} size="sm" alt="profile" />
-            </div>
-          </>
-        ) : (
-          <span className="block text-xs w-[36px] text-[#98A2B3] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {new Date(item?.created_at)
-              .toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })
-              .replace(/\s?(am|pm)/i, "")}
-          </span>
-        )}
-      </div>
+      {!isSystemMessage && (
+        <div className="flex items-center justify-center">
+          {shouldShowAvatar ? (
+            <>
+              <div className="relative inline-flex">
+                <UserHoverCard
+                  item={item}
+                  handleOpen={handleOpen}
+                  isOnline={isOnline}
+                />
+              </div>
+              <div
+                className="relative flex lg:hidden cursor-pointer mb-2"
+                onClick={handleOpen}
+              >
+                <UserAvatar item={item} size="sm" alt="profile" />
+              </div>
+            </>
+          ) : (
+            <span className="block text-xs w-[36px] text-[#98A2B3] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {new Date(item?.created_at)
+                .toLocaleTimeString([], {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+                .replace(/\s?(am|pm)/i, "")}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="w-full">
-        {shouldShowAvatar && (
+        {!isSystemMessage && shouldShowAvatar && (
           <div className="flex items-center gap-2">
             <span
               className="hover font-bold text-[15px] text-[#1D2939] cursor-pointer"
