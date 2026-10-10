@@ -317,7 +317,10 @@ const Topbar = () => {
                         name={orgData?.name}
                       />
                     </div>
-                    <span className="truncate max-w-20">
+                    <span
+                      className="truncate max-w-[180px]"
+                      title={orgData?.name}
+                    >
                       {orgData?.name ? orgData.name : ""}
                     </span>
                     <span className="h-full flex items-center justify-center mt-0.5">
