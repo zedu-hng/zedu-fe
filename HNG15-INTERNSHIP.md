@@ -66,7 +66,7 @@ synced with `zedu-hng`; you just pull before branching.
 - A PR waits on two people: your lead first, then a reviewer. A nudge in your team channel is fine.
 - Reviewers work a shared queue (`ready-for-review`), oldest first. A busy team's extra PRs wait as
   `queued` and are picked up automatically as slots free.
-- The preview runs against the shared dev backend. If your change needs backend work that isn't on
-  `dev` yet, say so with a `Backend URL:` line in the PR description (see CONTRIBUTING) so it can't
+- The preview runs against the live backend (`api.zedu.chat`). Log in with a test account, not a real
+  one. If your change needs backend work that isn't live yet, say so with a `Backend URL:` line in the PR description (see CONTRIBUTING) so it can't
   merge early.
 - If a check fails, open its **Details**; the message names the fix.
