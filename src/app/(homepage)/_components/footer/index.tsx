@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { PostRequest } from "~/utils/request";
 import { useToast } from "~/components/ui/use-toast";
@@ -133,6 +134,7 @@ const appStoreLinks = [
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 const Footer = () => {
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -216,7 +218,9 @@ const Footer = () => {
 
             <div className="space-y-4">
               <p className="text-white/90">
-                Mobile App is available on Google PlayStore and AppStore
+                {pathname === "/contributors/ibis"
+                  ? "Zedu mobile app is available on Google Play Store and App Store"
+                  : "Mobile App is available on Google PlayStore and AppStore"}
               </p>
               <div className="mt-5 flex flex-wrap items-start gap-8 text-white">
                 {appStoreLinks.map((store) => (
