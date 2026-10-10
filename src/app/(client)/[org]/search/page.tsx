@@ -83,15 +83,37 @@ const SearchPaginationLink = ({
 export default function Search() {
   const searchParams = useSearchParams();
   const baseQuery = searchParams.get("query");
+  const initialChannel = searchParams.get("channel") || undefined;
+
+  return (
+    <SearchResults
+      key={baseQuery}
+      baseQuery={baseQuery}
+      initialChannel={initialChannel}
+    />
+  );
+}
+
+function SearchResults({
+  baseQuery,
+  initialChannel,
+}: {
+  baseQuery: string | null;
+  initialChannel?: string;
+}) {
   const [results, setResults] = useState<CombinedResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     type: "messages" as "messages" | "people" | undefined,
     from: undefined as string | undefined,
-    channel: undefined as string | undefined,
+    channel: initialChannel,
     date: undefined as { type: string; value: string } | undefined,
     sortBy: "relevance" as "relevance" | "newest" | "oldest" | string,
   });
+
+  useEffect(() => {
+    setFilters((current) => ({ ...current, channel: initialChannel }));
+  }, [initialChannel]);
 
   const { state } = useContext(DataContext);
   const { orgData, channels, orgMembers } = state;
@@ -162,6 +184,15 @@ export default function Search() {
     date?: { type: string; value: string };
     sortBy: "relevance" | "newest" | "oldest" | string;
   }) => {
+    if (newFilters.channel !== filters.channel) {
+      const url = new URL(window.location.href);
+      if (newFilters.channel) {
+        url.searchParams.set("channel", newFilters.channel);
+      } else {
+        url.searchParams.delete("channel");
+      }
+      window.history.replaceState(null, "", url);
+    }
     setResults([]);
     setFilters({
       type: newFilters.type || "messages",
@@ -226,6 +257,7 @@ export default function Search() {
 
         <SearchFilters
           onFilterChange={handleFilterChange}
+          channel={filters.channel}
           channels={channels || []}
           users={filterUsers}
         />
