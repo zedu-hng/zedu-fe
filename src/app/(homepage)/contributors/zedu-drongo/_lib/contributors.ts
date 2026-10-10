@@ -40,7 +40,7 @@ export const zeduDrongoContributors: Contributor[] = [
   { name: "Isaac Ogugua Eberechukwu", username: "OBA" },
   { name: "Chaydee Hilary", username: "Lahrry" },
   { name: "Umeoke Ozioma", username: "Ozioma Umeoke" },
-  { name: "Azeezat Morenikeji Olanihun", username: "azeezatolanihun" },
+  { name: "Olanihun Azeezat Morenikeji", username: "azeezatolanihun" },
   { name: "MARY IRAWOOLA OLADIMEJI", username: "Mirawoola" },
   { name: "Bolarinwa Oyerinde", username: "bolaoye" },
   { name: "UTIBE BASSEY", username: "ragnar" },
