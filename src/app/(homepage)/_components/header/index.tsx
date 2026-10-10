@@ -60,6 +60,7 @@ const topLevelLinks: NavLink[] = [
   { label: "Resources", href: "/resources" },
   { label: "Pricing", href: "/pricing" },
   { label: "About Us", href: "/about" },
+  { label: "Team", href: "/contributors/zedu-puffin" },
   { label: "Download", href: "/download" },
 ];
 
