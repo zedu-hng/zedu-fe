@@ -171,7 +171,7 @@ const contributors: Contributor[] = [
     workspaceEmail: "mrxxvector@gmail.com",
     gitHubEmail: "mrxxvector@gmail.com",
     role: "member",
-    hobbies: [],
+    hobbies: ["Sports", "Music", "Gaming"],
   },
   {
     id: "16",
