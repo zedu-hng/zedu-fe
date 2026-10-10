@@ -422,7 +422,7 @@ function SignUp() {
                 <div className="text-[16px] font-[600] leading-[20.16px]">
                   {googleloading ? (
                     <span className="flex items-center gap-x-2">
-                      <span className="animate-pulse">Logging in...</span>
+                      <span className="animate-pulse">Signing up...</span>
                       <Loading width="20" height="20" color="#7141F8" />
                     </span>
                   ) : (
@@ -460,7 +460,7 @@ function SignUp() {
                     <div className="text-[16px] font-[600] leading-[20.16px]">
                       {appleLoading ? (
                         <span className="flex items-center gap-x-2">
-                          <span className="animate-pulse">Logging in...</span>
+                          <span className="animate-pulse">Signing up...</span>
                           <Loading width="20" height="20" color="#000" />
                         </span>
                       ) : (
