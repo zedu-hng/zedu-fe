@@ -74,8 +74,14 @@ export async function openDmWithUser({
       participant_id: participantId,
     });
 
+    // PostRequest shows the server error and returns it instead of throwing, so
+    // a returned Error means the toast has already been shown.
+    const requestFailed = response instanceof Error;
+
     if (response?.status !== 200 && response?.status !== 201) {
-      showError("Couldn't open the conversation");
+      if (!requestFailed) {
+        showError("Couldn't open the conversation");
+      }
       return false;
     }
 
