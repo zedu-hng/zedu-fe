@@ -89,7 +89,7 @@ const TeamToucanPage = () => {
 
       <DynamicFooter
         text="Start Building Structured Learning Today"
-        description="Create organized channels, manage cohorts, and streamline your learning environment."
+        description="Create organized channels, manage cohorts, and simplify your learning environment."
       />
     </div>
   );
