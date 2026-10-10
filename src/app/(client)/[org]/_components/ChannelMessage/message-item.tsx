@@ -53,6 +53,7 @@ import {
   isPreviewableDocument,
 } from "~/utils/document-files";
 import { useRouter } from "next/navigation";
+import { tokenizeMessageText } from "~/app/(client)/[org]/_components/ChannelMessage/tokenize-message-text";
 
 /** @eslint-disable */
 
@@ -231,6 +232,10 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
     const props = node.props;
     const children = props.children;
 
+    if (typeof props.href === "string" && /^mailto:/i.test(props.href)) {
+      return node;
+    }
+
     if (
       (props["data-id"] || props["data-label"]) &&
       typeof children === "string"
@@ -257,11 +262,11 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
     }
 
     if (typeof children === "string") {
-      const mentionRegex = /([@#][a-zA-Z0-9_.-]+(?:\s[a-zA-Z0-9_.-]+)*)/g;
-      const parts = children.split(mentionRegex);
+      const parts = tokenizeMessageText(children);
 
-      return parts.map((part: any, i: number) => {
-        if (typeof part === "string" && part.startsWith("@")) {
+      return parts.map(({ text: part, isEmail, isMention }, i) => {
+        if (isEmail) return part;
+        if (isMention && part.startsWith("@")) {
           return (
             <GlobalMention
               key={`${part.slice(1)}-${i}`}
@@ -273,7 +278,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
             />
           );
         }
-        if (typeof part === "string" && part.startsWith("#")) {
+        if (isMention && part.startsWith("#")) {
           return (
             <GlobalMention
               key={`${part.slice(1)}-${i}`}
