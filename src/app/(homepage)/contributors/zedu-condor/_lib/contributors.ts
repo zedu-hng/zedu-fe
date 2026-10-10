@@ -27,4 +27,9 @@ export const contributors: Contributor[] = [
     handle: "babatunde_adeoti",
     role: "Developer",
   },
+  {
+    name: "Abdul-Baaqi Jempeji",
+    handle: "adebisijempeji",
+    role: "Software Engineer",
+  },
 ];
