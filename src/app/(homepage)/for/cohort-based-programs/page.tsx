@@ -160,7 +160,7 @@ const CohortBasedProgramsPage = () => {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      <section className="relative isolate overflow-hidden px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-12 lg:px-10 lg:pb-28 lg:pt-12">
+      <section className="relative isolate overflow-hidden px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-10 lg:px-10 lg:pb-28 lg:pt-16">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute bottom-0 left-1/2 -z-10 h-[35%] w-screen -translate-x-1/2 bg-gradient-to-t from-blue-50/30 to-white"
