@@ -14,7 +14,7 @@ export const zeduWeaverContributors: Contributor[] = [
   { name: "Ayodeji Adeniyi Oluwafemi", username: "Dayjigud" },
   { name: "Favour Daniel", username: "MR.FÃVY" },
   { name: "Bamijoko Mercy", username: "Bambam" },
-  { name: "Egeonu Chiamaka Happiness", username: "happiness egeonu" },
+  { name: "Happiness Chiamaka Egeonu", username: "happiness egeonu" },
   { name: "Faith Obi", username: "Faith_Dev_" },
   { name: "Abiodun Adeleke", username: "Tearsmith" },
   { name: "Naomi Okoro", username: "Nayohmee" },
