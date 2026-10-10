@@ -9,12 +9,12 @@ import { DynamicFooter } from "./_components/footer/dynamic-footer";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Zedu - Learning Platform for Bootcamps, Schools, and Cohorts",
+    absolute: "Zedu | AI Learning Platform for Bootcamps & Communities",
   },
   description:
-    "Zedu is an AI-powered education platform built for bootcamps and learning communities. Organize cohorts, run classes, manage communication, and scale modern learning in one workspace.",
+    "Zedu is an AI-powered platform for bootcamps and learning communities. Organize cohorts, run classes and manage communication in one workspace.",
   openGraph: {
-    title: "Zedu - Learning Platform for Bootcamps, Schools, and Cohorts",
+    title: "Zedu | AI Learning Platform for Bootcamps & Communities",
     description:
       "Built for modern learning: structured channels, AI-powered support, flexible education pricing, and tools that help educators run better cohorts.",
     url: "/",
