@@ -127,7 +127,7 @@ const ReplyMessage = ({ fetchMoreData, hasMore }: any) => {
               const isSaved = bookmarks?.some((b: any) => b.id === item.id);
 
               return (
-                <React.Fragment key={index}>
+                <React.Fragment key={item.id ?? index}>
                   <>
                     {isEditReply && threadReply?.id === item?.id ? (
                       <div
