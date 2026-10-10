@@ -14,7 +14,7 @@ export type Team = {
 };
 
 export const TEAM: Team = {
-  name: "Zedu-Sparrow",
+  name: "Zedu-Sparrow Contributors",
   contributors: [
     {
       fullName: "Abraham Bishop",
