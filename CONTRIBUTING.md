@@ -573,7 +573,7 @@ Commitlint runs on your commit message via the `.husky/commit-msg` hook, and in 
 
 The short version:
 
-> Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → the team fork builds it → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
+> Approved ticket → ticket branch in your team's fork → test against your team's backend → **one PR** to `zedu-hng/zedu-fe:dev` → PR checks build it and a preview goes up → team lead approves → Zedu reviewers review with that build → squash merge → your team syncs.
 
 New to the internship? [`HNG15-INTERNSHIP.md`](./HNG15-INTERNSHIP.md) is a one-page overview of how a ticket flows from the team fork to `dev`.
 
@@ -663,17 +663,14 @@ These files are owned by the reviewers. The **Protected files** check fails any 
    - your team lead's GitHub handle;
    - screenshots or a recording for visible changes.
 3. Ask your team lead to review it and leave an **Approve** review.
-4. Trigger the first build (see [How your PR gets built](#7-how-your-pr-gets-built)).
-5. Move the ticket to **IN REVIEW**.
+4. Move the ticket to **IN REVIEW**.
 
 ### 7. How your PR gets built
 
-The team fork builds your PR, with the team fork's `APP_ENV_FILE`, so the build talks to your team's backend. Zedu never holds your config or secrets.
+Zedu builds your PR on GitHub's runners, on every push, with a public build config. Your fork needs no build setup, no secrets and no first run.
 
-- **Builds run only while your PR is open.** Pushes to a ticket branch without an open PR skip the build. Docs-only pushes never build.
-- **First build:** opening the PR doesn't trigger one. In the team fork, go to **Actions → PR build → Run workflow** on your branch, or push a commit. After that, every push builds automatically.
-- On your PR, the **Fork build** check finds that run for your latest commit and reports the result. Comment `/fork-build` on the PR to re-check straight away.
-- No build showing at all? Check that Actions is enabled in the team fork and that it's synced.
+- The **Build** check shows the result. It is one of the **PR checks** statuses, so a failed build shows up next to ESLint and TypeScript.
+- Comment nothing and trigger nothing: push to the ticket branch and the checks re-run.
 
 **Previews.** Every PR from a registered team org gets a preview at `https://<PR number>.preview.groups.zedu.chat`, rebuilt on every push. Zedu builds it on GitHub's runners and hosts it, so your team sets nothing up. PRs from other forks get one when a reviewer adds the `preview` label.
 
@@ -681,7 +678,7 @@ The team fork builds your PR, with the team fork's `APP_ENV_FILE`, so the build 
 - It runs against the shared `dev` backend, exactly what reviewers test. If your PR needs backend work that isn't on `dev` yet, add a `Backend URL:` line to the PR description with that backend's host (for example `https://api.<team>.groups.zedu.chat`). The **Backend dependency** check then fails until the backend lands on `dev` and you delete the line, so the PR can't merge against unreleased backend code.
 - It's removed when the PR closes or after 48 hours without a push; the link comes back on your next push. Google sign-in and calls don't work in previews; use email login.
 
-Before you open the PR, check your work locally, or ask your lead to merge your branch into the team fork's `staging` sandbox. The build gate proves it compiles; a preview proves it works.
+Before you open the PR, check your work locally, or ask your lead to merge your branch into the team fork's `staging` sandbox. The **Build** check proves it compiles; a preview proves it works.
 
 The other checks run on the PR itself. **PR checks** runs file policy, Gitleaks, malware heuristics, commit messages, dependency audit, Prettier, ESLint, TypeScript, the review bot and the build in one job; **PR scans** runs Semgrep and ClamAV. Each check shows as its own status on the PR (ESLint, TypeScript, Build, ...), with the run's summary table listing every result. **PR rules** adds **Branch name**, **Single author**, **Protected files**, **Size**, **PR title** and **PR template**.
 
@@ -689,9 +686,9 @@ The other checks run on the PR itself. **PR checks** runs file policy, Gitleaks,
 
 - **Your team lead approves first.** Zedu reviewers only pick up PRs the lead has approved.
 - **1 Zedu reviewer approval** is required, and it must come after your last push.
-- All checks must pass, including **Fork build**.
+- All checks must pass, including **Build**.
 - All review threads must be resolved. Don't resolve a thread without actually addressing it.
-- To address feedback, push to the same ticket branch. Checks and the fork build re-run.
+- To address feedback, push to the same ticket branch. Checks re-run.
 - Reviewers **squash-merge** into `dev`. Your PR title becomes the commit message, so keep it conventional.
 - Contributors don't merge their own PRs.
 
@@ -710,7 +707,7 @@ Anything prefixed `NEXT_PUBLIC_` is compiled into the browser bundle and readabl
 ### 11. Definition of done
 
 - Acceptance criteria met.
-- All checks green on the PR, including **Fork build**.
+- All checks green on the PR, including **Build**.
 - Approved by your team lead and a Zedu reviewer, with all threads resolved.
 - Merged into `zedu-hng:dev`.
 - Verified in the build or preview.
@@ -809,7 +806,6 @@ pnpm start   # next start
 | `pr-review-comment.yml`                                                                | After PR checks / PR scans     | Posts each check as a status, and the review bot's comment                                                                           |
 | `pr-rules.yml`                                                                         | PR → `dev`, `central-staging`  | Branch name, single author, protected files, size, title, template                                                                   |
 | `pr-pre-commit-checks.yml`, `pr-review.yml`, `security-checks.yml`, `malware-scan.yml` | Disabled in `zedu-hng`         | Zedu's originals, replaced by the two above; kept unchanged so syncs don't conflict                                                  |
-| `fork-build.yml`                                                                       | PR events / comment / schedule | Relays the fork's PR build as **Fork build**                                                                                         |
 | `deploy-staging.yml`                                                                   | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)                                                                                                  |
 | `deploy-main.yml`                                                                      | Push / dispatch → `main`       | Deploy production (self-hosted runner)                                                                                               |
 
