@@ -1,18 +1,8 @@
 name: PR rules
 
-# Trusted: runs the review repo's copy of this file (pull_request_target) and NEVER checks out PR code,
-# so a PR can't edit these rules to pass itself. All data comes from the GitHub API.
-#
-# - Branch name: <type>/<ticket-id>-<short-description>. Reviewers (write access) are exempt.
-# - Single author: one person per PR. Co-authored-by trailers are fine. Reviewers are exempt.
-# - Protected files: .github/, AGENTS.md, CONTRIBUTING.md, tooling config.
-#   Blocked unless a reviewer adds the `config-change-approved` label.
-# - Size: at most ~400 changed lines (lockfiles and generated files excluded). Reviewers can apply
-#   the `size-override` label to allow a larger PR.
-# - PR title: <type>(<ticket-id>): <summary>, with the ticket matching the branch.
-# - PR template: every checkbox in .github/pull_request_template.md must be ticked.
-# Sync and promotion PRs (label `sync`, head dev/central-staging or upstream main/staging) are
-# waived here. Hotfix PRs (label `hotfix`) skip only size; branch/author/protected still run.
+# Caller: the logic lives in zedu-hng/zedu-ci (pr-rules.yml), pinned by commit. This file sets the
+# triggers, concurrency and token permissions. Keep the file name: other workflows look it up.
+# Branch name, Single author, Protected files, Size, PR title and PR template, each a commit status.
 
 on:
   pull_request_target:
@@ -27,263 +17,22 @@ on:
       - labeled
       - unlabeled
 
-permissions:
-  contents: read
-  pull-requests: read
+permissions: {}
 
 concurrency:
   group: pr-rules-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
-env:
-  GH_TOKEN: ${{ github.token }}
-  REPO: ${{ github.repository }}
-  PR_NUMBER: ${{ github.event.pull_request.number }}
-  HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-  HEAD_REF: ${{ github.event.pull_request.head.ref }}
-  AUTHOR: ${{ github.event.pull_request.user.login }}
-  LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-
 jobs:
-  scope:
-    name: Classify PR
+  rules:
+    name: PR rules
     if: vars.IS_BOOTCAMP == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      internal: ${{ steps.c.outputs.internal }}
-      reviewer: ${{ steps.c.outputs.reviewer }}
-      sync: ${{ steps.c.outputs.sync }}
-      hotfix: ${{ steps.c.outputs.hotfix }}
-    steps:
-      - id: c
-        run: |
-          case "$AUTHOR" in
-            dependabot\[bot\]|renovate\[bot\]|github-actions\[bot\])
-              echo "reviewer=true" >> "$GITHUB_OUTPUT"
-              echo "internal=false" >> "$GITHUB_OUTPUT"
-              echo "Author $AUTHOR is a bot; branch-name and single-author checks are waived."
-              exit 0
-              ;;
-          esac
-          upstream=$(gh api "repos/$REPO" --jq '.parent.full_name // ""')
-          if { [ "$HEAD_REPO" = "$REPO" ] || [ "$HEAD_REPO" = "$upstream" ]; } \
-             && { [ "$HEAD_REF" = dev ] || [ "$HEAD_REF" = central-staging ]; }; then
-            echo "internal=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "internal=false" >> "$GITHUB_OUTPUT"
-          fi
-          labels=",${LABELS},"
-          hotfix=false
-          case "$labels" in *,hotfix,*) hotfix=true ;; esac
-          echo "hotfix=$hotfix" >> "$GITHUB_OUTPUT"
-          has_sync=false
-          case "$labels" in *,sync,*) has_sync=true ;; esac
-          head_ok=false
-          case "$HEAD_REF" in dev|central-staging|main|staging) head_ok=true ;; esac
-          if [ "$has_sync" = true ] && [ "$head_ok" = true ] \
-             && { [ "$HEAD_REPO" = "$REPO" ] || [ "$HEAD_REPO" = "$upstream" ]; }; then
-            echo "sync=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "sync=false" >> "$GITHUB_OUTPUT"
-          fi
-          if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
-            echo "::warning::Permission lookup failed for $AUTHOR; retrying once."
-            if ! perm=$(gh api "repos/$REPO/collaborators/$AUTHOR/permission" --jq .permission); then
-              echo "::error::Permission lookup failed twice for $AUTHOR; treating the author as a non-reviewer."
-              perm=none
-            fi
-          fi
-          case "$perm" in
-            admin|maintain|write) echo "reviewer=true" >> "$GITHUB_OUTPUT" ;;
-            *) echo "reviewer=false" >> "$GITHUB_OUTPUT" ;;
-          esac
-          echo "Author $AUTHOR permission: $perm"
-
-  branch-name:
-    name: Branch name
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      REVIEWER: ${{ needs.scope.outputs.reviewer }}
-      SYNC: ${{ needs.scope.outputs.sync }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; branch-name check waived."
-            exit 0
-          fi
-          pattern='^(feat|fix|hotfix|test|docs|refactor|chore|perf|security)/([A-Za-z]+-)?[[:digit:]]+-[a-z[:digit:]][a-z[:digit:]-]*$'
-          if [[ "$HEAD_REF" =~ $pattern ]]; then
-            echo "OK: $HEAD_REF"
-          elif [ "$REVIEWER" = true ]; then
-            echo "::notice::$HEAD_REF doesn't match the ticket format; allowed because $AUTHOR is a reviewer."
-          else
-            echo "::error::Branch '$HEAD_REF' doesn't match <type>/<ticket-id>-<short-description>, e.g. fix/245-login-redirect. Open the PR from a correctly named ticket branch (see CONTRIBUTING.md)."
-            exit 1
-          fi
-
-  single-author:
-    name: Single author
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      REVIEWER: ${{ needs.scope.outputs.reviewer }}
-      SYNC: ${{ needs.scope.outputs.sync }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; single-author check waived."
-            exit 0
-          fi
-          # GitHub login when the commit email is linked to an account, otherwise the author email.
-          authors=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/commits" \
-            --jq '.[] | (.author.login // .commit.author.email)' | sort -u)
-          count=$(echo "$authors" | grep -c . || true)
-          echo "Commit authors: $(echo "$authors" | tr '\n' ' ')"
-          if [ "$count" -le 1 ]; then
-            echo "OK: single author"
-          elif [ "$REVIEWER" = true ]; then
-            echo "::notice::$count authors; allowed because $AUTHOR is a reviewer."
-          else
-            echo "::error::This PR has commits from $count authors. Each member opens their own PR from their own ticket branch; don't combine teammates' work. Credit collaborators with Co-authored-by trailers instead."
-            exit 1
-          fi
-
-  protected-files:
-    name: Protected files
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'config-change-approved') || github.event.pull_request.user.login == 'dependabot[bot]' }}
-      SYNC: ${{ needs.scope.outputs.sync }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; protected-files check waived."
-            exit 0
-          fi
-          protected='^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
-          filenames=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
-          hits=$(printf '%s\n' "$filenames" | grep -E "$protected" || true)
-          if [ -z "$hits" ]; then
-            echo "OK: no protected files changed"
-          elif [ "$APPROVED" = true ]; then
-            echo "::notice::Protected files changed, approved by the config-change-approved label:"; echo "$hits"
-          else
-            echo "::error::This PR changes protected files. Revert them, or agree the change with the reviewers first (they add the config-change-approved label):"
-            while read -r f; do echo "  - $f"; done <<< "$hits"
-            exit 1
-          fi
-
-  size:
-    name: Size
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      SYNC: ${{ needs.scope.outputs.sync }}
-      HOTFIX: ${{ needs.scope.outputs.hotfix }}
-      OVERRIDE: ${{ contains(github.event.pull_request.labels.*.name, 'size-override') }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; size check waived."
-            exit 0
-          fi
-          if [ "$HOTFIX" = "true" ]; then
-            echo "::notice::Hotfix PR; size check waived."
-            exit 0
-          fi
-          if [ "$OVERRIDE" = "true" ]; then
-            echo "::notice::size-override label applied; size check waived."
-            exit 0
-          fi
-          # Lockfiles and generated files don't count toward the reviewable size.
-          count=$(gh api --paginate "repos/$REPO/pulls/$PR_NUMBER/files" \
-            --jq '.[] | select(.filename | test("(^|/)(pnpm-lock\\.yaml|package-lock\\.json|yarn\\.lock)$") | not) | select(.filename | test("\\.tsbuildinfo$") | not) | (.additions + .deletions)' \
-            | awk '{s+=$1} END {print s+0}')
-          limit=400
-          echo "Changed lines (lockfiles/generated excluded): $count (limit ~$limit)"
-          if [ "$count" -gt "$limit" ]; then
-            echo "::error::This PR changes $count lines, over the ~$limit limit. Split it into smaller PRs, or ask a reviewer for the size-override label."
-            exit 1
-          fi
-          echo "OK: within the ~$limit line limit."
-
-  title:
-    name: PR title
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      SYNC: ${{ needs.scope.outputs.sync }}
-      REVIEWER: ${{ needs.scope.outputs.reviewer }}
-      TITLE: ${{ github.event.pull_request.title }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; PR title check waived."
-            exit 0
-          fi
-          if [[ "$TITLE" =~ ^[a-z]+\(([A-Za-z]*-)?([0-9]+)\):[[:space:]]+(.+)$ ]]; then
-            tnum="${BASH_REMATCH[2]}"
-          else
-            if [ "$REVIEWER" = "true" ]; then
-              echo "::notice::Title doesn't match <type>(<ticket-id>): <summary>; allowed because $AUTHOR is a reviewer."
-              exit 0
-            fi
-            echo "::error::PR title must be <type>(<ticket-id>): <summary>, e.g. fix(CHAT-142): clear the typing indicator."
-            exit 1
-          fi
-          bnum=$(printf '%s' "$HEAD_REF" | grep -oE '[0-9]+' | head -1 || true)
-          if [ -z "$bnum" ]; then
-            echo "::notice::Branch has no ticket number; skipping the title/branch ticket match."
-          elif [ "$bnum" = "$tnum" ]; then
-            echo "OK: PR title ticket $tnum matches the branch."
-          elif [ "$REVIEWER" = "true" ]; then
-            echo "::notice::Title ticket ($tnum) doesn't match branch ($bnum); allowed because $AUTHOR is a reviewer."
-          else
-            echo "::error::PR title ticket '$tnum' doesn't match the branch ticket '$bnum'. Use the same ticket as your branch name."
-            exit 1
-          fi
-
-  template:
-    name: PR template
-    needs: scope
-    if: needs.scope.outputs.internal == 'false' || needs.scope.outputs.sync == 'true'
-    runs-on: ubuntu-latest
-    env:
-      SYNC: ${{ needs.scope.outputs.sync }}
-      REVIEWER: ${{ needs.scope.outputs.reviewer }}
-      BASE_REF: ${{ github.event.pull_request.base.ref }}
-    steps:
-      - run: |
-          if [ "$SYNC" = "true" ]; then
-            echo "::notice::Sync PR; PR template check waived."
-            exit 0
-          fi
-          if [ "$REVIEWER" = "true" ]; then
-            echo "::notice::Reviewer PR; PR template check waived."
-            exit 0
-          fi
-          template=$(gh api "repos/$REPO/contents/.github/pull_request_template.md?ref=$BASE_REF" --jq .content | base64 -d)
-          body=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .body)
-          norm() { tr '[:upper:]' '[:lower:]' | tr -s '[:space:]' ' '; }
-          body_norm=$(printf '%s' "$body" | norm)
-          missing=""
-          while IFS= read -r line; do
-            label=$(printf '%s' "$line" | sed -E 's/^- \[[ xX]\] //')
-            label_norm=$(printf '%s' "$label" | norm)
-            [ -n "$label_norm" ] || continue
-            printf '%s\n' "$body_norm" | grep -qF "[x] $label_norm" || missing="${missing}  - ${label}"$'\n'
-          done < <(printf '%s\n' "$template" | grep -E '^- \[ \] ')
-          if [ -n "$missing" ]; then
-            echo "::error::Tick every checkbox in the PR template (.github/pull_request_template.md)."
-            echo "Unticked:"
-            printf '%s' "$missing"
-            exit 1
-          fi
-          echo "OK: all PR template checkboxes are ticked."
+    permissions:
+      contents: read
+      pull-requests: read
+      statuses: write
+    uses: zedu-hng/zedu-ci/.github/workflows/pr-rules.yml@ed2c2cdb27717ae5fa31cb45f49dd2f31dc86837
+    with:
+      protected: '^(\.github/|AGENTS\.md$|CONTRIBUTING\.md$|components\.json$|eslint\.config\.mjs$|\.prettierrc$|\.prettierignore$|tsconfig\.json$|next\.config\.mjs$|postcss\.config\.|tailwind\.config\.|commitlint\.config|\.gitleaks\.toml$|\.semgrepignore$|\.husky/|\.npmrc$)'
+      size_exclude: '(^|/)(pnpm-lock\.yaml|package-lock\.json|yarn\.lock)$|\.tsbuildinfo$'
+      template: .github/pull_request_template.md
