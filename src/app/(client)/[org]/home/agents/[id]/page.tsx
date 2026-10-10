@@ -1084,154 +1084,127 @@ $result = $stmt->get_result();
             {/* Empty intro section for users that are selected */}
             {/* Messages section */}
             <div className="flex flex-col">
-              {messages
-                .reduce<
-                  {
-                    label: string;
-                    items: {
-                      message: (typeof messages)[number];
-                      index: number;
-                    }[];
-                  }[]
-                >((groups, message, index) => {
-                  // Group consecutive messages by day so each sticky divider stays within its day
-                  const label = formatDate(message.timestamp);
-                  const lastGroup = groups[groups.length - 1];
-                  if (lastGroup?.label === label) {
-                    lastGroup.items.push({ message, index });
-                  } else {
-                    groups.push({ label, items: [{ message, index }] });
-                  }
-                  return groups;
-                }, [])
-                .map((group) => (
-                  <div key={group.label}>
-                    <div className="sticky top-0 z-10 my-4">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-dotted border-[#E6EAEF]"></div>
+              {messages.map((message, index) => {
+                const previousMessage = index > 0 ? messages[index - 1] : null;
+                const showHeader =
+                  !previousMessage || previousMessage.sender !== message.sender;
+                const showDateDivider =
+                  !previousMessage ||
+                  formatDate(message.timestamp) !==
+                    formatDate(previousMessage.timestamp);
+
+                return (
+                  <React.Fragment key={message.id}>
+                    {showDateDivider && (
+                      <div className="sticky top-0 z-10 my-4 bg-white">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-dotted border-[#E6EAEF]"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                          <span className="bg-white px-4 py-1 text-[13px] text-[#101828] border border-[#E6EAEF] rounded-[30px]">
+                            {formatDate(message.timestamp)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="relative flex justify-center">
-                        <span className="bg-white px-4 py-1 text-[13px] text-[#101828] border border-[#E6EAEF] rounded-[30px]">
-                          {group.label}
-                        </span>
+                    )}
+                    <div
+                      className={`bg-white group hover:bg-gray-50 transition-colors flex items-start px-5 ${
+                        showHeader && "mt-5"
+                      }`}
+                    >
+                      <div className="w-8 flex-shrink-0 mr-2 flex items-center justify-center">
+                        {showHeader ? (
+                          <Image
+                            src={message.avatar}
+                            alt="avatar"
+                            width={40}
+                            height={40}
+                            className="rounded-[7px]"
+                            style={{
+                              backgroundColor: message?.color,
+                              border: "1px solid #E6EAEF",
+                            }}
+                          />
+                        ) : (
+                          <span className="text-xs text-[#98A2B3] opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                            {new Date(message.timestamp).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: false,
+                              }
+                            )}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-grow">
+                        {showHeader && (
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-[15px] text-[#1D2939]">
+                              {message.sender}
+                            </span>
+                            <span className="text-xs text-[#98A2B3]">
+                              {new Date(message.timestamp).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex items-start justify-between relative">
+                          {displayMessageBlock(message)}
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center ml-4 absolute right-0 bottom-full bg-white shadow-md rounded-[8px] border border-[#E6EAEF] p-[2px]">
+                            <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-base">
+                                ✅
+                              </span>
+                            </button>
+                            <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-base">
+                                👀
+                              </span>
+                            </button>
+                            <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
+                              <span className="inline-flex items-center justify-center w-4 h-4 text-base">
+                                🙌
+                              </span>
+                            </button>
+                            <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
+                              <SmilePlus size={16} className="text-[#667085]" />
+                            </button>
+                            <button
+                              className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
+                              // onClick={() => handleThreadClick(message)}
+                            >
+                              <MessageCircleMore
+                                size={16}
+                                className="text-[#667085]"
+                              />
+                            </button>
+                            <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
+                              <Forward size={16} className="text-[#667085]" />
+                            </button>
+                            <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
+                              <Bookmark size={16} className="text-[#667085]" />
+                            </button>
+                            <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
+                              <MoreVertical
+                                size={16}
+                                className="text-[#667085]"
+                              />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    {group.items.map(({ message, index }) => {
-                      const previousMessage =
-                        index > 0 ? messages[index - 1] : null;
-                      const showHeader =
-                        !previousMessage ||
-                        previousMessage.sender !== message.sender;
-
-                      return (
-                        <React.Fragment key={message.id}>
-                          <div
-                            className={`bg-white group hover:bg-gray-50 transition-colors flex items-start px-5 ${
-                              showHeader && "mt-5"
-                            }`}
-                          >
-                            <div className="w-8 flex-shrink-0 mr-2 flex items-center justify-center">
-                              {showHeader ? (
-                                <Image
-                                  src={message.avatar}
-                                  alt="avatar"
-                                  width={40}
-                                  height={40}
-                                  className="rounded-[7px]"
-                                  style={{
-                                    backgroundColor: message?.color,
-                                    border: "1px solid #E6EAEF",
-                                  }}
-                                />
-                              ) : (
-                                <span className="text-xs text-[#98A2B3] opacity-0 group-hover:opacity-100 transition-opacity mt-1">
-                                  {new Date(
-                                    message.timestamp
-                                  ).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                    hour12: false,
-                                  })}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-grow">
-                              {showHeader && (
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-bold text-[15px] text-[#1D2939]">
-                                    {message.sender}
-                                  </span>
-                                  <span className="text-xs text-[#98A2B3]">
-                                    {new Date(
-                                      message.timestamp
-                                    ).toLocaleTimeString([], {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                      hour12: true,
-                                    })}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex items-start justify-between relative">
-                                {displayMessageBlock(message)}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center ml-4 absolute right-0 bottom-full bg-white shadow-md rounded-[8px] border border-[#E6EAEF] p-[2px]">
-                                  <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
-                                    <span className="inline-flex items-center justify-center w-4 h-4 text-base">
-                                      ✅
-                                    </span>
-                                  </button>
-                                  <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
-                                    <span className="inline-flex items-center justify-center w-4 h-4 text-base">
-                                      👀
-                                    </span>
-                                  </button>
-                                  <button className="pb-[4px] px-[10px] hover:bg-gray-200 rounded">
-                                    <span className="inline-flex items-center justify-center w-4 h-4 text-base">
-                                      🙌
-                                    </span>
-                                  </button>
-                                  <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
-                                    <SmilePlus
-                                      size={16}
-                                      className="text-[#667085]"
-                                    />
-                                  </button>
-                                  <button
-                                    className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
-                                    // onClick={() => handleThreadClick(message)}
-                                  >
-                                    <MessageCircleMore
-                                      size={16}
-                                      className="text-[#667085]"
-                                    />
-                                  </button>
-                                  <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
-                                    <Forward
-                                      size={16}
-                                      className="text-[#667085]"
-                                    />
-                                  </button>
-                                  <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
-                                    <Bookmark
-                                      size={16}
-                                      className="text-[#667085]"
-                                    />
-                                  </button>
-                                  <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
-                                    <MoreVertical
-                                      size={16}
-                                      className="text-[#667085]"
-                                    />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                ))}
+                  </React.Fragment>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
           </div>
