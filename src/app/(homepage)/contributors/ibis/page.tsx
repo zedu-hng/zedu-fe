@@ -100,7 +100,7 @@ export default function Page() {
 function getInitials(name: string) {
   return name
     .replace("@", "")
-    .split(" ")
+    .split(/[ ._]+/)
     .filter(Boolean)
     .map((word) => word[0])
     .join("")
