@@ -18,7 +18,7 @@ export const zeduWeaverContributors: Contributor[] = [
   { name: "Faith Obi", username: "Faith_Dev_" },
   { name: "Abiodun Adeleke", username: "Tearsmith" },
   { name: "Naomi Okoro", username: "Nayohmee" },
-  { name: "Ugonwa Ohagwasi", username: "nwa" },
+  { name: "Ohagwasi Ugonwa", username: "nwa" },
   { name: "Okeke Raphael", username: "roktech" },
   { name: "Emmanuel Umeogu", username: "Emmalaka" },
   { name: "Obiorah Paschal", username: "Maazi" },
