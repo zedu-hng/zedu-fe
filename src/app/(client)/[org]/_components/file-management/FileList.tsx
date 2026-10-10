@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import FileActions from "./actions";
 import { FileDetails } from "./FileInfo";
@@ -17,12 +19,9 @@ interface FileListProps extends FileDetails {
   onRestore?: () => void;
   viewType: string;
   uploader_display_name?: string;
-  // Bulk selection props
   isSelected?: boolean;
-
   onSelect?: (fileId: string) => void;
   showCheckbox?: boolean;
-
   onEnterBulkMode?: (fileId: string) => void;
 }
 
@@ -62,7 +61,6 @@ export const decodeFileName = (fileName: string): string => {
   }
 };
 
-/** Shorten long names while keeping the extension and both ends readable. */
 export const truncateFileName = (fileName: string, maxLength = 42): string => {
   const decoded = decodeFileName(fileName);
   if (decoded.length <= maxLength) return decoded;
@@ -130,22 +128,20 @@ const FileList: React.FC<FileListProps> = ({
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rowRef = useRef<HTMLDivElement>(null);
 
-  // Handle right-click context menu
   const handleContextMenu = (e: React.MouseEvent) => {
-    if (showCheckbox) return; // Don't show context menu if already in bulk mode
+    if (showCheckbox) return;
     e.preventDefault();
     setContextMenuPosition({ x: e.clientX, y: e.clientY });
     setIsContextMenuOpen(true);
   };
 
-  // Handle long-press for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (showCheckbox) return; // Don't handle long-press if already in bulk mode
+    if (showCheckbox) return;
     longPressTimerRef.current = setTimeout(() => {
       const touch = e.touches[0];
       setContextMenuPosition({ x: touch.clientX, y: touch.clientY });
       setIsContextMenuOpen(true);
-    }, 500); // 500ms long-press
+    }, 500);
   };
 
   const handleTouchEnd = () => {
@@ -186,7 +182,6 @@ const FileList: React.FC<FileListProps> = ({
     </button>
   );
 
-  // Close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       setIsContextMenuOpen(false);
@@ -261,7 +256,6 @@ const FileList: React.FC<FileListProps> = ({
           </div>
         </div>
 
-        {/* Context Menu */}
         {isContextMenuOpen && (
           <div
             className="fixed bg-white border border-gray-200 shadow-lg rounded-lg py-1 z-50"
@@ -321,11 +315,6 @@ const FileList: React.FC<FileListProps> = ({
             </span>
           </div>
           <div className="hidden md:flex md:col-span-2 items-center gap-2 text-[#4B5563] min-w-0">
-            {/* <img
-              src={user_profile_photo || "/av_Image.png"}
-              alt={uploader_display_name || owner}
-              className="w-6 h-6 rounded-full object-cover"
-            /> */}
             <span className="truncate">{uploader_display_name || owner}</span>
           </div>
           <div className="hidden md:flex md:col-span-2 items-center text-[#4B5563] truncate">
@@ -351,7 +340,6 @@ const FileList: React.FC<FileListProps> = ({
           </div>
         </div>
 
-        {/* Context Menu */}
         {isContextMenuOpen && (
           <div
             className="fixed bg-white border border-gray-200 shadow-lg rounded-lg py-1 z-50"
@@ -409,11 +397,6 @@ const FileList: React.FC<FileListProps> = ({
           </span>
         </div>
         <div className="hidden md:flex md:col-span-2 items-center gap-2 text-[#4B5563] min-w-0">
-          {/* <img
-            src={user_profile_photo || "/av_Image.png"}
-            alt={uploader_display_name || owner}
-            className="w-6 h-6 rounded-full object-cover"
-          /> */}
           <span className="truncate">{uploader_display_name || owner}</span>
         </div>
         <div className="hidden md:flex md:col-span-2 items-center text-[#4B5563] truncate">
@@ -439,7 +422,6 @@ const FileList: React.FC<FileListProps> = ({
         </div>
       </div>
 
-      {/* Context Menu */}
       {isContextMenuOpen && (
         <div
           className="fixed bg-white border border-gray-200 shadow-lg rounded-lg py-1 z-50"
@@ -462,4 +444,5 @@ const FileList: React.FC<FileListProps> = ({
     </>
   );
 };
+
 export default FileList;
