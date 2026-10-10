@@ -44,7 +44,7 @@ export const contributors: Contributor[] = [
   },
   { name: "Favour Chinaza", githubUsername: "favourchinaza110" },
   { name: "Fawaz Yusuff", githubUsername: "flawrrz" },
-  { name: "Francis Anyah", githubUsername: "assisi-francis" },
+  { name: "Francis ANYAH", githubUsername: "assisi-francis" },
   { name: "Godgift Achong", githubUsername: "giftninho" },
   { name: "Godspower Nwankwo", githubUsername: "GODSPE1" },
   {
