@@ -83,12 +83,30 @@ const SearchPaginationLink = ({
 export default function Search() {
   const searchParams = useSearchParams();
   const baseQuery = searchParams.get("query");
+  const initialChannel = searchParams.get("channel") || undefined;
+
+  return (
+    <SearchResults
+      key={JSON.stringify([baseQuery, initialChannel])}
+      baseQuery={baseQuery}
+      initialChannel={initialChannel}
+    />
+  );
+}
+
+function SearchResults({
+  baseQuery,
+  initialChannel,
+}: {
+  baseQuery: string | null;
+  initialChannel?: string;
+}) {
   const [results, setResults] = useState<CombinedResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     type: "messages" as "messages" | "people" | undefined,
     from: undefined as string | undefined,
-    channel: undefined as string | undefined,
+    channel: initialChannel,
     date: undefined as { type: string; value: string } | undefined,
     sortBy: "relevance" as "relevance" | "newest" | "oldest" | string,
   });
@@ -226,6 +244,7 @@ export default function Search() {
 
         <SearchFilters
           onFilterChange={handleFilterChange}
+          channel={filters.channel}
           channels={channels || []}
           users={filterUsers}
         />
