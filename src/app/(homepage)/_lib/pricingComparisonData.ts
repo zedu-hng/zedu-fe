@@ -78,7 +78,7 @@ export const pricingComparisonSections: PricingComparisonSection[] = [
         label: "Students per Cohort",
         showInfoIcon: true,
         values: {
-          starter: "Up to 100",
+          starter: "Up to 100 total",
           growth: "Up to 500",
           enterprise: "Custom",
         },

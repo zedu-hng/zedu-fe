@@ -32,7 +32,7 @@ const staticPricingCards: PricingCardData[] = [
     footnote: "No credit card needed",
     features: [
       { text: "Up to 3 cohorts", enabled: true },
-      { text: "Up to 100 students per cohort", enabled: true },
+      { text: "Up to 100 members in total", enabled: true },
       { text: "Up to 5 teachers/admins", enabled: true },
       { text: "Organized learning channels", enabled: true },
       { text: "Basic messaging and threads", enabled: true },
