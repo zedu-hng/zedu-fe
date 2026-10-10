@@ -83,7 +83,7 @@ const learningTeamCards = [
     Icon: SchoolIcon,
   },
   {
-    title: "Online Learning platforms",
+    title: "Online Learning Platforms",
     desc: "Scale learning communities without chaos. Manage thousands of learners with AI-assisted moderation.",
     Icon: BookIcon,
   },
@@ -179,7 +179,7 @@ const AboutPage = () => {
         <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_1.15fr] lg:gap-12">
           <div className="flex flex-col items-start gap-5 text-left">
             <h2 className="max-w-xl text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl">
-              Move quickly from ideas to execution
+              Why We Built Zedu
             </h2>
 
             <p className="max-w-2xl text-sm text-neutral-600 sm:text-base">
@@ -253,7 +253,7 @@ const AboutPage = () => {
               Built for Modern Learning
             </h2>
             <p className="text-sm text-neutral-600 sm:text-base">
-              Stay aligned, where your teams are.
+              Stay aligned where your teams are.
             </p>
 
             <ul className="space-y-2.5">
