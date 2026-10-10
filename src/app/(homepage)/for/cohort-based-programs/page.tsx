@@ -59,14 +59,14 @@ export const metadata: Metadata = {
 
 const valueCards = [
   {
-    title: "One home for every cohort",
+    title: "Onboard every cohort with structure",
     description:
-      "Give each program a focused space for lessons, announcements, resources, and conversations that are easy to follow.",
+      "Welcome learners into a focused space for program announcements, milestones, resources, and conversations from day one.",
   },
   {
     title: "Keep learners connected",
     description:
-      "Help learners, mentors, and instructors communicate in real time without scattering important updates across different tools.",
+      "Help learners, mentors, and instructors communicate in real time through focused discussions without scattering important updates across different tools.",
   },
   {
     title: "Support every learner",
@@ -77,9 +77,9 @@ const valueCards = [
 
 const programFeatures = [
   {
-    title: "Organize cohort communication",
+    title: "Run live sessions and discussions",
     description:
-      "Create dedicated channels for each cohort, topic, project, or learning milestone so conversations stay focused.",
+      "Bring learners, mentors, and instructors together for live sessions, then keep the follow-up discussion in the right cohort or topic channel.",
     image: "/images/homepage/features/cohort-communication.png",
   },
   {
