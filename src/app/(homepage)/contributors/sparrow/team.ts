@@ -79,5 +79,19 @@ export const TEAM: Team = {
       role: "Member",
       field: "Frontend Developer",
     },
+    {
+      fullName: "Obiageli Ezeokoli",
+      zeduUsername: "Oby Ezeokoli",
+      githubUsername: "AfrikTechie",
+      role: "Member",
+      field: "Data Analysis",
+    },
+    {
+      fullName: "Pearl Koosi Akpaka",
+      zeduUsername: "PearlAkpaka",
+      githubUsername: "pearl-bit-tech",
+      role: "Member",
+      field: "Product Management",
+    },
   ],
 };
