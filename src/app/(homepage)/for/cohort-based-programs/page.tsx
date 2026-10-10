@@ -160,12 +160,12 @@ const CohortBasedProgramsPage = () => {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
 
-      <section className="relative isolate overflow-hidden px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-10 lg:px-10 lg:pb-28 lg:pt-16">
+      <section className="relative isolate overflow-hidden px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-16">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute bottom-0 left-1/2 -z-10 h-[35%] w-screen -translate-x-1/2 bg-gradient-to-t from-blue-50/30 to-white"
         />
-        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-8 rounded-[28px] px-5 pb-8 pt-0 sm:px-8 sm:pb-12 sm:pt-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-14 lg:px-12 lg:pb-20 lg:pt-0">
+        <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 rounded-[28px] px-5 py-6 sm:px-8 sm:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-14 lg:px-12 lg:py-14">
           <div className="flex flex-col items-center gap-5 text-center lg:max-w-[500px] lg:items-start lg:text-left">
             <h1 className="text-2xl font-semibold leading-tight text-[#1f2530] sm:text-4xl lg:text-[44px] lg:leading-[1.12]">
               <span className="text-primary-500">Run better cohorts </span>
@@ -191,16 +191,42 @@ const CohortBasedProgramsPage = () => {
             </div>
           </div>
 
-          <div className="relative w-full overflow-hidden rounded-3xl">
-            <div className="relative aspect-[16/11] w-full sm:aspect-[4/3] lg:aspect-[16/10]">
+          <div className="relative w-full pb-10 sm:pb-12">
+            <div className="relative aspect-[16/11] w-full overflow-hidden rounded-3xl sm:aspect-[4/3] lg:aspect-[16/10]">
               <Image
-                src="/images/homepage/solutions/bootcamps-hero.png"
-                alt="Learners collaborating in a cohort-based program with Zedu"
+                src="/images/homepage/solutions/cohort-programs-hero.jpg"
+                alt="Adult learners collaborating with a mentor during a cohort workshop"
                 fill
                 priority
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 680px"
-                className="object-contain object-center"
+                className="object-cover object-center"
               />
+            </div>
+            <div
+              aria-hidden="true"
+              className="absolute bottom-0 left-0 w-[58%] max-w-[320px] rounded-2xl bg-white px-3 py-3 shadow-xl sm:px-5 sm:py-4"
+            >
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/Zedu.png"
+                  alt=""
+                  width={78}
+                  height={30}
+                  className="h-auto w-[55px] sm:w-[78px]"
+                />
+                <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-medium text-primary-500 sm:text-xs">
+                  Cohort
+                </span>
+              </div>
+              <div className="mt-3 flex items-center gap-2 sm:mt-4">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[10px] font-semibold text-primary-600 sm:size-8 sm:text-xs">
+                  LM
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <span className="h-1.5 w-1/2 rounded-full bg-slate-200" />
+                  <span className="h-1.5 w-full rounded-full bg-slate-100" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
