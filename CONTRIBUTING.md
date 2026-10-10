@@ -799,15 +799,15 @@ pnpm start   # next start
 
 ### GitHub Actions (`.github/workflows/`)
 
-| Workflow                                                                               | Trigger                        | Purpose                                                                                                                              |
-| -------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `pr-checks.yml`                                                                        | PR → `dev`, `central-staging`  | File policy, Gitleaks, malware heuristics, commit messages, audit, Prettier, ESLint, TypeScript, review bot, build (+ preview image) |
-| `pr-scans.yml`                                                                         | PR → `dev`, `central-staging`  | Semgrep, ClamAV                                                                                                                      |
-| `pr-review-comment.yml`                                                                | After PR checks / PR scans     | Posts each check as a status, and the review bot's comment                                                                           |
-| `pr-rules.yml`                                                                         | PR → `dev`, `central-staging`  | Branch name, single author, protected files, size, title, template                                                                   |
-| `pr-pre-commit-checks.yml`, `pr-review.yml`, `security-checks.yml`, `malware-scan.yml` | Disabled in `zedu-hng`         | Zedu's originals, replaced by the two above; kept unchanged so syncs don't conflict                                                  |
-| `deploy-staging.yml`                                                                   | Push / dispatch → `staging`    | Deploy staging (self-hosted runner)                                                                                                  |
-| `deploy-main.yml`                                                                      | Push / dispatch → `main`       | Deploy production (self-hosted runner)                                                                                               |
+| Workflow                                                                               | Trigger                       | Purpose                                                                                                                              |
+| -------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `pr-checks.yml`                                                                        | PR → `dev`, `central-staging` | File policy, Gitleaks, malware heuristics, commit messages, audit, Prettier, ESLint, TypeScript, review bot, build (+ preview image) |
+| `pr-scans.yml`                                                                         | PR → `dev`, `central-staging` | Semgrep, ClamAV                                                                                                                      |
+| `pr-review-comment.yml`                                                                | After PR checks / PR scans    | Posts each check as a status, and the review bot's comment                                                                           |
+| `pr-rules.yml`                                                                         | PR → `dev`, `central-staging` | Branch name, single author, protected files, size, title, template                                                                   |
+| `pr-pre-commit-checks.yml`, `pr-review.yml`, `security-checks.yml`, `malware-scan.yml` | Disabled in `zedu-hng`        | Zedu's originals, replaced by the two above; kept unchanged so syncs don't conflict                                                  |
+| `deploy-staging.yml`                                                                   | Push / dispatch → `staging`   | Deploy staging (self-hosted runner)                                                                                                  |
+| `deploy-main.yml`                                                                      | Push / dispatch → `main`      | Deploy production (self-hosted runner)                                                                                               |
 
 ### Docker
 
