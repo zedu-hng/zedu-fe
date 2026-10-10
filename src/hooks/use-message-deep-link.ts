@@ -18,9 +18,12 @@ export function useMessageDeepLink({
   const { state, dispatch } = useContext(DataContext);
   const appliedRef = useRef<string | null>(null);
   const threadRef = useRef(state?.thread);
-  threadRef.current = state?.thread;
   const loadThreadRef = useRef(state?.loadThread);
-  loadThreadRef.current = state?.loadThread;
+
+  useEffect(() => {
+    threadRef.current = state?.thread;
+    loadThreadRef.current = state?.loadThread;
+  }, [state?.thread, state?.loadThread]);
 
   const threadId = searchParams.get("thread_id");
   const messageId = searchParams.get("message_id");
@@ -43,7 +46,8 @@ export function useMessageDeepLink({
       if (
         parentThread &&
         String(threadRef.current?.thread_id || "") === String(threadId) &&
-        !threadRef.current?.message
+        (!threadRef.current?.message ||
+          threadRef.current?.username === "Thread")
       ) {
         dispatch({ type: ACTIONS.THREAD, payload: parentThread });
         if (
@@ -88,6 +92,12 @@ export function useMessageDeepLink({
       const fallbackThread = {
         thread_id: threadId,
         channels_id: channelId,
+        message: "",
+        username: "Thread",
+        created_at: new Date().toISOString(),
+        reactions: [],
+        preview_reply: [],
+        type: "message",
       };
 
       dispatch({ type: ACTIONS.THREAD, payload: fallbackThread });
