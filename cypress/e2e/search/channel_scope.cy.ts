@@ -49,8 +49,11 @@ describe("Channel search scope", () => {
         data = channels[0];
       } else if (path === "/search/organisation/org-test") {
         const query = new URL(request.url).searchParams.get("query");
-        data = query?.includes("in:zedu-neo")
-          ? [searchHit("zedu-neo")]
+        const channel = channels.find((item) =>
+          query?.includes(`in:${item.name}`)
+        );
+        data = channel
+          ? [searchHit(channel.name)]
           : [searchHit("zedu-neo"), searchHit("general"), searchHit("dm")];
         request.alias = "messageSearch";
       }
@@ -92,7 +95,9 @@ describe("Channel search scope", () => {
   it("preserves the channel when pressing Enter", () => {
     visit("/test/home/channels/channel-neo");
     cy.get('[contenteditable="true"]').should("be.visible");
-    cy.get('input[placeholder="Search in #zedu-neo"]').type("ticket{enter}");
+    cy.get('input[placeholder="Search in #zedu-neo"]').type("ticket");
+    cy.contains("button", 'View all results for "ticket"').should("be.visible");
+    cy.get('input[placeholder="Search in #zedu-neo"]').type("{enter}");
     expectScopedResults();
   });
 
@@ -115,6 +120,31 @@ describe("Channel search scope", () => {
     cy.contains("button", "In: #zedu-neo").should("not.exist");
     cy.contains("ticket in general").should("be.visible");
     cy.contains("ticket in dm").should("be.visible");
+    cy.location("search").should((search) => {
+      expect(new URLSearchParams(search).has("channel")).to.equal(false);
+    });
+    cy.reload();
+    cy.contains("button", "In: #zedu-neo").should("not.exist");
+    cy.contains("ticket in general").should("be.visible");
+    cy.contains("ticket in dm").should("be.visible");
+  });
+
+  it("preserves a changed channel in the URL and after reload", () => {
+    visit("/test/search?query=ticket&channel=zedu-neo");
+    cy.contains("button", "In: #zedu-neo").click();
+    cy.contains("button", "#general").click();
+    cy.location("search").should((search) => {
+      const params = new URLSearchParams(search);
+      expect(params.get("channel")).to.equal("general");
+      expect(params.get("query")).to.equal("ticket");
+    });
+    cy.contains("button", "In: #general").should("be.visible");
+    cy.contains("ticket in general").should("be.visible");
+    cy.contains("ticket in zedu-neo").should("not.exist");
+    cy.reload();
+    cy.contains("button", "In: #general").should("be.visible");
+    cy.contains("ticket in general").should("be.visible");
+    cy.contains("ticket in zedu-neo").should("not.exist");
   });
 
   it("resets the originating channel for a new workspace-wide search", () => {

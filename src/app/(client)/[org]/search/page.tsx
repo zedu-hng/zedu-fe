@@ -87,7 +87,7 @@ export default function Search() {
 
   return (
     <SearchResults
-      key={JSON.stringify([baseQuery, initialChannel])}
+      key={baseQuery}
       baseQuery={baseQuery}
       initialChannel={initialChannel}
     />
@@ -110,6 +110,10 @@ function SearchResults({
     date: undefined as { type: string; value: string } | undefined,
     sortBy: "relevance" as "relevance" | "newest" | "oldest" | string,
   });
+
+  useEffect(() => {
+    setFilters((current) => ({ ...current, channel: initialChannel }));
+  }, [initialChannel]);
 
   const { state } = useContext(DataContext);
   const { orgData, channels, orgMembers } = state;
@@ -180,6 +184,15 @@ function SearchResults({
     date?: { type: string; value: string };
     sortBy: "relevance" | "newest" | "oldest" | string;
   }) => {
+    if (newFilters.channel !== filters.channel) {
+      const url = new URL(window.location.href);
+      if (newFilters.channel) {
+        url.searchParams.set("channel", newFilters.channel);
+      } else {
+        url.searchParams.delete("channel");
+      }
+      window.history.replaceState(null, "", url);
+    }
     setResults([]);
     setFilters({
       type: newFilters.type || "messages",
