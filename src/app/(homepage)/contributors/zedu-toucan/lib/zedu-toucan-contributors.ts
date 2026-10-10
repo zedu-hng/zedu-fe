@@ -5,6 +5,7 @@ export type Contributor = {
 
 export const zeduToucanContributors: Contributor[] = [
   { name: "Abasifreke John", username: "Ab-Jon" },
+  { name: "Abayomi Abubakar Ademola", username: "abayomiabubakar56-afk" },
   { name: "Adesanya Islamiat", username: "adesanyai" },
   { name: "Agnes Livingstone", username: "AG539" },
   { name: "awanat2020", username: "awanat2020" },
