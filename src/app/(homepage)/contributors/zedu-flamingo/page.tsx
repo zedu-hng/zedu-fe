@@ -29,7 +29,7 @@ export default async function FlamingoBoardPage() {
       <div className="mt-16">
         <DynamicFooter
           text="Empowering Collaborative Learning"
-          description="Connect and build together on the Zedu platform."
+          description="Connect and create together on the Zedu platform."
         />
       </div>
     </div>
