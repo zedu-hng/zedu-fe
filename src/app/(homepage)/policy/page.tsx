@@ -21,6 +21,23 @@ const POLICY_SECTIONS = [
 // Height of the fixed site header (h-20 in _components/header)
 const SITE_HEADER_HEIGHT = 80;
 
+// Scroll so a section heading sits just below the header and the mobile bar
+const scrollToPolicySection = (
+  id: string,
+  barHeight: number,
+  behavior: ScrollBehavior
+) => {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const top =
+    target.getBoundingClientRect().top +
+    window.scrollY -
+    SITE_HEADER_HEIGHT -
+    barHeight -
+    16;
+  window.scrollTo({ top, behavior });
+};
+
 // Set document title for client component
 const useDocumentTitle = (title: string) => {
   useEffect(() => {
@@ -79,6 +96,44 @@ function Policy() {
     return () => observer.disconnect();
   }, []);
 
+  // Keep the pinned bar's position and width current after a resize or
+  // rotation (the slot keeps its in-flow size while the bar is fixed)
+  const isMobileMenuPinned = pinnedBox !== null;
+  useEffect(() => {
+    if (!isMobileMenuPinned) return;
+    const remeasure = () => {
+      const slot = mobileMenuSlotRef.current;
+      if (!slot) return;
+      const { left, width } = slot.getBoundingClientRect();
+      setPinnedBox((box) =>
+        box && (box.left !== left || box.width !== width)
+          ? { ...box, left, width }
+          : box
+      );
+    };
+    window.addEventListener("resize", remeasure);
+    return () => window.removeEventListener("resize", remeasure);
+  }, [isMobileMenuPinned]);
+
+  // On phones, a link straight to a section (e.g. /policy#contact-us) lets
+  // the browser put the heading under the fixed header and bar, so redo
+  // that scroll with the same offset as the menu
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile || !POLICY_SECTIONS.some((section) => section.id === id)) {
+      return;
+    }
+    const frame = requestAnimationFrame(() =>
+      scrollToPolicySection(
+        id,
+        mobileMenuRef.current?.offsetHeight ?? 0,
+        "auto"
+      )
+    );
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   // The current section is the last heading that has reached the top
   // quarter of the screen below the bar
   useEffect(() => {
@@ -132,23 +187,17 @@ function Policy() {
     };
   }, [isMobileMenuOpen]);
 
-  // Scroll so the heading sits just below the header and pinned bar
   const goToSection = (
     event: React.MouseEvent<HTMLAnchorElement>,
     id: string
   ) => {
     event.preventDefault();
     setIsMobileMenuOpen(false);
-    const target = document.getElementById(id);
-    if (!target) return;
-    const barHeight = mobileMenuRef.current?.offsetHeight ?? 0;
-    const top =
-      target.getBoundingClientRect().top +
-      window.scrollY -
-      SITE_HEADER_HEIGHT -
-      barHeight -
-      16;
-    window.scrollTo({ top, behavior: "smooth" });
+    scrollToPolicySection(
+      id,
+      mobileMenuRef.current?.offsetHeight ?? 0,
+      "smooth"
+    );
     window.history.replaceState(null, "", `#${id}`);
   };
 
