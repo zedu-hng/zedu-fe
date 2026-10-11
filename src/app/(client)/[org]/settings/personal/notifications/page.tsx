@@ -1,93 +1,78 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import SettingsLabel from "../../components/settings-label";
 import { GetRequest, PostRequest } from "~/utils/new-request";
 import Loading from "~/components/ui/loading";
-
-type Preferences = {
-  notificationType: "all" | "mentions" | "nothing";
-  timeFrom: string;
-  timeTo: string;
-  infoMethod: "mobile" | "email";
-};
-
-const defaultPreferences: Preferences = {
-  notificationType: "all",
-  timeFrom: "00:00",
-  timeTo: "00:00",
-  infoMethod: "mobile",
-};
+import { showError, showSuccess } from "~/components/toast/sonner";
+import {
+  NotificationTypeSection,
+  ScheduleSection,
+  DeliveryChannelsSection,
+  SaveStatusIndicator,
+  ActionBar,
+} from "./notification-sections";
+import {
+  DEFAULTS,
+  to12h,
+  to24h,
+  parseNotifyType,
+  type ActiveDays,
+  type Preferences,
+  type SaveStatus,
+} from "./notification-types";
 
 const NotificationPage = () => {
-  const [prefs, setPrefs] = useState<Preferences>(defaultPreferences);
-  const [initialPrefs, setInitialPrefs] =
-    useState<Preferences>(defaultPreferences);
+  const [prefs, setPrefs] = useState<Preferences>(DEFAULTS);
+  const [savedPrefs, setSavedPrefs] = useState<Preferences>(DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const hasChanges = JSON.stringify(prefs) !== JSON.stringify(initialPrefs);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const hasChanges = useMemo(
+    () => JSON.stringify(prefs) !== JSON.stringify(savedPrefs),
+    [prefs, savedPrefs]
+  );
 
   useEffect(() => {
-    const orgId = localStorage.getItem("orgId") || "";
+    if (hasChanges) setSaveStatus("unsaved");
+  }, [hasChanges]);
 
-    const fetchPreferences = async () => {
-      setLoading(true);
+  const fetchPreferences = useCallback(async () => {
+    const orgId = localStorage.getItem("orgId") || "";
+    setLoading(true);
+    try {
       const res = await GetRequest(
         `/organisations/${orgId}/notification-preference?device_type=web`
       );
       if (res.status === 200 || res.status === 201) {
-        const data = res.data.data;
-        const [from, to] = data.time_range.split(" - ").map(convertTo24Hour);
-
-        setPrefs({
-          notificationType: getNotifyType(data.notify_about),
-          timeFrom: from,
-          timeTo: to,
-          infoMethod: data.send_mail ? "email" : "mobile",
-        });
-        setInitialPrefs({
-          notificationType: getNotifyType(data.notify_about),
-          timeFrom: from,
-          timeTo: to,
-          infoMethod: data.send_mail ? "email" : "mobile",
-        });
+        const d = res.data.data,
+          [from, to] = d.time_range.split(" - ").map(to24h);
+        const parsed: Preferences = {
+          notificationType: parseNotifyType(d.notify_about),
+          timeFrom: from || "09:00",
+          timeTo: to || "17:00",
+          allDay: d.all_day === false ? "custom" : "all_day",
+          activeDays: (d.active_days as ActiveDays) ?? "everyday",
+          emailNotifications: Boolean(d.send_mail),
+          directMentionEmail: Boolean(d.direct_mention_email),
+        };
+        setPrefs(parsed);
+        setSavedPrefs(parsed);
       }
-      setLoading(false);
-    };
-
-    fetchPreferences();
+    } catch {
+      showError("Failed to load notification preferences");
+    }
+    setLoading(false);
   }, []);
 
-  const getNotifyType = (
-    notify_about: string
-  ): Preferences["notificationType"] => {
-    if (notify_about === "all_new_messages") return "all";
-    if (notify_about === "mentions") return "mentions";
-    return "nothing";
-  };
-
-  const convertTo12Hour = (time: string) => {
-    const [h, m] = time.split(":");
-    const hour = parseInt(h, 10);
-    const suffix = hour >= 12 ? "PM" : "AM";
-    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-    return `${formattedHour.toString().padStart(2, "0")}:${m} ${suffix}`;
-  };
-
-  const convertTo24Hour = (time: string) => {
-    const [t, suffix] = time.split(" ");
-    let [h, m] = t.split(":").map(Number);
-    if (suffix === "PM" && h !== 12) h += 12;
-    if (suffix === "AM" && h === 12) h = 0;
-    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
-  };
+  useEffect(() => {
+    fetchPreferences();
+  }, [fetchPreferences]);
 
   const handleSave = async () => {
     const orgId = localStorage.getItem("orgId") || "";
-
     setSaving(true);
-
+    setSaveStatus("saving");
     const payload = {
       notify_about:
         prefs.notificationType === "all"
@@ -95,161 +80,75 @@ const NotificationPage = () => {
           : prefs.notificationType === "mentions"
             ? "mentions"
             : "nothing",
-      send_mail: prefs.infoMethod === "email",
-      time_range: `${convertTo12Hour(prefs.timeFrom)} - ${convertTo12Hour(prefs.timeTo)}`,
+      send_mail: prefs.emailNotifications,
+      time_range:
+        prefs.allDay === "all_day"
+          ? "12:00 AM - 11:59 PM"
+          : `${to12h(prefs.timeFrom)} - ${to12h(prefs.timeTo)}`,
       device_type: "web",
+      all_day: prefs.allDay === "all_day",
+      active_days: prefs.activeDays,
+      direct_mention_email: prefs.directMentionEmail,
     };
-
-    const res = await PostRequest(
-      `/organisations/${orgId}/notification-preference?device_type=web`,
-      payload
-    );
-    if (res.status === 200 || res.status === 201) {
-      setInitialPrefs(prefs);
+    try {
+      const res = await PostRequest(
+        `/organisations/${orgId}/notification-preference?device_type=web`,
+        payload
+      );
+      if (res.status === 200 || res.status === 201) {
+        setSavedPrefs(prefs);
+        setSaveStatus("saved");
+        showSuccess("Preferences saved");
+      } else setSaveStatus("unsaved");
+    } catch {
+      setSaveStatus("unsaved");
+      showError("Failed to save preferences");
     }
     setSaving(false);
   };
 
-  const handleRevert = () => {
-    setPrefs(initialPrefs);
-  };
+  const updatePref = <K extends keyof Preferences>(
+    key: K,
+    value: Preferences[K]
+  ) => setPrefs((prev) => ({ ...prev, [key]: value }));
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="p-6">
+      <div className="flex min-h-[300px] items-center justify-center p-6">
         <Loading />
       </div>
     );
-  }
 
   return (
     <div>
       <SettingsLabel />
-      <div className="p-4 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-base font-semibold">
-            Your Notification Preferences
-          </h1>
-          <p className="text-sm text-[#344054]">
-            Manage when and why you get notified.
-          </p>
-        </div>
-
-        {/* Notification Type */}
-        <div className="max-w-2xl">
-          <label className="block font-semibold text-sm mb-2">
-            Send notifications for:
-          </label>
-          <div className="space-y-3">
-            {["all", "mentions", "nothing"].map((type) => (
-              <label key={type} className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="notificationType"
-                  checked={prefs.notificationType === type}
-                  onChange={() =>
-                    setPrefs((prev) => ({
-                      ...prev,
-                      notificationType: type as Preferences["notificationType"],
-                    }))
-                  }
-                />
-                <span className="capitalize text-sm">
-                  {type === "all" ? "All new messages" : type}
-                </span>
-              </label>
-            ))}
+      <div className="mx-auto max-w-2xl p-4 lg:px-8">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-semibold">
+              Your Notification Preferences
+            </h1>
+            <p className="text-sm text-[#667085]">
+              Manage when and why you get notified.
+            </p>
           </div>
+          <SaveStatusIndicator
+            saveStatus={saveStatus}
+            hasChanges={hasChanges}
+          />
         </div>
-
-        <hr className="bg-[#E6EAEF] border my-4" />
-
-        {/* Time Range */}
-        <div className="max-w-2xl">
-          <label className="block font-semibold text-sm mb-2">
-            Receive notifications only within:
-          </label>
-          <div className="flex items-center space-x-4">
-            <div className="flex flex-col items-start gap-1 text-sm">
-              <span className="font-medium">From</span>
-              <input
-                type="time"
-                value={prefs.timeFrom}
-                onChange={(e) =>
-                  setPrefs((prev) => ({ ...prev, timeFrom: e.target.value }))
-                }
-                className="border rounded p-3"
-              />
-            </div>
-            <div className="flex flex-col items-start gap-1 text-sm">
-              <span className="font-medium">To</span>
-              <input
-                type="time"
-                value={prefs.timeTo}
-                onChange={(e) =>
-                  setPrefs((prev) => ({ ...prev, timeTo: e.target.value }))
-                }
-                className="border rounded p-3"
-              />
-            </div>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            <span className="font-medium text-black">Note:</span> Outside this
-            time, notifications are paused.
-          </p>
+        <div className="space-y-6">
+          <NotificationTypeSection prefs={prefs} updatePref={updatePref} />
+          <ScheduleSection prefs={prefs} updatePref={updatePref} />
+          <DeliveryChannelsSection prefs={prefs} updatePref={updatePref} />
         </div>
-
-        <hr className="bg-[#E6EAEF] border my-4" />
-
-        {/* Info Method */}
-        <div className="mb-4 max-w-2xl">
-          <label className="block font-semibold text-sm mb-2">
-            To keep me informed:
-          </label>
-          <div className="space-y-2 text-sm">
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="infoMethod"
-                checked={prefs.infoMethod === "mobile"}
-                onChange={() =>
-                  setPrefs((prev) => ({ ...prev, infoMethod: "mobile" }))
-                }
-              />
-              <span>Use different settings for mobile devices</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="infoMethod"
-                checked={prefs.infoMethod === "email"}
-                onChange={() =>
-                  setPrefs((prev) => ({ ...prev, infoMethod: "email" }))
-                }
-              />
-              <span>Receive notifications via email</span>
-            </label>
-          </div>
-        </div>
-
-        {/* Save/Cancel */}
-        {hasChanges && (
-          <div className="flex justify-end space-x-3 pt-4 max-w-xl">
-            <button
-              onClick={handleRevert}
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Revert Changes
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700"
-            >
-              {saving ? <Loading /> : "Save Changes"}
-            </button>
-          </div>
-        )}
+        <ActionBar
+          hasChanges={hasChanges}
+          saving={saving}
+          onRestoreDefaults={() => setPrefs(DEFAULTS)}
+          onCancel={() => setPrefs(savedPrefs)}
+          onSave={handleSave}
+        />
       </div>
     </div>
   );
