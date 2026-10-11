@@ -157,15 +157,18 @@ const Footer = () => {
               className={`${inter.className} flex w-full flex-col gap-3 text-slate-100 antialiased`}
             >
               <div className="flex flex-col gap-1">
-                <h4 className="text-base font-bold tracking-tight text-white">
+                <label
+                  htmlFor="newsletter-email"
+                  className="text-base font-bold tracking-tight text-white"
+                >
                   Sign up to our Newsletter
-                </h4>
+                </label>
                 <p className="text-xs font-normal text-white/80 leading-relaxed">
                   Fresh ideas, useful insights, delivered to your inbox.
                 </p>
               </div>
 
-              <div className="flex h-12 w-full items-center justify-between gap-2 rounded-2xl bg-white p-1.5 shadow-md">
+              <div className="flex h-12 w-full items-center justify-between gap-2 rounded-2xl bg-white p-1.5 shadow-md focus-within:ring-2 focus-within:ring-[#6042EC] focus-within:ring-offset-2 focus-within:ring-offset-[#303073]">
                 <div className="flex items-center gap-2.5 pl-3 flex-1 min-w-0">
                   <svg
                     className="h-5 w-5 text-gray-400 shrink-0"
@@ -181,8 +184,12 @@ const Footer = () => {
                     />
                   </svg>
                   <input
+                    id="newsletter-email"
                     type="email"
                     name="newsletter"
+                    aria-label="Email address for newsletter subscription"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? "newsletter-error" : undefined}
                     placeholder="Your email address"
                     value={email}
                     onChange={(e) => {
@@ -194,11 +201,15 @@ const Footer = () => {
                 </div>
                 <button
                   type="submit"
+                  aria-label="Subscribe to newsletter"
                   disabled={loading}
                   className="flex h-full items-center justify-center gap-1.5 px-4 text-xs font-semibold text-white bg-[#6042EC] hover:bg-[#7254FC] disabled:opacity-70 transition-all duration-200 rounded-xl shrink-0 shadow-sm"
                 >
                   {loading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
                   ) : (
                     <>
                       <span>Subscribe</span>
@@ -209,7 +220,13 @@ const Footer = () => {
               </div>
 
               {error && (
-                <p className="text-xs font-medium text-red-300">{error}</p>
+                <p
+                  id="newsletter-error"
+                  className="text-xs font-medium text-red-300"
+                  role="alert"
+                >
+                  {error}
+                </p>
               )}
               <p className="text-[11px] font-normal text-white/70">
                 Unsubscribe anytime.
