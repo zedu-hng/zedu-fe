@@ -93,5 +93,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "Product Management",
     },
+    {
+      fullName: "Okafor Ifechukwu Uriel",
+      zeduUsername: "okafor uriel",
+      githubUsername: "blackoin-studio",
+      role: "Member",
+      field: "Full-stack Software Engineer",
+    },
   ],
 };
