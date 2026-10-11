@@ -1,4 +1,5 @@
 "use client";
+import { NotificationBanner } from "~/app/(client)/[org]/_components/notification-banner";
 
 import { Avatar, AvatarImage } from "~/components/ui/avatar";
 import { EllipsisVertical, Hash, Lock, Pin } from "lucide-react";
@@ -123,12 +124,15 @@ const ChannelHeader = () => {
     { id: "pins", label: "Pinned", icon: Pin },
   ];
 
-  return (
+  const navigation = (
     <nav className="border-b border-[#E6EAEF] px-3 pt-3 md:px-5 md:pt-4">
       <div className="flex items-start justify-between gap-3">
         <ChannelDetailsDialog>
           <Tooltips side="bottom" text="Get channel details">
-            <h2 className="text-base lg:text-lg font-bold hover:bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1.5">
+            <h2
+              tabIndex={-1}
+              className="text-base lg:text-lg font-bold hover:bg-gray-100 px-2 py-1 rounded-md flex items-center gap-1.5"
+            >
               {displayName &&
                 (showPrivateIcon ? (
                   <Lock className="size-4 lg:size-5 shrink-0" />
@@ -281,6 +285,13 @@ const ChannelHeader = () => {
         isPrivate={channelDetails?.is_private}
       />
     </nav>
+  );
+
+  return (
+    <header className="shrink-0">
+      {navigation}
+      <NotificationBanner />
+    </header>
   );
 };
 
