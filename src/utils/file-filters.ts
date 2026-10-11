@@ -23,6 +23,7 @@ export interface BuildFileQueryArgs {
   folderId?: string;
   page?: number;
   limit?: number;
+  sortOrder?: string[];
 }
 
 export const buildFileQuery = (args: BuildFileQueryArgs): string => {
@@ -35,6 +36,7 @@ export const buildFileQuery = (args: BuildFileQueryArgs): string => {
     folderId,
     page = 1,
     limit = 10,
+    sortOrder,
   } = args;
 
   const params = new URLSearchParams();
@@ -71,6 +73,17 @@ export const buildFileQuery = (args: BuildFileQueryArgs): string => {
   const search = fileNameSearch?.trim();
   if (search) {
     params.append("search", search);
+  }
+
+  if (sortOrder && sortOrder.length > 0) {
+    const sortValue = sortOrder[0];
+    if (sortValue === "newest-to-oldest") {
+      params.append("sort_by", "created_at");
+      params.append("order", "desc");
+    } else if (sortValue === "oldest-to-newest") {
+      params.append("sort_by", "created_at");
+      params.append("order", "asc");
+    }
   }
 
   return params.toString();
