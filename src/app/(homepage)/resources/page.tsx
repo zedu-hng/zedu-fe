@@ -59,6 +59,11 @@ const ResourcesPage = () => {
                 role="tab"
                 aria-selected={activeTab === tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse") {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 className={`shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-colors md:px-6 ${
                   activeTab === tab.id
                     ? "bg-white text-primary-500 shadow-sm"

@@ -48,6 +48,20 @@ pnpm install
 pnpm dev
 ```
 
+## Resources category browsing
+
+On `/resources`, hovering over a category with a mouse selects it and displays
+its resources. Moving into the content keeps the category selected so you can
+scroll through it without clicking. Click, touch, and keyboard activation
+remain available; touch scrolling over the category bar does not select a tab.
+The current search query is preserved and filters the selected category.
+Categories without matching resources continue to show the existing empty state.
+
+To verify, run `pnpm dev` and open `/resources`. Hover between Guides and Webinars,
+move into the content, and scroll. Check an empty category and repeat with a
+search query. At a mobile viewport, confirm tapping selects a category and
+horizontal scrolling across the category bar does not select one accidentally.
+
 ## Contributing
 
 Please see [CONTRIBUTING](./CONTRIBUTING.md)
