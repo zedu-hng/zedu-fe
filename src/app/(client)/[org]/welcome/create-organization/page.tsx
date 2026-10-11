@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import Loading from "~/components/ui/loading";
@@ -40,6 +40,7 @@ const initialState = {
 const CreateOrganization: React.FC = () => {
   const router = useRouter();
   const [buttonloading, setButtonloding] = useState(false);
+  const createdOrgIdRef = useRef<string | null>(null);
   const [values, setValues] = useState(initialState);
   const [loading, setLoading] = useState(true);
   const [countries, setCountries] = useState<any>([]);
@@ -94,9 +95,18 @@ const CreateOrganization: React.FC = () => {
       country: country?.value,
     };
 
-    const res = await PostRequest("/organisations", payload, token);
+    const res = createdOrgIdRef.current
+      ? {
+          status: 200,
+          data: {
+            data: { id: createdOrgIdRef.current },
+            message: "Organisation created",
+          },
+        }
+      : await PostRequest("/organisations", payload, token);
 
     if (res?.status === 200 || res?.status === 201) {
+      createdOrgIdRef.current = res?.data?.data?.id ?? null;
       // onboard the user
       await PutRequest("/auth/onboard-status", {}, token);
       // Switch into the new organisation so the user lands there rather than
