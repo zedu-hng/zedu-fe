@@ -120,8 +120,10 @@ const decodeFileName = (name: string) => {
   }
 };
 
+const DEFAULT_PROTOCOL = "https:";
+
 const ensureScheme = (url: string) =>
-  /^https?:\/\//i.test(url) ? url : `https://${url}`;
+  /^https?:\/\//i.test(url) ? url : `${DEFAULT_PROTOCOL}//${url}`;
 
 const isThreadFileBundle = (item: Record<string, unknown>) =>
   Array.isArray(item.media) &&
