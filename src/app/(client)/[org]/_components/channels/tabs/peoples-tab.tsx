@@ -3,11 +3,10 @@
 import Image from "next/image";
 import { ExternalLink, Search, Loader2 } from "lucide-react";
 import { useContext, useState } from "react";
+import { ACTIONS } from "~/store/Actions";
 import { DataContext } from "~/store/GlobalState";
 import { Member } from "~/types/people";
 import images from "~/assets/images";
-import { PostRequest } from "~/utils/new-request";
-import { useRouter } from "next/navigation";
 import { useOrganisationUsers } from "~/hooks/useOrganisationUsers";
 
 const SkeletonCard = () => (
@@ -22,9 +21,8 @@ const SkeletonCard = () => (
 );
 
 export default function PeopleTab() {
-  const { state } = useContext(DataContext);
-  const { channelloading, orgMembers, orgMembersTotal, orgSlug } = state;
-  const router = useRouter();
+  const { state, dispatch } = useContext(DataContext);
+  const { channelloading, orgMembers, orgMembersTotal } = state;
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -41,26 +39,18 @@ export default function PeopleTab() {
     (isSearching ? members.length : orgMembersTotal || orgMembers?.length) ||
     0;
 
-  const handleRoute = async (data: any) => {
-    localStorage.setItem("channelName", data?.name);
-
-    const resolvedOrgId = localStorage.getItem("orgId") || "";
-
-    const payload = {
-      chat_type: data?.entity_type,
-      participant_id: data?.id,
-    };
-
-    const res = await PostRequest(
-      `/organisations/${resolvedOrgId}/dms`,
-      payload
-    );
-
-    if (res?.status === 200 || res?.status === 201) {
-      router.push(
-        `/${orgSlug}/people/${res?.data?.data?.channel_id}/${res?.data?.data?.participant_id}`
-      );
-    }
+  const handleOpenProfile = (data: Member) => {
+    dispatch({
+      type: ACTIONS.USER_DATA,
+      payload: {
+        ...data,
+        user_id: data.id,
+        username: data.username || data.name,
+        full_name: data.name,
+        phone: data.phone_number,
+      },
+    });
+    dispatch({ type: ACTIONS.HOVER_PROFILE, payload: true });
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -110,7 +100,7 @@ export default function PeopleTab() {
                 <div
                   key={user.id || index}
                   className="border border-gray-200 rounded-lg overflow-hidden flex flex-col group cursor-pointer hover:shadow-md transition-shadow bg-white w-full min-w-0"
-                  onClick={() => handleRoute(user)}
+                  onClick={() => handleOpenProfile(user)}
                 >
                   <div className="aspect-square relative overflow-hidden bg-gray-100">
                     <Image
