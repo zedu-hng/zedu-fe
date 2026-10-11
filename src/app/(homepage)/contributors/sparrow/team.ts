@@ -93,5 +93,19 @@ export const TEAM: Team = {
       role: "Member",
       field: "Product Management",
     },
+    {
+      fullName: "Uyanwanne Emmanuel Chukwudaru",
+      zeduUsername: "emmyanzo",
+      githubUsername: "emmyanzx",
+      role: "Member",
+      field: "Frontend Developer",
+    },
+    {
+      fullName: "Obidigwe Francis Praise Chukwunonso",
+      zeduUsername: "Francis-7-tech",
+      githubUsername: "francis-7-tech",
+      role: "Member",
+      field: "Fullstack Development",
+    },
   ],
 };
