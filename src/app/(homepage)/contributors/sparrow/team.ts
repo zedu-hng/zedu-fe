@@ -98,7 +98,7 @@ export const TEAM: Team = {
       zeduUsername: "okafor uriel",
       githubUsername: "blackoin-studio",
       role: "Member",
-      field: "Full-stack Software Engineer",
+      field: "Full-Stack Software Engineer",
     },
   ],
 };
