@@ -9,6 +9,8 @@ import {
   BookmarkCheck,
 } from "lucide-react";
 import MessageItem from "./message-item";
+import PollCard from "../poll/poll-card";
+import { useChannelPolls } from "../poll/channel-polls-context";
 import { AppleEmojiText } from "~/app/(client)/[org]/_components/apple-emoji/apple-emoji-text";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
@@ -54,6 +56,8 @@ const Message = ({
   popupId,
 }: MessageProps) => {
   const { state, dispatch } = useContext(DataContext);
+  const { pollsByThread } = useChannelPolls();
+  const poll = item?.thread_id ? pollsByThread[item.thread_id] : undefined;
   const { bookmarks, user, orgMembers } = state;
   const pathname = usePathname();
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
@@ -283,6 +287,8 @@ const Message = ({
             </div>
           </div>
         </div>
+
+        {poll && <PollCard poll={poll} />}
 
         <div className="flex flex-wrap items-center gap-2 rounded-md mt-1">
           {item?.reactions?.map((emoji: any, index: number) => {

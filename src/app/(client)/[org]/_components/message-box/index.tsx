@@ -51,6 +51,8 @@ import Loading from "~/components/ui/loading";
 import Picker from "~/components/theme/themed-emoji-picker";
 import GifPicker from "~/components/gifs/gif-picker";
 import Tooltips from "../tooltip";
+import CreatePollDialog from "../poll/create-poll-dialog";
+import { useChannelPolls } from "../poll/channel-polls-context";
 import { UploadRequest } from "~/utils/new-request";
 import { compressImage } from "~/utils/compress-image";
 import { localGifToFile, type LocalGif } from "~/lib/gifs/local-pack";
@@ -115,6 +117,7 @@ const MessageBox = ({
   showTyping = true,
 }: any) => {
   const { state, dispatch } = useContext(DataContext);
+  const { createPoll } = useChannelPolls();
   const params = useParams();
   const id = params.id as string;
   const uuid = uuidv7();
@@ -336,6 +339,16 @@ const MessageBox = ({
       sendMessage(id, uuid, content, medias);
       dispatch({ type: ACTIONS.CLEAR_MENTIONS });
     }
+  };
+
+  const handleCreatePoll = async (question: string, options: string[]) => {
+    if (channelLoading || !subscription) return null;
+
+    const threadId = uuidv7();
+
+    sendMessage(id, threadId, question, []);
+
+    return createPoll({ threadId, question, options });
   };
 
   const handleKeyDown = (event: any) => {
@@ -905,6 +918,8 @@ const MessageBox = ({
                   <Slash size={18} color="#606060" />
                 </button>
               </Tooltips>
+
+              <CreatePollDialog onSubmit={handleCreatePoll} />
 
               {show && (
                 <Fragment>
