@@ -8,9 +8,9 @@ import { FAQSection } from "../../_components/home/FAQSection";
 import type { HomeFAQ } from "../../_lib/faqData";
 
 export const metadata: Metadata = {
-  title: "File Management",
+  title: "Educational File Management platform",
   description:
-    "Manage course files in one structured workspace with Zedu File Management. Organize resources, share securely, and collaborate across classes, cohorts, and departments.",
+    "Organize, store, share, and collaborate on learning materials and educational resources with Zedu's file management platform.",
   keywords: [
     "Zedu file management",
     "education file sharing",
@@ -156,9 +156,8 @@ const FileManagementProductsPage = () => {
           In One Place
         </h1>
         <p className="max-w-[95%] text-xs text-neutral-600 sm:max-w-[90%] sm:text-base md:max-w-[65%] lg:max-w-[45%] lg:text-lg">
-          Store, share, and collaborate on course materials, assignments, and
-          resources directly inside Zedu. Everything stays connected to the
-          conversations and classes where it belongs.
+          Organize, store, share, and collaborate on learning materials and
+          educational resources directly on Zedu
         </p>
         <div className="flex w-full max-w-md flex-row items-center justify-center gap-2 sm:gap-3">
           <ArrowBtn
