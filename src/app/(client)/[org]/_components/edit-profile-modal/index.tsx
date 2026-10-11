@@ -38,18 +38,26 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // set default values
+  // reset the form to the saved profile each time the dialog opens,
+  // so edits discarded with Cancel, X, Esc or an outside click don't persist
   useEffect(() => {
+    if (!isOpen) return;
+
     setFullName(user?.full_name || "");
     setDisplayName(user?.display_name || "");
     setUsername(user?.username || "");
     setEmail(user?.email || "");
     setPhone(user?.phone || "");
     setAvatar(user?.avatar_url || user?.default_avatar_url || images?.user);
+    setAvatarFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
 
     setTitle(user?.title || "");
-    setNamePronunciation(user?.name_pronounciation);
-  }, [user]);
+    setNamePronunciation(user?.name_pronounciation || "");
+    setTimezone(user?.timezone);
+  }, [isOpen, user]);
 
   const handleSave = async () => {
     const formData = new FormData();
