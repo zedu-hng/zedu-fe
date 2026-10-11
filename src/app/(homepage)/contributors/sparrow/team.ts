@@ -93,5 +93,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "Product Management",
     },
+    {
+      fullName: "Mustapha Satar",
+      zeduUsername: "satar",
+      githubUsername: "satarmustapha93-del",
+      role: "Member",
+      field: "AI Product Developer",
+    },
   ],
 };
