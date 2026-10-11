@@ -2,7 +2,7 @@
 
 import { useContext, useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { ChevronDown, Headphones, Plus, X } from "lucide-react";
+import { Headphones, Plus, X } from "lucide-react";
 import { BuzzItem } from "./buzz-item";
 import UseBuzzs from "../../home/channels/hooks/use-buzzs";
 import { DataContext } from "~/store/GlobalState";
@@ -162,7 +162,6 @@ export const BuzzList = () => {
                   )}
                 >
                   {option.label}
-                  <ChevronDown className="size-3.5 opacity-60" />
                 </button>
               ))}
             </div>
