@@ -1,0 +1,22 @@
+# Zedu
+
+> Zedu is an AI-powered education and cohort collaboration workspace designed for bootcamps, schools, and universities. It unifies structured channels, real-time audio/video calls (Buzz), file sharing, and AI coworkers into a single platform.
+
+## Core Capabilities
+- [Structured Channels](https://zedu.chat/products/channels): Topic- and cohort-based communication channels with granular role-based access control.
+- [Buzz Real-Time Calls](https://zedu.chat/products/buzz): Low-latency voice and video meetings built directly into cohort workspaces.
+- [File Management](https://zedu.chat/products/file-management): Centralized repository for learning materials, assignments, and media.
+- [AI Coworkers](https://zedu.chat/about): Context-aware AI assistants embedded into learning channels to support learners 24/7.
+
+## Solutions
+- [Bootcamps](https://zedu.chat/solutions/bootcamps): Streamline cohort management, mentor coordination, and project reviews.
+- [Schools](https://zedu.chat/solutions/schools): Safe, structured communication for K-12 learning environments.
+- [Universities](https://zedu.chat/solutions/universities): Scalable campus collaboration across faculties and student groups.
+
+## Pricing & Details
+- [Pricing Plans](https://zedu.chat/pricing): Free starter tier, flexible cohort billing, and custom institutional plans.
+- [Full Documentation & Context](https://zedu.chat/llms-full.txt): Comprehensive AI-readable platform details.
+
+## Optional
+- [Resources & Guides](https://zedu.chat/resources): Tutorials, guides, and best practices for running online cohorts.
+- [Contact Sales](https://zedu.chat/contact-sales): Custom enterprise deployments and institution onboarding.

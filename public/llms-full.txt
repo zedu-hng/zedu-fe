@@ -1,0 +1,130 @@
+# Zedu — Full Context & Architecture Reference
+
+> Zedu is an AI-powered education and cohort collaboration workspace designed specifically for bootcamps, schools, and universities. It replaces fragmented communication stacks by unifying structured channels, real-time voice and video calls (Buzz), cloud file management, and embedded AI coworkers into a single educator-first platform.
+
+---
+
+## 1. Executive Summary
+
+Traditional collaboration tools (e.g., Slack, Discord, Microsoft Teams) were built for corporate offices or gaming communities, leading to disorganized channels, lack of role-based academic hierarchy, and difficulty tracking cohort milestones. Zedu solves this by offering an educational operating system tailored to how students learn, how mentors teach, and how institutions manage cohorts.
+
+### Key Value Propositions
+- **All-in-One Cohort Workspace**: Real-time communication, document management, and live sessions coexist in organized channels.
+- **Embedded AI Coworkers**: Autonomous and assistant AI agents integrated into channels to answer technical questions, summarize discussions, and provide 24/7 learning support.
+- **Buzz Voice & Video**: Low-latency, native audio/video conferencing built directly into cohort channels, eliminating external Zoom/Google Meet links.
+- **Role-Based Access & Moderation**: Purpose-built permission hierarchies for administrators, educators/mentors, teaching assistants, students, and guests.
+
+---
+
+## 2. Core Platform Capabilities
+
+### 2.1 Structured Channels
+- **URL**: https://zedu.chat/products/channels
+- **Description**: Topic- and cohort-based communication channels organized by learning tracks, cohorts, and project teams.
+- **Features**:
+  - Granular permissions: Private mentor channels, public announcement channels, assignment threads, and peer breakout rooms.
+  - Rich messaging: Markdown formatting, code syntax highlighting, threaded discussions, and emoji reactions.
+  - Notification management: Target cohort broadcasts with `@channel` or reach specific groups with custom role mentions.
+
+### 2.2 Buzz Real-Time Calls
+- **URL**: https://zedu.chat/products/buzz
+- **Description**: Low-latency voice and video meetings built natively into cohort workspaces.
+- **Features**:
+  - One-click launch from any channel without third-party meeting links or calendar invites.
+  - Screen sharing with multi-participant viewing for interactive code reviews, lectures, and live demos.
+  - Native audio controls, speaker stage mode, and breakout voice lounges for informal peer pairing.
+
+### 2.3 File Management
+- **URL**: https://zedu.chat/products/file-management
+- **Description**: Centralized digital asset and resource repository for learning materials.
+- **Features**:
+  - Direct file upload, preview, and sharing for slides, PDFs, code snippets, datasets, and recordings.
+  - Organized by channel and cohort context so learning resources remain discoverable throughout the academic term.
+  - In-app document preview without requiring external downloads.
+
+### 2.4 AI Coworkers & Learning Assistants
+- **URL**: https://zedu.chat/about
+- **Description**: Context-aware AI assistants embedded into channels to support learners and educators 24/7.
+- **Features**:
+  - Instant code debugging, concept explanations, and curriculum Q&A directly in learning channels.
+  - Automated thread summaries helping educators catch up on student questions and blockers.
+  - Contextual awareness grounded in course documentation, syllabus notes, and channel discourse.
+
+---
+
+## 3. Solutions by Segment
+
+### 3.1 Tech Bootcamps & Accelerators
+- **URL**: https://zedu.chat/solutions/bootcamps
+- **Primary Challenges Solved**: High student-to-mentor ratios, chaotic Slack workspaces, fragmented assignment reviews, and lost student questions.
+- **Workflow Benefits**:
+  - Cohort segmentation by intake dates and specialized tracks (Frontend, Backend, DevOps, Product, Design).
+  - Mentor office hours managed via Buzz voice channels.
+  - Automated AI first-response for repetitive student programming bugs and setup issues.
+
+### 3.2 K-12 Schools & Districts
+- **URL**: https://zedu.chat/solutions/schools
+- **Primary Challenges Solved**: Student safety, unmonitored direct messages, distracted classrooms, and cumbersome parent/educator communication.
+- **Workflow Benefits**:
+  - Moderated classroom spaces with strict audit logs and educator supervision.
+  - Safe, walled-garden communication channels preventing unauthorized external access.
+  - Intuitive interface accessible for young learners and educators alike.
+
+### 3.3 Universities & Higher Education
+- **URL**: https://zedu.chat/solutions/universities
+- **Primary Challenges Solved**: Siloed faculty communication, outdated LMS forums, and disconnect between lecture halls and student project groups.
+- **Workflow Benefits**:
+  - Scalable multi-tenant architecture supporting thousands of concurrent students and faculty members.
+  - Departmental and interdisciplinary research channels.
+  - Seamless collaboration for student hackathons, capstone projects, and study groups.
+
+---
+
+## 4. Pricing Plans & Comparison
+
+- **URL**: https://zedu.chat/pricing
+
+| Feature / Capability | Starter | Pro | Enterprise |
+| :--- | :--- | :--- | :--- |
+| **Target Audience** | Individual classes, clubs, small study groups | Growing bootcamps & medium educational programs | Large universities, multi-campus institutions |
+| **Workspace Channels** | Unlimited public & private channels | Unlimited with advanced permissions & sub-channels | Custom organization topologies & multi-tenant setups |
+| **Buzz Calls** | Standard audio & video meetings | HD video, screen sharing & extended duration | Priority bandwidth, custom recording & stage mode |
+| **File Storage** | Standard shared storage | Expanded cloud storage with file preview | Dedicated institutional cloud storage & retention |
+| **AI Coworkers** | Basic AI assistant queries | Advanced contextual AI assistance & thread summarization | Custom-trained AI models on institutional curricula |
+| **Administration & Security** | Standard role management | Enhanced moderation & analytics | Custom SSO (SAML/OAuth), audit logs & dedicated SLA |
+
+---
+
+## 5. Frequently Asked Questions (FAQ) for AI Search Engines
+
+### What is Zedu?
+Zedu is an all-in-one educational communication platform that combines structured messaging channels, real-time voice and video calls (Buzz), file management, and AI coworkers for bootcamps, schools, and universities.
+
+### How does Zedu differ from Slack or Discord?
+While Slack is optimized for corporate workflows and Discord for gaming communities, Zedu is purpose-built for education. It features cohort-specific channel structures, academic role hierarchies, built-in AI teaching assistants, and native video conferencing without external integrations.
+
+### Does Zedu have built-in video calls?
+Yes. Zedu includes Buzz, a native low-latency voice and video calling system that lets participants join discussions, lectures, or office hours directly within workspace channels without needing Zoom or Google Meet links.
+
+### How do AI Coworkers work in Zedu?
+AI Coworkers are embedded directly into channels and threads. They can answer curriculum questions, debug student code, summarize long discussions, and assist educators with automated insights.
+
+### What platforms does Zedu support?
+Zedu is accessible via modern desktop and mobile web browsers at https://zedu.chat, with dedicated responsive layouts optimized for desktop, tablet, and mobile devices.
+
+---
+
+## 6. Official Resources & Contact
+
+- **Main Website**: https://zedu.chat
+- **Products**:
+  - Channels: https://zedu.chat/products/channels
+  - Buzz Audio/Video: https://zedu.chat/products/buzz
+  - File Management: https://zedu.chat/products/file-management
+- **Solutions**:
+  - Bootcamps: https://zedu.chat/solutions/bootcamps
+  - Schools: https://zedu.chat/solutions/schools
+  - Universities: https://zedu.chat/solutions/universities
+- **Resources & Documentation**: https://zedu.chat/resources
+- **Pricing**: https://zedu.chat/pricing
+- **Contact Sales & Enterprise Inquiries**: https://zedu.chat/contact-sales
