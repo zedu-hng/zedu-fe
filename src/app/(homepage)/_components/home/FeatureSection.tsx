@@ -13,7 +13,7 @@ export const FeatureSection = () => {
   const router = useRouter();
   return (
     <>
-      <section className="relative isolate flex w-full flex-col items-center gap-5 overflow-hidden px-4 py-12 text-center sm:gap-6 sm:px-8 sm:py-16 lg:gap-8 lg:px-12">
+      <section className="relative isolate flex w-full flex-col items-center gap-5overflow-hidden px-4 py-12 text-center sm:gap-6 sm:px-8 sm:py-16 lg:gap-8 lg:px-12">
         <div className="flex flex-col gap-3 items-center">
           <h1 className=" text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl text-center">
             Everything you need for{" "}
