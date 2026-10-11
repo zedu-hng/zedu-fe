@@ -2,20 +2,17 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Zedu Yoda Contributors Board | Zedu",
-  description:
-    "Explore and submit contributions to the Zedu Yoda developer community. Track contributors, Zedu usernames, and linked GitHub repositories.",
+  description: "Browse Zedu Yoda contributor names and Zedu usernames.",
   openGraph: {
     title: "Zedu Yoda Contributors Board | Zedu",
-    description:
-      "Explore and submit contributions to the Zedu Yoda developer community. Track contributors, Zedu usernames, and linked GitHub repositories.",
+    description: "Browse Zedu Yoda contributor names and Zedu usernames.",
     url: "/contributors/zedu-yoda",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Zedu Yoda Contributors Board | Zedu",
-    description:
-      "Explore and submit contributions to the Zedu Yoda developer community.",
+    description: "Browse Zedu Yoda contributor names and Zedu usernames.",
   },
   alternates: {
     canonical: "/contributors/zedu-yoda",
