@@ -54,11 +54,19 @@ const ChannelsMessage = () => {
 
   const getData = async () => {
     if (!id) return;
-    // Capture unread count before clearing
-    unreadCountRef.current = state?.threadCount || 0;
+    // Capture unread count once per channel opening (before clearing)
+    if (unreadCountRef.current === 0) {
+      unreadCountRef.current = state?.threadCount || 0;
+    }
     await GetRequest(`/threads/channels/${id}?page=1&limit=1`);
     clearChannelUnread();
   };
+
+  // Reset unread capture when channel changes
+  useEffect(() => {
+    unreadCountRef.current = 0;
+    setUnreadDividerId(null);
+  }, [id]);
 
   // Mark as read and clear Nav highlight whenever this channel is opened
   useEffect(() => {
@@ -106,23 +114,33 @@ const ChannelsMessage = () => {
       const unreadIndex = Math.min(unreadCountRef.current, messages.length);
       const firstUnread = messages[unreadIndex];
       if (firstUnread) {
-        setUnreadDividerId(`unread-divider-${firstUnread.thread_id}`);
+        // Issue 2 fix: if unread boundary is beyond loaded messages, use the oldest loaded message
+        const targetMsg =
+          unreadCountRef.current > messages.length
+            ? messages[messages.length - 1]
+            : firstUnread;
+        setUnreadDividerId(`unread-divider-${targetMsg.thread_id}`);
       }
     } else {
       setUnreadDividerId(null);
     }
   }, [messages]);
 
-  // Scroll to unread divider after it renders
+  // Scroll to the first unread message (not the older message above the divider)
   useEffect(() => {
     if (!unreadDividerId) return;
     const hasScrolled = { current: false };
     const timer = setTimeout(() => {
       if (hasScrolled.current) return;
       hasScrolled.current = true;
-      const divider = document.getElementById(unreadDividerId);
-      if (!divider) return;
-      const firstUnreadMsg = divider.nextElementSibling;
+      // Issue 3 fix: scroll directly to the first unread message by thread ID
+      const firstUnreadThreadId = unreadDividerId.replace(
+        "unread-divider-",
+        ""
+      );
+      const firstUnreadMsg = document.getElementById(
+        `thread-${firstUnreadThreadId}`
+      );
       if (firstUnreadMsg) {
         firstUnreadMsg.scrollIntoView({ block: "start", behavior: "smooth" });
       }
