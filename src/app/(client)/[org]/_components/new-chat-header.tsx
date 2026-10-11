@@ -28,6 +28,9 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
+  // Key repeat can outrun React renders; the ref keeps every press counted
+  // even when several land between two renders.
+  const highlightRef = useRef(0);
   const triggerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverContentRef = useRef<HTMLDivElement>(null);
@@ -56,6 +59,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
   }, [filteredUsers.length]);
 
   useEffect(() => {
+    highlightRef.current = highlightIndex;
     rowRefs.current[highlightIndex]?.scrollIntoView({ block: "nearest" });
   }, [highlightIndex]);
 
@@ -65,6 +69,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
 
   const handleSearch = (search: string) => {
     setInputValue(search);
+    highlightRef.current = 0;
     setHighlightIndex(0);
     if (!open) setOpen(true);
   };
@@ -72,6 +77,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
   const handleSelectUser = (user: User) => {
     setSelectedUsers((prev) => [...prev, user]);
     setInputValue("");
+    highlightRef.current = 0;
     setHighlightIndex(0);
     setOpen(false);
     setTimeout(() => inputRef.current?.focus(), 10);
@@ -104,8 +110,12 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
       }
 
       if (event.key === "ArrowDown") {
-        const next = Math.min(highlightIndex + 1, filteredUsers.length - 1);
-        setHighlightIndex(Math.max(next, 0));
+        const next = Math.max(
+          Math.min(highlightRef.current + 1, filteredUsers.length - 1),
+          0
+        );
+        highlightRef.current = next;
+        setHighlightIndex(next);
 
         // Page more users in as the highlight reaches the last loaded row.
         if (
@@ -117,7 +127,9 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
           loadMore();
         }
       } else {
-        setHighlightIndex((prev) => Math.max(prev - 1, 0));
+        const next = Math.max(highlightRef.current - 1, 0);
+        highlightRef.current = next;
+        setHighlightIndex(next);
       }
       return;
     }
@@ -125,7 +137,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
     if (!open) return;
 
     if (event.key === "Enter") {
-      const user = filteredUsers[highlightIndex];
+      const user = filteredUsers[highlightRef.current];
       if (user) {
         event.preventDefault();
         handleSelectUser(user);
@@ -246,7 +258,10 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
                       rowRefs.current[index] = el;
                     }}
                     onMouseDown={(e) => e.preventDefault()}
-                    onMouseEnter={() => setHighlightIndex(index)}
+                    onMouseEnter={() => {
+                      highlightRef.current = index;
+                      setHighlightIndex(index);
+                    }}
                     onClick={() => handleSelectUser(user)}
                     className={`flex items-center gap-[10px] px-4 py-[10px] hover:bg-[#F1F1FE] cursor-pointer ${
                       index === highlightIndex ? "bg-[#F1F1FE]" : ""
