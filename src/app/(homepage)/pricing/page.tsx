@@ -10,6 +10,7 @@ import {
   pricingComparisonPlans,
 } from "../_lib/pricingComparisonData";
 import { CircleHelp } from "lucide-react";
+import { pricingFAQs } from "../_lib/faqData";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -110,7 +111,7 @@ const PricingPage = () => {
       </div>
 
       <div id="help-center">
-        <FAQSection />
+        <FAQSection faqs={pricingFAQs} />
       </div>
 
       <DynamicFooter
