@@ -30,8 +30,8 @@ export const resources: ResourceItem[] = [
     title: "Organizing Courses with Channels",
     description:
       "How universities structure course discussions using Zedu to keep topics clear and accessible.",
-    image: "/images/homepage/resources/image-1.png",
-    link: "#",
+    image: "/images/homepage/resources/organizing-courses-with-channels.png",
+    link: "/resources/organizing-courses-with-channels",
   },
   {
     id: 2,
@@ -40,8 +40,8 @@ export const resources: ResourceItem[] = [
     title: "Running Active Class Discussions",
     description:
       "Tips for teachers to encourage student participation and build a thriving online classroom.",
-    image: "/images/homepage/resources/image-2.png",
-    link: "#",
+    image: "/images/homepage/resources/running-active-class-discussions.jpg",
+    link: "/resources/running-active-class-discussions",
   },
   {
     id: 3,
@@ -51,17 +51,17 @@ export const resources: ResourceItem[] = [
     description:
       "How bootcamps organize fast-paced learning programs, coordinate mentors, and track progress.",
     image: "/images/homepage/resources/image-3.png",
-    link: "#",
+    link: "/resources/managing-bootcamp-cohorts",
   },
   {
     id: 4,
     tab: "guides",
     category: "Guides",
-    title: "Using AI assistant for Learning",
+    title: "Using an AI Assistant for Learning",
     description:
-      "Discover how AI help summarize discussions, answer questions, and support students Zedu workspace.",
-    image: "/images/homepage/resources/image-4.png",
-    link: "#",
+      "Discover how AI helps summarize discussions, answer questions, and support students in your Zedu workspace.",
+    image: "/images/homepage/resources/using-an-ai-assistant-for-learning.jpg",
+    link: "/resources/using-an-ai-assistant-for-learning",
   },
   {
     id: 1,
@@ -70,8 +70,8 @@ export const resources: ResourceItem[] = [
     title: "Organizing Courses with Channels",
     description:
       "How universities structure course discussions using Zedu to keep topics clear and accessible.",
-    image: "/images/homepage/resources/image-1.png",
-    link: "#",
+    image: "/images/homepage/resources/organizing-courses-with-channels.png",
+    link: "/resources/organizing-courses-with-channels",
   },
   {
     id: 2,
@@ -80,8 +80,8 @@ export const resources: ResourceItem[] = [
     title: "Running Active Class Discussions",
     description:
       "Tips for teachers to encourage student participation and build a thriving online classroom.",
-    image: "/images/homepage/resources/image-2.png",
-    link: "#",
+    image: "/images/homepage/resources/running-active-class-discussions.jpg",
+    link: "/resources/running-active-class-discussions",
   },
   {
     id: 3,
@@ -91,17 +91,17 @@ export const resources: ResourceItem[] = [
     description:
       "How bootcamps organize fast-paced learning programs, coordinate mentors, and track progress.",
     image: "/images/homepage/resources/image-3.png",
-    link: "#",
+    link: "/resources/managing-bootcamp-cohorts",
   },
   {
     id: 4,
     tab: "guides",
     category: "Guides",
-    title: "Using AI assistant for Learning",
+    title: "Using an AI Assistant for Learning",
     description:
-      "Discover how AI help summarize discussions, answer questions, and support students Zedu workspace.",
-    image: "/images/homepage/resources/image-4.png",
-    link: "#",
+      "Discover how AI helps summarize discussions, answer questions, and support students in your Zedu workspace.",
+    image: "/images/homepage/resources/using-an-ai-assistant-for-learning.jpg",
+    link: "/resources/using-an-ai-assistant-for-learning",
   },
   {
     id: 1,
@@ -110,8 +110,8 @@ export const resources: ResourceItem[] = [
     title: "Organizing Courses with Channels",
     description:
       "How universities structure course discussions using Zedu to keep topics clear and accessible.",
-    image: "/images/homepage/resources/image-1.png",
-    link: "#",
+    image: "/images/homepage/resources/organizing-courses-with-channels.png",
+    link: "/resources/organizing-courses-with-channels",
   },
   {
     id: 6,
