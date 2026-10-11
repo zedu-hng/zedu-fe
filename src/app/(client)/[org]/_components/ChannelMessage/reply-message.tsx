@@ -237,7 +237,7 @@ const Message = ({
             </div>
           </>
         ) : (
-          <span className="block text-[10px] whitespace-nowrap w-[36px] text-[#98A2B3] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="mt-1 block w-[36px] text-xs text-[#98A2B3] opacity-0 transition-opacity group-hover:opacity-100">
             {new Date(item?.created_at).toLocaleTimeString([], {
               hour: "numeric",
               minute: "2-digit",

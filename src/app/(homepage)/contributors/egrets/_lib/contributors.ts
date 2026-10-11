@@ -9,6 +9,7 @@ export const contributors: Contributor[] = [
     githubUsername: "TrippleA001",
   },
   { name: "Abdullateef Dauda", githubUsername: "abdul-o" },
+  { name: "Felix Musanzi", githubUsername: "flexxsir" },
   { name: "Adejumoke Oluwole", githubUsername: "jumokeolu" },
   {
     name: "Aisha Abdulkadir Joda",
@@ -18,7 +19,7 @@ export const contributors: Contributor[] = [
     name: "Akinremi Oluwatoyin Mary",
     githubUsername: "Oluwatoyin-224",
   },
-  { name: "Babatunde Omojuwa", githubUsername: "juskins" },
+  { name: "Babatunde Omojuwa Kolawole", githubUsername: "juskins" },
   { name: "Bilkis Oladimeji", githubUsername: "Atete22" },
   { name: "Bolakale Fuad", githubUsername: "bolakale6" },
   { name: "Christiana Mabel Nyuma", githubUsername: "Mabel007" },
@@ -57,7 +58,10 @@ export const contributors: Contributor[] = [
   { name: "Kafayat Faniran", githubUsername: "KaffyDevelops" },
   { name: "Manu Jesse", githubUsername: "Manu2232" },
   { name: "Michelle Utomi", githubUsername: "michycipher" },
-  { name: "Mutairu Dirisu", githubUsername: "mutairudirisu" },
+  {
+    name: "Mutairu Dirisu Aji",
+    githubUsername: "mutairudirisu",
+  },
   { name: "Nduaguba Marcellus", githubUsername: "creativemcn" },
   {
     name: "Okeke Chukwuebuka",
