@@ -60,11 +60,15 @@ const MenuDropdown = ({ isOpen, onClose }: MenuDropdownProps) => {
     "px-4 py-[10px] text-[15px] text-[#101828] hover:bg-[#F1F1FE] flex items-center justify-between cursor-pointer";
   const dividerClass = "h-px bg-[#E6EAEF]";
 
-  const isStarred = Boolean(state?.channelDetails?.is_starred);
+  const detailsMatch =
+    String(
+      state?.channelDetails?.channels_id || state?.channelDetails?.id || ""
+    ) === String(id || "");
+  const isStarred = Boolean(detailsMatch && state?.channelDetails?.is_starred);
 
   const handleToggleStar = async (e: ReactMouseEvent) => {
     e.stopPropagation();
-    if (!id || buttonLoading) return;
+    if (!id || !detailsMatch || buttonLoading) return;
     setButtonLoading(true);
 
     const nextStarred = !isStarred;
@@ -126,9 +130,15 @@ const MenuDropdown = ({ isOpen, onClose }: MenuDropdownProps) => {
               Open channel details
             </ChannelDetailsDialog>
 
-            <div className={menuItemClass} onClick={handleToggleStar}>
-              {isStarred ? "Unstar channel" : "Star channel"}
-            </div>
+            {detailsMatch && (
+              <button
+                type="button"
+                className={cn(menuItemClass, "w-full text-left")}
+                onClick={handleToggleStar}
+              >
+                {isStarred ? "Unstar channel" : "Star channel"}
+              </button>
+            )}
 
             <NotificationSettingsModal />
 
