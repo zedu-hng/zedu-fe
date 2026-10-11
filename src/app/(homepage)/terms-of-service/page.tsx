@@ -134,7 +134,7 @@ function TermsOfService() {
           <p className="text-2xl md:text-4xl font-semibold leading-10 pb-2">
             Terms of Service
           </p>
-          <p className="text-[#5C5C5C] text-sm lg:text-base pb-5">
+          <p className="text-neutral-600 text-sm lg:text-base pb-5">
             Last updated: 10 October 2026
           </p>
 
