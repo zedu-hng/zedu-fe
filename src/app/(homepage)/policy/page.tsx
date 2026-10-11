@@ -115,23 +115,33 @@ function Policy() {
     return () => window.removeEventListener("resize", remeasure);
   }, [isMobileMenuPinned]);
 
-  // On phones, a link straight to a section (e.g. /policy#contact-us) lets
-  // the browser put the heading under the fixed header and bar, so redo
-  // that scroll with the same offset as the menu
+  // On phones, a link straight to a section (e.g. /policy#contact-us), or a
+  // later hash change, lets the browser put the heading under the fixed
+  // header and bar, so redo that scroll with the same offset as the menu
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    if (!isMobile || !POLICY_SECTIONS.some((section) => section.id === id)) {
-      return;
-    }
-    const frame = requestAnimationFrame(() =>
-      scrollToPolicySection(
-        id,
-        mobileMenuRef.current?.offsetHeight ?? 0,
-        "auto"
-      )
-    );
-    return () => cancelAnimationFrame(frame);
+    let frame = 0;
+    const scrollToHash = () => {
+      cancelAnimationFrame(frame);
+      const id = window.location.hash.slice(1);
+      const isMobile = window.matchMedia("(max-width: 767px)").matches;
+      if (!isMobile || !POLICY_SECTIONS.some((section) => section.id === id)) {
+        return;
+      }
+      frame = requestAnimationFrame(() =>
+        scrollToPolicySection(
+          id,
+          mobileMenuRef.current?.offsetHeight ?? 0,
+          "auto"
+        )
+      );
+    };
+
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", scrollToHash);
+    };
   }, []);
 
   // The current section is the last heading that has reached the top
