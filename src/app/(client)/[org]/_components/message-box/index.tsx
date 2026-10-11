@@ -66,6 +66,7 @@ import { emoticonMap } from "./emoticon-map";
 import { useParams } from "next/navigation";
 import { uuidv7 } from "uuidv7";
 import { CHAT_FILE_ACCEPT } from "~/utils/document-files";
+import { useMediaQuery } from "~/hooks/use-media-query";
 
 interface VoiceMessage {
   id: string;
@@ -338,13 +339,16 @@ const MessageBox = ({
     }
   };
 
+  // On touch devices, Enter adds a new line; only the Send button sends.
+  const isTouchDevice = useMediaQuery("(hover: none) and (pointer: coarse)");
+
   const handleKeyDown = (event: any) => {
     if (event.key === "Enter") {
       if (editor?.isActive("codeBlock")) {
         return;
       }
 
-      if (event.shiftKey) {
+      if (event.shiftKey || isTouchDevice) {
         return;
       } else if (
         editor?.isActive("bulletList") ||
@@ -704,7 +708,7 @@ const MessageBox = ({
           <div className="md:flex-1 relative px-3">
             <EditorContent
               editor={editor}
-              className="py-2 rounded-md flex flex-row overflow-auto"
+              className="py-2 rounded-md flex flex-row overflow-auto max-h-40 sm:max-h-none"
               onKeyDown={handleKeyDown}
             />
 

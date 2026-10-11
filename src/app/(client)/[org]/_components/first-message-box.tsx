@@ -47,6 +47,7 @@ import { normalizeOutgoingMessageHtml } from "./editor/normalize-message-html";
 import Tooltips from "./tooltip";
 import { CHAT_FILE_ACCEPT } from "~/utils/document-files";
 import { localGifToFile, type LocalGif } from "~/lib/gifs/local-pack";
+import { useMediaQuery } from "~/hooks/use-media-query";
 
 const FirstMessageBox = ({ sendMessage }: any) => {
   const { editor, isEmpty } = UseTextEditor();
@@ -158,9 +159,12 @@ const FirstMessageBox = ({ sendMessage }: any) => {
     sendMessage(id, uuid, content, medias);
   };
 
+  // On touch devices, Enter adds a new line; only the Send button sends.
+  const isTouchDevice = useMediaQuery("(hover: none) and (pointer: coarse)");
+
   const handleKeyDown = (event: any) => {
     if (event.key === "Enter") {
-      if (event.shiftKey) {
+      if (event.shiftKey || isTouchDevice) {
         return;
       } else {
         event.preventDefault();
@@ -386,7 +390,7 @@ const FirstMessageBox = ({ sendMessage }: any) => {
         <div className="md:flex-1 relative px-3">
           <EditorContent
             editor={editor}
-            className="py-2 rounded-md flex flex-row overflow-auto"
+            className="py-2 rounded-md flex flex-row overflow-auto max-h-40 sm:max-h-none"
             onKeyDown={handleKeyDown}
           />
 
