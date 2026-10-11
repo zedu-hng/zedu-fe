@@ -108,8 +108,7 @@ const DownLoadPage = () => {
             href={PLAY_STORE_URL}
           />
         </div>
-
-        <div className="flex w-full max-w-md flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
+        <div className="flex w-full max-w-xl flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <div>
             <Image
               src={"/images/homepage/download/users-image.png"}
