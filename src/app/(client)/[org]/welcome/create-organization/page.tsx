@@ -13,6 +13,7 @@ import useFirstChannel from "../../home/channels/hooks/first-channel";
 import StepIndicator from "~/components/ui/step-indicator";
 import { RegisterWebhookRequest } from "~/utils/webhook-request";
 import { DataContext } from "~/store/GlobalState";
+import { showError } from "~/components/toast/sonner";
 import {
   redirectAfterOrgSwitch,
   resolveChannelIdForOrgSwitch,
@@ -98,9 +99,6 @@ const CreateOrganization: React.FC = () => {
     if (res?.status === 200 || res?.status === 201) {
       // onboard the user
       await PutRequest("/auth/onboard-status", {}, token);
-
-      localStorage.setItem("orgId", res?.data?.data?.id);
-
       // Switch into the new organisation so the user lands there rather than
       // the auto-created default (pattern from organization/create/page.tsx).
       const result = await PutRequest(
@@ -109,20 +107,55 @@ const CreateOrganization: React.FC = () => {
         token
       );
 
-      if (result?.status === 200 || result?.status === 201) {
-        localStorage.setItem("token", result?.data?.data?.access_token);
-        localStorage.setItem("orgId", result?.data?.data?.organisation?.id);
+      const switched = result?.data?.data;
+      const newSlug = switched?.current_organisation_slug;
+      const switchWorked =
+        (result?.status === 200 || result?.status === 201) && Boolean(newSlug);
+
+      if (!switchWorked) {
+        // Stay here so the user can retry. Never redirect into the old workspace.
+        showError(
+          "We could not switch to your new workspace. Please try again."
+        );
+        setButtonloding(false);
+        return;
+      }
+
+      if (switched?.access_token) {
+        localStorage.setItem("token", switched.access_token);
+      }
+      localStorage.setItem(
+        "orgId",
+        switched?.organisation?.id ?? res?.data?.data?.id
+      );
+
+      // Keep the stored user in step with the new workspace so the welcome
+      // pages do not mistake it for the auto-created default one.
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        if (storedUser) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...storedUser,
+              organisation: {
+                ...storedUser.organisation,
+                ...switched?.organisation,
+                type: switched?.organisation?.type ?? values.organisationType,
+              },
+            })
+          );
+        }
+      } catch {
+        // Storage not available: nothing more to do.
       }
 
       const channelId = await resolveChannelIdForOrgSwitch(
         firstChannel,
-        result?.data?.data?.organisation?.id
+        switched?.organisation?.id
       );
 
-      redirectAfterOrgSwitch(
-        result?.data?.data?.current_organisation_slug || orgSlug,
-        channelId
-      );
+      redirectAfterOrgSwitch(newSlug, channelId);
 
       // send webhook
       const webhookData = `
