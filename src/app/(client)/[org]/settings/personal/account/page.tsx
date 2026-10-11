@@ -9,6 +9,7 @@ import { ACTIONS } from "~/store/Actions";
 import { getUserStatus } from "~/utils/user-status";
 import images from "~/assets/images";
 import Image from "next/image";
+import axios from "axios";
 import { PostRequest } from "~/utils/new-request";
 import { showSuccess, showError } from "~/components/toast/sonner";
 
@@ -35,7 +36,7 @@ const AccountPage = () => {
         type: ACTIONS.PROFILE_CALLBACK,
         payload: !state?.profileCallback,
       });
-    } else {
+    } else if (!axios.isAxiosError(res)) {
       showError("Failed to clear status");
     }
     setClearing(false);
@@ -115,7 +116,8 @@ const AccountPage = () => {
                     onClick={() =>
                       dispatch({ type: ACTIONS.STATUS, payload: true })
                     }
-                    className="text-sm font-medium text-[#6868F7] hover:underline"
+                    disabled={clearing}
+                    className="text-sm font-medium text-[#6868F7] hover:underline disabled:opacity-50"
                   >
                     {status ? "Update status" : "Set a status"}
                   </button>

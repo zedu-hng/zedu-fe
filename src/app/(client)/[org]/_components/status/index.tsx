@@ -15,11 +15,13 @@ import {
 } from "~/components/ui/popover";
 import EmojiPicker from "~/components/theme/themed-emoji-picker";
 import data from "@emoji-mart/data";
+import axios from "axios";
 import { PostRequest } from "~/utils/new-request";
 import Loading from "~/components/ui/loading";
 import { ACTIONS } from "~/store/Actions";
 import { DataContext } from "~/store/GlobalState";
 import { showSuccess, showError } from "~/components/toast/sonner";
+import { getUserStatus } from "~/utils/user-status";
 
 type StatusPreset = {
   emoji: string;
@@ -91,8 +93,8 @@ const StatusModal = () => {
 
   useEffect(() => {
     if (status) {
-      setStatusText(user?.text || "");
-      setEmoji(user?.icon || "");
+      setStatusText("");
+      setEmoji("");
       setRemoveAfter(user?.status_timeout || "");
       setPauseNotifications(user?.pause_notification || false);
     }
@@ -139,7 +141,7 @@ const StatusModal = () => {
         payload: !state?.profileCallback,
       });
       dispatch({ type: ACTIONS.STATUS, payload: false });
-    } else {
+    } else if (!axios.isAxiosError(res)) {
       showError("Failed to update status");
     }
     setLoading(false);
@@ -164,7 +166,7 @@ const StatusModal = () => {
         payload: !state?.profileCallback,
       });
       dispatch({ type: ACTIONS.STATUS, payload: false });
-    } else {
+    } else if (!axios.isAxiosError(res)) {
       showError("Failed to clear status");
     }
     setLoading(false);
@@ -294,7 +296,7 @@ const StatusModal = () => {
         </div>
 
         <div className="flex justify-end gap-3 mt-6 px-5">
-          {(user?.text || user?.icon) && (
+          {getUserStatus(user) && (
             <Button
               variant="outline"
               className="h-9 border-none text-red-500 hover:text-red-600 hover:bg-red-50 mr-auto px-0 shadow-none"
