@@ -4,18 +4,42 @@ import { Edit2Icon } from "lucide-react";
 import SettingsLabel from "../../components/settings-label";
 import DeleteAccount from "./components/delete-account";
 import EditProfileDialog from "../../../_components/edit-profile-modal";
-import StatusModal from "../../../_components/status";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
 import { getUserStatus } from "~/utils/user-status";
 import images from "~/assets/images";
 import Image from "next/image";
+import { PostRequest } from "~/utils/new-request";
+import { showSuccess, showError } from "~/components/toast/sonner";
 
 const AccountPage = () => {
   const [profileDialog, setProfileDialog] = useState(false);
   const { state, dispatch } = useContext(DataContext);
   const { user } = state;
   const status = useMemo(() => getUserStatus(user), [user]);
+  const [clearing, setClearing] = useState(false);
+
+  const handleClearStatus = async () => {
+    setClearing(true);
+    const payload = {
+      icon: "",
+      text: "",
+      status_timeout: "",
+      pause_notification: false,
+      clear_status: true,
+    };
+    const res = await PostRequest("/profile/change-status", payload);
+    if (res?.status === 200 || res?.status === 201) {
+      showSuccess("Status cleared successfully");
+      dispatch({
+        type: ACTIONS.PROFILE_CALLBACK,
+        payload: !state?.profileCallback,
+      });
+    } else {
+      showError("Failed to clear status");
+    }
+    setClearing(false);
+  };
 
   return (
     <div className="min-h-screen">
@@ -85,15 +109,27 @@ const AccountPage = () => {
                 ) : (
                   <p className="text-[#667085]">No status set</p>
                 )}
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch({ type: ACTIONS.STATUS, payload: true })
-                  }
-                  className="text-sm font-medium text-[#6868F7] hover:underline"
-                >
-                  {status ? "Update status" : "Set a status"}
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatch({ type: ACTIONS.STATUS, payload: true })
+                    }
+                    className="text-sm font-medium text-[#6868F7] hover:underline"
+                  >
+                    {status ? "Update status" : "Set a status"}
+                  </button>
+                  {status && (
+                    <button
+                      type="button"
+                      onClick={handleClearStatus}
+                      disabled={clearing}
+                      className="text-sm font-medium text-red-500 hover:underline disabled:opacity-50"
+                    >
+                      {clearing ? "Clearing..." : "Clear status"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {user?.timezone && (
@@ -132,7 +168,6 @@ const AccountPage = () => {
         isOpen={profileDialog}
         onClose={() => setProfileDialog(false)}
       />
-      <StatusModal />
     </div>
   );
 };

@@ -19,6 +19,7 @@ import { PostRequest } from "~/utils/new-request";
 import Loading from "~/components/ui/loading";
 import { ACTIONS } from "~/store/Actions";
 import { DataContext } from "~/store/GlobalState";
+import { showSuccess, showError } from "~/components/toast/sonner";
 
 type StatusPreset = {
   emoji: string;
@@ -44,7 +45,7 @@ const presets: StatusPreset[] = [
   {
     emoji: "🌴",
     text: "Vacationing",
-    duration: "Don’t clear",
+    duration: "dont-clear",
     section: "For HNG Inc",
   },
   {
@@ -56,24 +57,29 @@ const presets: StatusPreset[] = [
   {
     emoji: "📅",
     text: "In a meeting",
-    duration: "Based on your Google Calendar",
+    duration: "dont-clear",
     section: "Automatically updates",
   },
 ];
 
-const groupedPresets = presets.reduce(
-  (acc, preset) => {
-    const section = preset.section || "Other";
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(preset);
-    return acc;
-  },
-  {} as Record<string, StatusPreset[]>
-);
-
 const StatusModal = () => {
   const { state, dispatch } = useContext(DataContext);
-  const { user, statusCallback, status } = state;
+  const { user, statusCallback, status, orgData } = state;
+
+  const orgName = orgData?.name || orgData?.organisation_name || "Zedu";
+
+  const groupedPresets = presets.reduce(
+    (acc, preset) => {
+      let section = preset.section || "Other";
+      if (section === "For HNG Inc") {
+        section = `For ${orgName}`;
+      }
+      if (!acc[section]) acc[section] = [];
+      acc[section].push(preset);
+      return acc;
+    },
+    {} as Record<string, StatusPreset[]>
+  );
   const [statusText, setStatusText] = useState(user?.text);
   const [emoji, setEmoji] = useState(user?.icon);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -84,10 +90,12 @@ const StatusModal = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setStatusText(user?.text);
-    setEmoji(user?.icon);
-    setRemoveAfter(user?.status_timeout);
-    setPauseNotifications(user?.pause_notification);
+    if (status) {
+      setStatusText(user?.text || "");
+      setEmoji(user?.icon || "");
+      setRemoveAfter(user?.status_timeout || "");
+      setPauseNotifications(user?.pause_notification || false);
+    }
 
     if (statusCallback) {
       setStatusText("");
@@ -97,7 +105,7 @@ const StatusModal = () => {
     setTimeout(() => {
       dispatch({ type: ACTIONS.STATUS_CALLBACK, payload: false });
     }, 2000);
-  }, [user?.text, user?.icon, statusCallback]);
+  }, [user?.text, user?.icon, statusCallback, status, dispatch]);
 
   const removeOptions = [
     "30 minutes",
@@ -125,11 +133,39 @@ const StatusModal = () => {
 
     const res = await PostRequest("/profile/change-status", payload);
     if (res?.status === 200 || res?.status === 201) {
+      showSuccess("Status updated successfully");
       dispatch({
         type: ACTIONS.PROFILE_CALLBACK,
         payload: !state?.profileCallback,
       });
       dispatch({ type: ACTIONS.STATUS, payload: false });
+    } else {
+      showError("Failed to update status");
+    }
+    setLoading(false);
+  };
+
+  const handleClearStatus = async () => {
+    setLoading(true);
+
+    const payload = {
+      icon: "",
+      text: "",
+      status_timeout: "",
+      pause_notification: false,
+      clear_status: true,
+    };
+
+    const res = await PostRequest("/profile/change-status", payload);
+    if (res?.status === 200 || res?.status === 201) {
+      showSuccess("Status cleared successfully");
+      dispatch({
+        type: ACTIONS.PROFILE_CALLBACK,
+        payload: !state?.profileCallback,
+      });
+      dispatch({ type: ACTIONS.STATUS, payload: false });
+    } else {
+      showError("Failed to clear status");
     }
     setLoading(false);
   };
@@ -258,6 +294,17 @@ const StatusModal = () => {
         </div>
 
         <div className="flex justify-end gap-3 mt-6 px-5">
+          {(user?.text || user?.icon) && (
+            <Button
+              variant="outline"
+              className="h-9 border-none text-red-500 hover:text-red-600 hover:bg-red-50 mr-auto px-0 shadow-none"
+              onClick={handleClearStatus}
+              disabled={loading}
+            >
+              Clear status
+            </Button>
+          )}
+
           <Button
             variant="outline"
             className="h-9 border border-[#101828]/40"
@@ -267,8 +314,8 @@ const StatusModal = () => {
           </Button>
 
           <Button
-            className="bg-blue-300 h-9 text-white px-7 d-flex items-center gap-2"
-            disabled={!emoji && !statusText}
+            className="bg-blue-300 h-9 text-white px-7 flex items-center gap-2"
+            disabled={(!emoji && !statusText) || loading}
             onClick={handleSubmit}
           >
             Save {loading && <Loading />}
