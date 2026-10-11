@@ -26,7 +26,8 @@
       "src/app/(homepage)/layout.tsx",
       "src/app/(client)/[org]/home/channels/[id]/settings/page.tsx",
       "src/app/(client)/[org]/home/channels/[id]/settings/history/page.tsx",
-      "src/app/(homepage)/resources/zedu-vs-whatsapp-telegram-for-bootcamps/page.tsx"
+      "src/app/(homepage)/resources/zedu-vs-whatsapp-telegram-for-bootcamps/page.tsx",
+      "src/app/(homepage)/resources/[slug]/page.tsx"
     ]
   },
   "reuse": {
