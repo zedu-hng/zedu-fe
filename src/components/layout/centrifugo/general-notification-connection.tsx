@@ -9,7 +9,6 @@ import { showInfo } from "~/components/toast/sonner";
 import { playBuzzParticipantJoinSound } from "~/lib/buzz/play-join-sound";
 import {
   registerNotificationBadge,
-  isHomeRoute,
   isNotificationsRoute,
 } from "~/lib/notifications/notification-badge";
 import {
@@ -75,7 +74,6 @@ export default function GeneralNotificationConnection() {
       dispatch({ type: ACTIONS.NOTIFY, payload: ctx?.data?.data });
 
       if (
-        !isHomeRoute(pathnameRef.current) &&
         !isNotificationsRoute(pathnameRef.current) &&
         registerNotificationBadge(ctx?.data)
       ) {
