@@ -7,7 +7,7 @@ interface GuideResourceProps {
   title: string;
   description: string;
   image: string;
-  link: string;
+  link?: string;
 }
 
 export const GuideResourceCard = ({
@@ -32,9 +32,16 @@ export const GuideResourceCard = ({
       </div>
 
       <div className="flex flex-col flex-grow p-4 gap-4">
-        <span className="inline-block w-fit text-xs font-medium p-2 rounded-full bg-primary-50/50 text-primary-500">
-          Guide
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-fit text-xs font-medium p-2 rounded-full bg-primary-50/50 text-primary-500">
+            Guide
+          </span>
+          {!link && (
+            <span className="inline-block w-fit text-xs font-medium p-2 rounded-full bg-neutral-100 text-neutral-600">
+              Coming soon
+            </span>
+          )}
+        </div>
 
         <div className="space-y-3">
           <h3 className="text-base font-semibold text-neutral-900 mb-2 line-clamp-2">
@@ -45,12 +52,14 @@ export const GuideResourceCard = ({
           </p>
         </div>
 
-        <Link
-          href={link}
-          className="inline-flex items-center gap-2 text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors mt-3"
-        >
-          Read article <ArrowRight size={16} />
-        </Link>
+        {link && (
+          <Link
+            href={link}
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary-500 hover:text-primary-600 transition-colors mt-3"
+          >
+            Read article <ArrowRight size={16} />
+          </Link>
+        )}
       </div>
     </div>
   );
