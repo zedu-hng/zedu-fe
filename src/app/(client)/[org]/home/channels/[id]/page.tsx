@@ -6,6 +6,7 @@ import ArchivedChannel from "../../../_components/archived-channel";
 import ChannelConnection from "~/components/layout/centrifugo/channel-connection";
 import ChannelHeader from "../../../_components/channel-nav";
 import ChannelsMessage from "../../../_components/ChannelMessage";
+import { ChannelPollsProvider } from "../../../_components/poll/channel-polls-context";
 import { DataContext } from "~/store/GlobalState";
 import HoverSidebar from "../../../_components/profile-sidebar/hover-sidebar";
 import JoinChannel from "../../../_components/join-channel";
@@ -172,81 +173,83 @@ const ChannelsPage = () => {
     String(channelId || "");
 
   return (
-    <div className="flex h-[calc(100dvh-70px)] relative w-full overflow-hidden">
-      <UseGetSingleChannel />
-      <ChannelConnection />
-      <ChannelAgoraConnection />
+    <ChannelPollsProvider>
+      <div className="flex h-[calc(100dvh-70px)] relative w-full overflow-hidden">
+        <UseGetSingleChannel />
+        <ChannelConnection />
+        <ChannelAgoraConnection />
 
-      {/* MAIN CONTENT */}
-      <div
-        className={cn(
-          "relative flex flex-col flex-1 transition-[margin]",
-          CONVERSATION_SEARCH_PANEL_TRANSITION
-        )}
-        style={{ marginRight: `${totalSidePanelWidth}px` }}
-      >
-        <ChannelHeader />
-
-        <ChannelsMessage />
-
-        <div className="absolute bottom-0 left-0 right-[17px]">
-          {!render && state?.channelDetails?.access === false ? (
-            <JoinChannel />
-          ) : state?.channelDetails?.archived ? (
-            <ArchivedChannel />
-          ) : channelReady && state?.channelDetails?.is_restricted ? (
-            <RestrictedChannel />
-          ) : (
-            <MessageBox
-              subscription={state?.channelSubscription}
-              sendMessage={handleSendMessage}
-              channelLoading={render}
-            />
+        {/* MAIN CONTENT */}
+        <div
+          className={cn(
+            "relative flex flex-col flex-1 transition-[margin]",
+            CONVERSATION_SEARCH_PANEL_TRANSITION
           )}
+          style={{ marginRight: `${totalSidePanelWidth}px` }}
+        >
+          <ChannelHeader />
+
+          <ChannelsMessage />
+
+          <div className="absolute bottom-0 left-0 right-[17px]">
+            {!render && state?.channelDetails?.access === false ? (
+              <JoinChannel />
+            ) : state?.channelDetails?.archived ? (
+              <ArchivedChannel />
+            ) : channelReady && state?.channelDetails?.is_restricted ? (
+              <RestrictedChannel />
+            ) : (
+              <MessageBox
+                subscription={state?.channelSubscription}
+                sendMessage={handleSendMessage}
+                channelLoading={render}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Master Side Panels Container - Holds all right-aligned panels */}
+        <div
+          className={cn(
+            "fixed z-30 mt-[60px] right-0 top-0 h-full flex overflow-hidden transition-[width]",
+            CONVERSATION_SEARCH_PANEL_TRANSITION,
+            !isSmUp && state?.reply && "w-full"
+          )}
+          style={
+            !isSmUp && state?.reply
+              ? undefined
+              : { width: `${totalSidePanelWidth}px` }
+          }
+        >
+          {/* Hover Sidebar */}
+          {state?.hoverProfile && isSmUp && (
+            <div className="w-[408px] h-full bg-white border-l border-[#E6EAEF]">
+              <HoverSidebar />
+            </div>
+          )}
+
+          {/* Threads Sidebar */}
+          {state?.reply && (
+            <div className={threadsSidebarPanelClassName}>
+              <ThreadsSidebar
+                handleSendMessage={handleReplyMessage}
+                fetchMoreData={fetchMoreData}
+                hasMore={hasMore}
+              />
+            </div>
+          )}
+
+          <ConversationSearchSidebar
+            channelId={String(channelId || "")}
+            conversationLabel={
+              state?.channelName || state?.channelDetails?.name
+                ? `#${state?.channelName || state?.channelDetails?.name}`
+                : undefined
+            }
+          />
         </div>
       </div>
-
-      {/* Master Side Panels Container - Holds all right-aligned panels */}
-      <div
-        className={cn(
-          "fixed z-30 mt-[60px] right-0 top-0 h-full flex overflow-hidden transition-[width]",
-          CONVERSATION_SEARCH_PANEL_TRANSITION,
-          !isSmUp && state?.reply && "w-full"
-        )}
-        style={
-          !isSmUp && state?.reply
-            ? undefined
-            : { width: `${totalSidePanelWidth}px` }
-        }
-      >
-        {/* Hover Sidebar */}
-        {state?.hoverProfile && isSmUp && (
-          <div className="w-[408px] h-full bg-white border-l border-[#E6EAEF]">
-            <HoverSidebar />
-          </div>
-        )}
-
-        {/* Threads Sidebar */}
-        {state?.reply && (
-          <div className={threadsSidebarPanelClassName}>
-            <ThreadsSidebar
-              handleSendMessage={handleReplyMessage}
-              fetchMoreData={fetchMoreData}
-              hasMore={hasMore}
-            />
-          </div>
-        )}
-
-        <ConversationSearchSidebar
-          channelId={String(channelId || "")}
-          conversationLabel={
-            state?.channelName || state?.channelDetails?.name
-              ? `#${state?.channelName || state?.channelDetails?.name}`
-              : undefined
-          }
-        />
-      </div>
-    </div>
+    </ChannelPollsProvider>
   );
 };
 
