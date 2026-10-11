@@ -48,6 +48,17 @@ pnpm install
 pnpm dev
 ```
 
+## Channels page title
+
+The public `/products/channels` page uses the title
+"Channels for Classroom & Cohort Communication | Zedu". The marketing layout
+adds the brand suffix; the page title does not include it a second time.
+
+To verify locally, run `pnpm dev`, open `/products/channels`, and check the
+browser tab and the single `<title>` element in the page source. The page's
+description, canonical URL, social-sharing metadata, and visible content are
+unchanged by this title improvement.
+
 ## Contributing
 
 Please see [CONTRIBUTING](./CONTRIBUTING.md)
