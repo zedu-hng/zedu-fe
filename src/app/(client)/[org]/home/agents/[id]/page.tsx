@@ -1130,9 +1130,9 @@ $result = $stmt->get_result();
                             {new Date(message.timestamp).toLocaleTimeString(
                               [],
                               {
-                                hour: "2-digit",
+                                hour: "numeric",
                                 minute: "2-digit",
-                                hour12: false,
+                                hour12: true,
                               }
                             )}
                           </span>

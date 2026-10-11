@@ -1,8 +1,19 @@
-import React, { useContext, useState } from "react";
-import { SmilePlus, Bookmark, BookmarkCheck } from "lucide-react";
-import UserAvatar from "~/components/layout/user-avatar";
+"use client";
+
+import React, { useContext, useEffect, useRef, useState } from "react";
+import {
+  Forward,
+  MessageCircleMore,
+  SmilePlus,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 import MessageItem from "./message-item";
 import { AppleEmojiText } from "~/app/(client)/[org]/_components/apple-emoji/apple-emoji-text";
+import { DataContext } from "~/store/GlobalState";
+import { ACTIONS } from "~/store/Actions";
+import { useParams, usePathname } from "next/navigation";
+import ReplyCard from "../reply-card";
 import {
   Popover,
   PopoverContent,
@@ -10,17 +21,14 @@ import {
 } from "~/components/ui/popover";
 import EmojiPicker from "~/components/theme/themed-emoji-picker";
 import data from "@emoji-mart/data";
-import { DataContext } from "~/store/GlobalState";
-import ReplyMore from "./reply-more";
+import More from "./more";
 import UserHoverCard from "../hover-card/user";
-import { ACTIONS } from "~/store/Actions";
 import {
   DeleteSavedMessage,
   GetRequest,
   PostRequest,
   SaveMessage,
 } from "~/utils/new-request";
-import { useParams, usePathname } from "next/navigation";
 import {
   Tooltip,
   TooltipContent,
@@ -28,33 +36,51 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { TooltipArrow } from "@radix-ui/react-tooltip";
-import moment from "moment";
+import { cn } from "~/lib/utils";
+import UserAvatar from "~/components/layout/user-avatar";
 import { formatReactionUsers } from "~/utils/format-reaction-users";
 
-const ReplyMessages = ({
+interface MessageProps {
+  item: any;
+  shouldShowAvatar: any;
+  popupId?: any;
+  setPopupId?: any;
+}
+
+const Message = ({
   item,
   shouldShowAvatar,
   setPopupId,
   popupId,
-}: any) => {
-  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+}: MessageProps) => {
   const { state, dispatch } = useContext(DataContext);
   const { bookmarks, user, orgMembers } = state;
+  const pathname = usePathname();
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const params = useParams();
   const id = params.id as string;
+  const isSaved = bookmarks?.some((b: any) => b.thread_id === item.thread_id);
   const [usernames, setUsernames] = useState<any>([]);
-  const pathname = usePathname();
+  const [showMobileActions, setShowMobileActions] = useState(false);
 
-  const isSaved = bookmarks?.some((b: any) => b.id === item.id);
-
+  // user data
   const isOnline = orgMembers?.find(
     (member: any) => member.id === item.user_id
   )?.online;
 
-  const handleOpen = () => {
-    dispatch({ type: ACTIONS.USER_DATA, payload: item });
-    dispatch({ type: ACTIONS.HOVER_PROFILE, payload: true });
+  const handleReply = () => {
+    dispatch({ type: ACTIONS.THREAD, payload: item });
+    dispatch({
+      type: ACTIONS.REPLIES,
+      payload: {
+        newThreads: item.preview_reply,
+        newPage: 1,
+        parentReactions: item.reactions,
+      },
+    });
+    dispatch({ type: ACTIONS.REPLY, payload: true });
+    dispatch({ type: ACTIONS.LOAD_THREAD, payload: !state.loadThread });
   };
 
   const onEmojiClick = async (emojiData: any) => {
@@ -62,11 +88,11 @@ const ReplyMessages = ({
 
     const payload = {
       thread_id: item?.thread_id,
-      message_id: item?.id,
-      type: "reply",
+      // message_id: item?.id,
+      type: "thread",
       reaction: emojiData.native,
     };
-    await PostRequest(`/reactions/${id ?? item?.channels_id}`, payload);
+    await PostRequest(`/reactions/${id}`, payload);
     setIsEmojiPickerOpen(false);
     setEmojiPickerOpen(false);
   };
@@ -76,32 +102,39 @@ const ReplyMessages = ({
 
     const payload = {
       thread_id: item?.thread_id,
-      message_id: item?.id,
-      type: "reply",
+      type: "thread",
       reaction: emoji,
     };
     await PostRequest(`/reactions/${id}`, payload);
   };
 
+  const handleOpen = () => {
+    dispatch({ type: ACTIONS.USER_DATA, payload: item });
+    dispatch({ type: ACTIONS.HOVER_PROFILE, payload: true });
+  };
+
   const toggleSave = async () => {
-    const updatedIds = [...bookmarks, { id: item.id }];
+    const updatedIds = [
+      ...bookmarks,
+      { id: item.id, thread_id: item.thread_id },
+    ];
 
     dispatch({ type: ACTIONS.BOOKMARKS, payload: updatedIds });
 
     const orgId = localStorage.getItem("orgId") || "";
 
     const payload = {
-      channels_id: id,
-      message_id: item.id,
+      channels_id: item?.channels_id,
       thread_id: item.thread_id,
+      type: "message",
     };
 
-    await SaveMessage(`/organisations/${orgId}/message/save`, payload);
+    await SaveMessage(`/organisations/${orgId}/thread/save`, payload);
   };
 
   const toggleRemove = async () => {
     const updatedIds = bookmarks.filter(
-      (bookmark: any) => bookmark.id !== item.id
+      (bookmark: any) => bookmark.thread_id !== item.thread_id
     );
 
     dispatch({ type: ACTIONS.BOOKMARKS, payload: updatedIds });
@@ -109,7 +142,7 @@ const ReplyMessages = ({
     const orgId = localStorage.getItem("orgId") || "";
 
     await DeleteSavedMessage(
-      `/organisations/${orgId}/saved/message/${item.id}`
+      `/organisations/${orgId}/saved/message/${item.thread_id}`
     );
   };
 
@@ -148,25 +181,45 @@ const ReplyMessages = ({
     }
   };
 
-  const handlePopup = () => {
-    setPopupId((prevId: string | null) =>
-      prevId === item.id ? null : item.id
-    );
-  };
-
   const handleClick = (emoji: any, e: any) => {
     handleUpdateEmoji(emoji.reaction);
     e.stopPropagation();
   };
 
-  //
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setShowMobileActions(false);
+      }
+    };
+
+    if (showMobileActions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showMobileActions]);
+
+  const handleMessageClick = () => {
+    if (window.innerWidth < 1024) {
+      setShowMobileActions(!showMobileActions);
+    }
+  };
 
   return (
     <div
-      id={item?.id ? `reply-${item.id}` : undefined}
-      className={`h-[100%] relative group py-1 transition-colors flex items-start gap-2 px-3 ${item.is_pinned ? "bg-yellow-50" : isSaved ? "bg-primary-50" : "hover:bg-gray-50"}`}
+      ref={containerRef}
+      className={`relative group message-row py-1 transition-colors flex items-start px-5 gap-2`}
+      onClick={handleMessageClick}
     >
-      <div className="flex shrink-0 items-center justify-center">
+      <div className="flex items-center justify-center">
         {shouldShowAvatar ? (
           <>
             <div className="relative inline-flex">
@@ -177,48 +230,53 @@ const ReplyMessages = ({
               />
             </div>
             <div
-              className="relative mb-2 flex cursor-pointer lg:hidden"
+              className="relative flex lg:hidden cursor-pointer mb-2"
               onClick={handleOpen}
             >
               <UserAvatar item={item} size="sm" alt="profile" />
             </div>
           </>
         ) : (
-          <span className="mt-1 block w-[36px] text-xs text-[#98A2B3] opacity-0 transition-opacity group-hover:opacity-100">
-            {new Date(item?.created_at)
-              .toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })
-              .replace(/\s?(am|pm)/i, "")}
+          <span className="block text-[10px] whitespace-nowrap w-[36px] text-[#98A2B3] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {new Date(item?.created_at).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            })}
           </span>
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="w-full">
         {shouldShowAvatar && (
           <div className="flex items-center gap-2">
             <span
-              className="cursor-pointer text-[15px] font-bold text-[#1D2939] hover:underline"
+              className="hover font-bold text-[15px] text-[#1D2939] cursor-pointer"
               onClick={handleOpen}
             >
               {item?.username || item?.email}
             </span>
 
-            <span className="text-xs text-[#98A2B3]">
-              {moment(item?.created_at).format("MMMM Do [at] h:mm A")}
+            <span className="text-xs text-[#98A2B3] mt-[1px]">
+              {new Date(item?.created_at).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })}
             </span>
           </div>
         )}
 
         <div className="relative flex items-start justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
             <MessageItem item={item} />
 
-            <span className="text-[9px] text-neutral-500">
-              {item?.edited ? "(edited)" : ""}
-            </span>
+            <div className="text-[9px] text-neutral-500 mt-[2px]">
+              {(item.user_type === "user" || item.user_type === "") &&
+              item?.edited === true
+                ? "(edited)"
+                : ""}
+            </div>
           </div>
         </div>
 
@@ -279,56 +337,31 @@ const ReplyMessages = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <PopoverContent className="p-0 w-full max-w-xs" align="end">
+            <PopoverContent className="p-0 w-full max-w-xs z-50" align="end">
               <EmojiPicker data={data} onEmojiSelect={onEmojiClick} />
             </PopoverContent>
           </Popover>
         </div>
 
-        <div className="hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity flex items-center ml-4 absolute right-5 -top-6 z-10 bg-white shadow-md rounded-[8px] border border-[#E6EAEF] p-[2px]">
-          {!pathname?.includes("/agents") && (
-            <Popover
-              open={isEmojiPickerOpen}
-              onOpenChange={setIsEmojiPickerOpen}
-            >
-              <PopoverTrigger asChild>
-                <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
-                  <SmilePlus size={18} className="text-[#667085]" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                className="p-0"
-                align="end"
-                avoidCollisions
-                collisionPadding={80}
-              >
-                <EmojiPicker data={data} onEmojiSelect={onEmojiClick} />
-              </PopoverContent>
-            </Popover>
-          )}
+        {item?.message_count > 0 && (
+          <ReplyCard
+            users={item?.messages}
+            totalReplies={item?.message_count}
+            lastReplyTime={item.last_reply || item?.created_at}
+            handleReply={handleReply}
+          />
+        )}
 
-          {isSaved ? (
-            <button
-              onClick={toggleRemove}
-              className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
-            >
-              <BookmarkCheck size={18} className="text-primary-500" />
-            </button>
-          ) : (
-            <button
-              onClick={toggleSave}
-              className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
-            >
-              <Bookmark size={18} className="text-[#667085]" />
-            </button>
-          )}
-          <ReplyMore item={item} />
-        </div>
-
-        {popupId === item.id && (
+        {item?.type !== "system" && (
           <div
-            onClick={handlePopup}
-            className="flex lg:hidden group-hover:opacity-100 transition-opacity flex items-center ml-4 absolute right-5 -top-6 z-10 bg-white shadow-md rounded-[8px] border border-[#E6EAEF] p-[2px]"
+            className={cn(
+              "flex items-center absolute right-5 -top-2 z-0 bg-white shadow-md rounded-[8px] border border-[#E6EAEF] p-[2px] transition-all duration-200",
+              "lg:opacity-0 lg:group-hover:opacity-100 lg:flex",
+              showMobileActions
+                ? "opacity-100 scale-100 pointer-events-auto"
+                : "opacity-0 scale-95 pointer-events-none lg:pointer-events-auto lg:scale-100 lg:opacity-0"
+            )}
+            onClick={(e) => e.stopPropagation()}
           >
             {!pathname?.includes("/agents") && (
               <Popover
@@ -341,32 +374,39 @@ const ReplyMessages = ({
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="p-0"
+                  className="p-0 w-full max-w-xs z-50"
                   align="end"
-                  avoidCollisions
-                  collisionPadding={80}
                 >
                   <EmojiPicker data={data} onEmojiSelect={onEmojiClick} />
                 </PopoverContent>
               </Popover>
             )}
 
-            {isSaved ? (
+            {!pathname?.includes("/agents") && (
               <button
-                onClick={toggleRemove}
                 className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
+                onClick={handleReply}
               >
-                <BookmarkCheck size={18} className="text-primary-500" />
-              </button>
-            ) : (
-              <button
-                onClick={toggleSave}
-                className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
-              >
-                <Bookmark size={18} className="text-[#667085]" />
+                <MessageCircleMore size={18} className="text-[#667085]" />
               </button>
             )}
-            <ReplyMore item={item} />
+
+            <button className="py-[7px] px-[10px] hover:bg-gray-200 rounded">
+              <Forward size={18} className="text-[#667085]" />
+            </button>
+
+            <button
+              onClick={isSaved ? toggleRemove : toggleSave}
+              className="py-[7px] px-[10px] hover:bg-gray-200 rounded"
+            >
+              {isSaved ? (
+                <BookmarkCheck size={18} className="text-primary-500" />
+              ) : (
+                <Bookmark size={18} className="text-[#667085]" />
+              )}
+            </button>
+
+            <More item={item} />
           </div>
         )}
       </div>
@@ -374,4 +414,4 @@ const ReplyMessages = ({
   );
 };
 
-export default ReplyMessages;
+export default Message;
