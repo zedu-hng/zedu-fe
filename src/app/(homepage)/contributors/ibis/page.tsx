@@ -67,7 +67,7 @@ export default function Page() {
           </h1>
 
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            Meet the members of Team Ibis who contributed to the Zedu platform.
+            Meet the members of Team Ibis contributing to the Zedu platform.
           </p>
 
           <p className="mt-2 text-sm text-muted-foreground">
