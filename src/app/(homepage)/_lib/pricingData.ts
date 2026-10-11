@@ -29,7 +29,7 @@ const staticPricingCards: PricingCardData[] = [
     description: "Best for small classes and educators starting with Zedu.",
     amount: "₦0",
     periodLabel: "/month",
-    footnote: "No credit card needed",
+    footnote: "Per workspace · No credit card needed",
     features: [
       { text: "Up to 3 cohorts", enabled: true },
       { text: "Organized learning channels", enabled: true },
@@ -47,9 +47,9 @@ const staticPricingCards: PricingCardData[] = [
     key: "pro",
     title: "Pro",
     description: "Best for bootcamps and structured programs.",
-    amount: "₦20K",
+    amount: "₦20,000",
     periodLabel: "/month",
-    footnote: "",
+    footnote: "Per workspace · about $13 USD",
     features: [
       { text: "Everything in Starter, and", enabled: true },
       { text: "Unlimited cohorts", enabled: true },
