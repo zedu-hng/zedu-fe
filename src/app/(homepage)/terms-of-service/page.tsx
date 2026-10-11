@@ -145,7 +145,7 @@ function TermsOfService() {
             Terms of Service
           </p>
 
-          <section id="acceptance" className="p-5">
+          <section id="acceptance" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Acceptance of Terms
             </h2>
@@ -157,7 +157,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="use" className="p-5">
+          <section id="use" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Use of the App
             </h2>
@@ -186,7 +186,7 @@ function TermsOfService() {
             </ul>
           </section>
 
-          <section id="user-content" className="p-5">
+          <section id="user-content" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">User Content</h2>
             <p className="text-[#5C5C5C] text-sm lg:text-xl">
               You may be able to submit, upload, or otherwise make available
@@ -199,7 +199,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="privacy" className="p-5">
+          <section id="privacy" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">Privacy</h2>
             <p className="text-[#5C5C5C] text-sm lg:text-xl">
               Your use of the Zedu App is subject to our Privacy Policy, which
@@ -209,7 +209,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="intellectual-property" className="p-5">
+          <section id="intellectual-property" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Intellectual Property
             </h2>
@@ -222,7 +222,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="subscription" className="p-5">
+          <section id="subscription" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Subscription and Payment
             </h2>
@@ -233,7 +233,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="liability" className="p-5">
+          <section id="liability" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Limitation of Liability
             </h2>
@@ -256,7 +256,7 @@ function TermsOfService() {
             </ol>
           </section>
 
-          <section id="termination" className="p-5">
+          <section id="termination" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">Termination</h2>
             <p className="text-[#5C5C5C] text-sm lg:text-xl">
               We reserve the right to suspend or terminate your access to the
@@ -266,7 +266,7 @@ function TermsOfService() {
             </p>
           </section>
 
-          <section id="governing-law" className="p-5">
+          <section id="governing-law" className="p-5 scroll-mt-24">
             <h2 className="text-base lg:text-xl font-semibold">
               Governing Law
             </h2>
