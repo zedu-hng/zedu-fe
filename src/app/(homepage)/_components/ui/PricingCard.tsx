@@ -20,6 +20,7 @@ type PricingCardProps = {
   ctaVariant: "outline" | "filled";
   variant: "starter" | "popular" | "enterprise";
   badgeText?: string;
+  titleAs?: "h2" | "h3";
 };
 
 export const CheckIcon = () => {
@@ -52,6 +53,7 @@ export const PricingCard = ({
   ctaVariant,
   variant,
   badgeText,
+  titleAs: TitleTag = "h3",
 }: PricingCardProps) => {
   const isPopular = variant === "popular";
   const router = useRouter();
@@ -70,17 +72,19 @@ export const PricingCard = ({
       ) : null}
 
       <div className="mx-auto flex max-w-[90%] flex-col items-center gap-2 text-center">
-        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+        <TitleTag className="text-lg font-semibold text-neutral-900">
+          {title}
+        </TitleTag>
         <p className="text-sm text-neutral-600">{description}</p>
       </div>
 
       <div className="flex flex-col gap-1 text-center">
-        <h3 className="flex items-end justify-center gap-2">
+        <p className="flex items-end justify-center gap-2">
           <span className="text-4xl font-bold text-neutral-900">{amount}</span>
           {periodLabel ? (
             <span className="text-sm text-neutral-700">{periodLabel}</span>
           ) : null}
-        </h3>
+        </p>
         {footnote ? (
           <p className="text-sm text-neutral-600">{footnote}</p>
         ) : null}

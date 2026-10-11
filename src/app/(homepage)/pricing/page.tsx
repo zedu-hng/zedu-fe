@@ -63,7 +63,7 @@ export const metadata: Metadata = {
 const PricingPage = () => {
   return (
     <div className="space-y-10">
-      <PricingSection showSubtitle />
+      <PricingSection showSubtitle isPageHeading />
 
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-12 space-y-6 relative">
         <div className="no-scrollbar">

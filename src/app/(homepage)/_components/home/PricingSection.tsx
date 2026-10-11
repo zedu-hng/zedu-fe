@@ -8,11 +8,16 @@ import { PurpleArrowRight } from "../svgs";
 
 type PricingSectionProps = {
   showSubtitle?: boolean;
+  /** Render the title as the page's <h1> (e.g. on /pricing). Defaults to <h2>. */
+  isPageHeading?: boolean;
 };
 
 export const PricingSection = ({
   showSubtitle = false,
+  isPageHeading = false,
 }: PricingSectionProps) => {
+  const TitleTag = isPageHeading ? "h1" : "h2";
+  const cardTitleTag = isPageHeading ? "h2" : "h3";
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
     "yearly"
   );
@@ -25,9 +30,9 @@ export const PricingSection = ({
           showSubtitle ? "gap-6" : "gap-3"
         }`}
       >
-        <h1 className=" text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl text-center">
+        <TitleTag className=" text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl text-center">
           Simple, Flexible Pricing for Education
-        </h1>
+        </TitleTag>
         {showSubtitle ? (
           <p className="max-w-3xl text-sm text-neutral-700 sm:text-base">
             Flexible plans for educators, bootcamps, and institutions building
@@ -70,6 +75,7 @@ export const PricingSection = ({
           <PricingCard
             key={plan.key}
             title={plan.title}
+            titleAs={cardTitleTag}
             description={plan.description}
             amount={plan.amount}
             periodLabel={plan.periodLabel}
@@ -83,10 +89,10 @@ export const PricingSection = ({
           />
         ))}
       </div>
-      <h1 className="text-xs sm:text-sm md:text-md font-medium text-neutral-700 ">
+      <p className="text-xs sm:text-sm md:text-md font-medium text-neutral-700 ">
         Launching a bootcamp? Let's build a pricing model that fits your cohort
         size.
-      </h1>
+      </p>
       <Link
         href={"client/settings/organisation/billing/all-plans"}
         className="group flex items-center gap-2 font-semibold text-primary-500"
