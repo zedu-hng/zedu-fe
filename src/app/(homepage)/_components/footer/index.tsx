@@ -187,7 +187,6 @@ const Footer = () => {
                     id="newsletter-email"
                     type="email"
                     name="newsletter"
-                    aria-label="Email address for newsletter subscription"
                     aria-invalid={!!error}
                     aria-describedby={error ? "newsletter-error" : undefined}
                     placeholder="Your email address"
