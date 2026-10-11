@@ -5,6 +5,7 @@ import { Toaster } from "~/components/ui/toaster";
 import { DataProvider } from "~/store/GlobalState";
 import Footer from "./_components/footer";
 import Header from "./_components/header";
+import { JsonLd } from "./_components/json-ld";
 import { ForceLightTheme } from "~/components/theme/force-light-theme";
 
 export const metadata: Metadata = {
@@ -69,6 +70,7 @@ export default function RootLayout({
     <ForceLightTheme>
       <DataProvider>
         <div className="zedu-marketing w-full">
+          <JsonLd />
           <Header />
           <div className="pt-12 min-w-screen overflow-x-hidden">{children}</div>
           <Footer />
