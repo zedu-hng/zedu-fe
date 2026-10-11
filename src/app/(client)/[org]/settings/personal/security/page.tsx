@@ -74,7 +74,9 @@ const SecurityPage = () => {
       <div className="p-3 my-3 bg-blue-50 border border-blue-200 rounded-mg text-blue-800 text-sm flex items-start gap-2">
         <span className="font-semibold">Note:</span>
         <p>
-          Displayed session locations are approximate and may be inaccurate based on network routing. This location should not be treated as your exact physical location.
+          Displayed session locations are approximate and may be inaccurate
+          based on network routing. This location should not be treated as your
+          exact physical location.
         </p>
       </div>
       <div className="mx-2 md:m-4 lg:mx-8 border rounded-md overflow-x-auto">
