@@ -91,7 +91,10 @@ export default function IncomingCallPopupContainer() {
   }, [dispatch]);
 
   // Only show popup if user is NOT the caller
-  if (!show || !callInfo || user?.user_id === callInfo.callerId) return null;
+  const currentUserId = String(user?.user_id || user?.id || "");
+  const callerId = String(callInfo?.callerId || "");
+  if (!show || !callInfo || (currentUserId && currentUserId === callerId))
+    return null;
 
   return (
     <IncomingCallPopup
