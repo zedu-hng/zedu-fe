@@ -46,7 +46,7 @@ export const TEAM: Team = {
     },
     {
       fullName: "Victor Adeshile",
-      zeduUsername: "Victor Adeshile",
+      zeduUsername: "victor_adeshile",
       githubUsername: "davik4life",
       role: "Member",
       field: "Full-Stack Software Engineer",
