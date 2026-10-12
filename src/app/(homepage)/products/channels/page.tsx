@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { ogImageUrl, siteUrl } from "~/lib/env-urls";
 import Image from "next/image";
-import { ArrowBtn, OutlineBtn } from "../../_components/ui/Button";
+import { ArrowBtn } from "../../_components/ui/Button";
 import {
   FilesIcon,
   MessagesQuestionIcon,
@@ -9,6 +9,7 @@ import {
 } from "../../_components/svgs";
 import { MessagesIcon } from "../../_components/svgs";
 import { FAQSection } from "../../_components/home/FAQSection";
+import { WatchDemoButton } from "~/components/watch-demo-button";
 import { DynamicFooter } from "../../_components/footer/dynamic-footer";
 import type { HomeFAQ } from "../../_lib/faqData";
 
@@ -159,7 +160,7 @@ const ChannelProductPage = () => {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <ArrowBtn text="Start using channels" linkToHome />
-              <OutlineBtn text="Watch a Demo" />
+              <WatchDemoButton text="Watch a Demo" title="Channels Demo" />
             </div>
           </div>
 
