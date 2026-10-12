@@ -17,6 +17,8 @@ import { ACTIONS } from "~/store/Actions";
 import { timezones } from "./timezones";
 import { showError, showSuccess } from "~/components/toast/sonner";
 import { compressImage } from "~/utils/compress-image";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const EditProfileDialog = ({ isOpen, onClose }: any) => {
@@ -233,13 +235,28 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
                 >
                   Phone Number
                 </label>
-                <input
-                  id="phone"
-                  type="text"
-                  value={phone}
-                  placeholder="+44 20 7946 0958"
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#E6EAEF] rounded-md text-[15px] text-[#344054] focus:outline-none focus:ring-2 focus:ring-[#6868F7]"
+                <PhoneInput
+                  country="ng"
+                  value={phone.replace(/\D/g, "")}
+                  placeholder="801 234 5678"
+                  enableSearch
+                  onChange={(value, data: any) => {
+                    if (!value || value === data?.dialCode) {
+                      setPhone("");
+                    } else {
+                      setPhone(`+${value}`);
+                    }
+                  }}
+                  inputProps={{ id: "phone", name: "phone" }}
+                  inputClass="!w-full !px-3 !py-2 !border !border-[#E6EAEF] !rounded-md !text-[15px] !text-[#344054] placeholder:!text-[#9CA3AF] focus:!outline-none focus:!ring-2 focus:!ring-[#6868F7]"
+                  buttonClass="!border-[#E6EAEF] !rounded-l-md"
+                  dropdownClass="!z-[9999]"
+                  containerClass="!w-full"
+                  inputStyle={{
+                    width: "100%",
+                    height: "40px",
+                    fontFamily: "inherit",
+                  }}
                 />
               </div>
 
