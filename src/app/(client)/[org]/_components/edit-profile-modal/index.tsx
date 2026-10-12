@@ -235,29 +235,33 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
                 >
                   Phone Number
                 </label>
-                <PhoneInput
-                  country="ng"
-                  value={phone.replace(/\D/g, "")}
-                  placeholder="801 234 5678"
-                  enableSearch
-                  onChange={(value, data: any) => {
-                    if (!value || value === data?.dialCode) {
-                      setPhone("");
-                    } else {
-                      setPhone(`+${value}`);
-                    }
-                  }}
-                  inputProps={{ id: "phone", name: "phone" }}
-                  inputClass="!w-full !px-3 !py-2 !border !border-[#E6EAEF] !rounded-md !text-[15px] !text-[#344054] placeholder:!text-[#9CA3AF] focus:!outline-none focus:!ring-2 focus:!ring-[#6868F7]"
-                  buttonClass="!border-[#E6EAEF] !rounded-l-md"
-                  dropdownClass="!z-[9999]"
-                  containerClass="!w-full"
-                  inputStyle={{
-                    width: "100%",
-                    height: "40px",
-                    fontFamily: "inherit",
-                  }}
-                />
+                <div className="edit-profile-phone">
+                  <PhoneInput
+                    country="ng"
+                    value={phone.replace(/\D/g, "")}
+                    placeholder="801 234 5678"
+                    enableSearch
+                    onChange={(value, data: any) => {
+                      if (!value || value === data?.dialCode) {
+                        setPhone("");
+                      } else {
+                        setPhone(`+${value}`);
+                      }
+                    }}
+                    inputProps={{ id: "phone", name: "phone" }}
+                    inputClass="!w-full !rounded-md !border !border-[#E6EAEF] !bg-transparent !py-2 !pl-12 !pr-3 !text-[15px] !text-[#344054] placeholder:!text-[#9CA3AF] focus:!border-[#6868F7] focus:!outline-none focus:!ring-2 focus:!ring-[#6868F7]"
+                    buttonClass="!rounded-l-md !border !border-[#E6EAEF] !bg-transparent"
+                    dropdownClass="!z-[9999]"
+                    containerClass="!w-full"
+                    searchClass="!border-[#E6EAEF]"
+                    inputStyle={{
+                      width: "100%",
+                      height: "40px",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                  <style>{`.edit-profile-phone .react-tel-input .form-control{background-color:transparent;border-color:#E6EAEF;color:#344054;}.edit-profile-phone .react-tel-input .flag-dropdown{background-color:transparent !important;border-color:#E6EAEF !important;}.edit-profile-phone .react-tel-input .flag-dropdown:hover,.edit-profile-phone .react-tel-input .flag-dropdown.open,.edit-profile-phone .react-tel-input .flag-dropdown.open .selected-flag,.edit-profile-phone .react-tel-input .selected-flag:hover{background-color:#F2F4F7 !important;}.edit-profile-phone .react-tel-input .country-list{z-index:9999;background-color:#ffffff;color:#344054;}.edit-profile-phone .react-tel-input .country-list .country:hover,.edit-profile-phone .react-tel-input .country-list .country.highlight{background-color:#F2F4F7;}.dark .edit-profile-phone .react-tel-input .flag-dropdown:hover,.dark .edit-profile-phone .react-tel-input .flag-dropdown.open,.dark .edit-profile-phone .react-tel-input .flag-dropdown.open .selected-flag,.dark .edit-profile-phone .react-tel-input .selected-flag:hover{background-color:rgba(255,255,255,0.08) !important;}.dark .edit-profile-phone .react-tel-input .country-list{background-color:#16181d;border-color:rgba(255,255,255,0.15);color:#f1f5f9;}.dark .edit-profile-phone .react-tel-input .country-list .search{background-color:#16181d;}.dark .edit-profile-phone .react-tel-input .country-list .search-box{background-color:transparent;border-color:rgba(255,255,255,0.15);color:#f1f5f9;}.dark .edit-profile-phone .react-tel-input .country-list .country:hover,.dark .edit-profile-phone .react-tel-input .country-list .country.highlight{background-color:rgba(255,255,255,0.08);}.dark .edit-profile-phone .react-tel-input .country-list .no-entries-message{color:#94a3b8;}`}</style>
+                </div>
               </div>
 
               {/* Title/Role */}
