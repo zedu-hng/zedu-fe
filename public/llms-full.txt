@@ -67,7 +67,7 @@ Traditional collaboration tools (e.g., Slack, Discord, Microsoft Teams) were bui
 - **Primary Challenges Solved**: Student safety, unmonitored direct messages, distracted classrooms, and cumbersome parent/educator communication.
 - **Workflow Benefits**:
   - Moderated classroom spaces with strict audit logs and educator supervision.
-  - Safe, walled-garden communication channels preventing unauthorized external access.
+  - Role-based access with configurable channel posting permissions.
   - Intuitive interface accessible for young learners and educators alike.
 
 ### 3.3 Universities & Higher Education
@@ -86,12 +86,12 @@ Traditional collaboration tools (e.g., Slack, Discord, Microsoft Teams) were bui
 
 | Feature / Capability | Starter | Pro | Enterprise |
 | :--- | :--- | :--- | :--- |
-| **Target Audience** | Individual classes, clubs, small study groups | Growing bootcamps & medium educational programs | Large universities, multi-campus institutions |
-| **Workspace Channels** | Unlimited public & private channels | Unlimited with advanced permissions & sub-channels | Custom organization topologies & multi-tenant setups |
-| **Buzz Calls** | Standard audio & video meetings | HD video, screen sharing & extended duration | Priority bandwidth, custom recording & stage mode |
-| **File Storage** | Standard shared storage | Expanded cloud storage with file preview | Dedicated institutional cloud storage & retention |
-| **AI Coworkers** | Basic AI assistant queries | Advanced contextual AI assistance & thread summarization | Custom-trained AI models on institutional curricula |
-| **Administration & Security** | Standard role management | Enhanced moderation & analytics | Custom SSO (SAML/OAuth), audit logs & dedicated SLA |
+| **Target Audience** | Small classes and educators starting with Zedu | Bootcamps and structured programs | Universities, large programs, and institutions |
+| **Channels** | Included | Included | Included |
+| **Voice and Video Calls (Buzz)** | Not included | Included with screen sharing | Included |
+| **File Sharing** | Included | Included | Included |
+| **AI Assistance** | Limited | Included with message summaries | Advanced |
+| **Administration and Security** | Basic | Advanced with analytics | Full with dedicated support |
 
 ---
 
