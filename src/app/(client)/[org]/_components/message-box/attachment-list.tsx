@@ -135,6 +135,11 @@ export const AttachmentList = ({
               duration={voice?.duration ?? 0}
               removeVoice={() => onRemove(id)}
             />
+            {status === "uploading" && (
+              <div className="self-center">
+                <Loading color="#606060" />
+              </div>
+            )}
             {status === "failed" && (
               <RetryButton
                 name={file.name}
