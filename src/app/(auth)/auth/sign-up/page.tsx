@@ -433,6 +433,9 @@ function SignUp() {
                 "Sign up with Google"
               )}
             </Button>
+            <div role="status" aria-live="polite" className="sr-only">
+              {googleloading ? "Signing up with Google..." : ""}
+            </div>
             {/* Apple Login */}
             <AppleSignin
               authOptions={{
@@ -479,6 +482,9 @@ function SignUp() {
                 console.error("Apple Signup Error:", err);
               }}
             />
+            <div role="status" aria-live="polite" className="sr-only">
+              {appleLoading ? "Signing up with Apple..." : ""}
+            </div>
           </div>
 
           <p className="text-[14px] font-[400] leading-[17.64px] text-center m-2">

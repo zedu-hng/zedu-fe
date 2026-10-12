@@ -305,6 +305,9 @@ function Login() {
                 "Sign in with Google"
               )}
             </Button>
+            <div role="status" aria-live="polite" className="sr-only">
+              {googleloading ? "Logging in with Google..." : ""}
+            </div>
             {/* Apple Login */}
             <AppleSignin
               authOptions={{
@@ -349,6 +352,9 @@ function Login() {
                 console.error("Apple Login Error:", err);
               }}
             />
+            <div role="status" aria-live="polite" className="sr-only">
+              {appleLoading ? "Logging in with Apple..." : ""}
+            </div>
           </div>
           <div className="w-full flex justify-center items-center my-5">
             <div className="flex items-center justify-center gap-3 max-w-xl w-1/5">
