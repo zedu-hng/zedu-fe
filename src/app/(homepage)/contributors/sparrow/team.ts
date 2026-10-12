@@ -26,9 +26,9 @@ export const TEAM: Team = {
     {
       fullName: "Denise Moemeke",
       zeduUsername: "denise_davida",
-      githubUsername: "deniseondata",
+      githubUsername: "databydenise",
       role: "Member",
-      field: "[Add your field of expertise]",
+      field: "Data Science / Engineering",
     },
     {
       fullName: "Medadi God'sglory Mitana",
@@ -141,6 +141,13 @@ export const TEAM: Team = {
       githubUsername: "Beldam7",
       role: "Member",
       field: "AI Automation Specialist",
+    },
+    {
+      fullName: "Paul Folorunsho",
+      zeduUsername: "Paul Folorunsho",
+      githubUsername: "folip01",
+      role: "Member",
+      field: "Backend Development",
     },
   ],
 };
