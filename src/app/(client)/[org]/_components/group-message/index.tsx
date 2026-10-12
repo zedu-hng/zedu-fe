@@ -26,7 +26,8 @@ import EditMessageBox from "../message-box/edit";
 const GroupMessage = ({ participants }: any) => {
   const { fetchMoreData, hasMore, loading } = UsePeopleMessage();
   const { state, dispatch } = useContext(DataContext);
-  const { chats, user, notify, bookmarks, dataId, isEdit, thread } = state;
+  const { chats, user, notify, bookmarks, dataId, isEdit, thread, reply } =
+    state;
   const groupedMessages = groupMessagesByDate(chats);
   const [showBadge, setShowBadge] = useState(false);
   const params = useParams();
@@ -179,6 +180,15 @@ const GroupMessage = ({ participants }: any) => {
                 (b: any) => b.thread_id === item.thread_id
               );
 
+              const isThreadActive = Boolean(
+                reply &&
+                thread &&
+                ((item?.thread_id && thread?.thread_id === item?.thread_id) ||
+                  (item?.id && thread?.id === item?.id) ||
+                  (item?.thread_id && thread?.id === item?.thread_id) ||
+                  (item?.id && thread?.thread_id === item?.id))
+              );
+
               return (
                 <React.Fragment key={index}>
                   {isEdit && thread?.thread_id === item?.thread_id ? (
@@ -195,7 +205,15 @@ const GroupMessage = ({ participants }: any) => {
                   ) : (
                     <div
                       id={`thread-${item.thread_id}`}
-                      className={`${item.is_pinned ? "bg-yellow-50" : isSaved ? "bg-primary-50" : "hover:bg-gray-50"} duration-500 ease-in-out`}
+                      className={`${
+                        isThreadActive
+                          ? "bg-primary-50 dark:bg-primary-500/15"
+                          : item.is_pinned
+                            ? "bg-yellow-50"
+                            : isSaved
+                              ? "bg-primary-50"
+                              : "hover:bg-gray-50 dark:hover:bg-white/5"
+                      } duration-500 ease-in-out`}
                     >
                       {item?.is_pinned ? (
                         <div className="flex items-center gap-2 bg-yellow-50 pl-10 text-[13px] font-semibold text-blue-100 pt-2">

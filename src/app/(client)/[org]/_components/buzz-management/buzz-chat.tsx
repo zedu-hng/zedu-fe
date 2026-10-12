@@ -29,7 +29,8 @@ import ChannelConnection from "~/components/layout/centrifugo/channel-connection
 const BuzzChat = () => {
   const { fetchMoreData, hasMore, loading } = UseChannel();
   const { state, dispatch } = useContext(DataContext);
-  const { messages, user, isEdit, thread, notify, bookmarks, dataId } = state;
+  const { messages, user, isEdit, thread, notify, bookmarks, dataId, reply } =
+    state;
   const groupedMessages = groupMessagesByDate(messages);
   const params = useParams();
   const id = params.id as string;
@@ -188,6 +189,16 @@ const BuzzChat = () => {
                       (b: any) => b.thread_id === item.thread_id
                     );
 
+                    const isThreadActive = Boolean(
+                      reply &&
+                      thread &&
+                      ((item?.thread_id &&
+                        thread?.thread_id === item?.thread_id) ||
+                        (item?.id && thread?.id === item?.id) ||
+                        (item?.thread_id && thread?.id === item?.thread_id) ||
+                        (item?.id && thread?.thread_id === item?.id))
+                    );
+
                     return (
                       <React.Fragment key={index}>
                         {isEdit && thread?.thread_id === item?.thread_id ? (
@@ -219,7 +230,15 @@ const BuzzChat = () => {
                         ) : (
                           <div
                             id={`thread-${item.thread_id}`}
-                            className={`${item.is_pinned ? "bg-yellow-50" : isSaved ? "bg-primary-50" : "hover:bg-gray-50"} duration-500 ease-in-out`}
+                            className={`${
+                              isThreadActive
+                                ? "bg-primary-50 dark:bg-primary-500/15"
+                                : item.is_pinned
+                                  ? "bg-yellow-50"
+                                  : isSaved
+                                    ? "bg-primary-50"
+                                    : "hover:bg-gray-50 dark:hover:bg-white/5"
+                            } duration-500 ease-in-out`}
                           >
                             {item?.is_pinned ? (
                               <div className="flex items-center gap-2 bg-yellow-50 pl-10 text-[13px] font-semibold text-blue-100 pt-2">
