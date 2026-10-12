@@ -25,7 +25,7 @@ export const FeatureSection = () => {
             workspace.
           </p>
           <div>
-            <ArrowBtn text="Get started for free" inverted linkToHome />
+            <ArrowBtn text="Get started for free" linkToHome />
           </div>
         </div>
 
