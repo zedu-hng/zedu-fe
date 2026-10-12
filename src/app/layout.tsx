@@ -7,7 +7,7 @@ import "react-loading-skeleton/dist/skeleton.css";
 import { DataProvider } from "~/store/GlobalState";
 import Script from "next/script";
 import ClientLayout from "./client-layout";
-import { gtmScriptUrl, ogImageUrl } from "~/lib/env-urls";
+import { gtmScriptUrl, ogImageUrl, siteUrl } from "~/lib/env-urls";
 import { ThemeProvider } from "~/components/theme/theme-provider";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: "Zedu — Structured Learning for Bootcamps & Schools",
     description:
       "Zedu is a structured learning platform for bootcamps, schools, and universities. Organize cohorts, channels, and AI-powered learning in one workspace.",
-    url: "https://zedu.chat",
+    url: siteUrl(),
     siteName: "Zedu",
     images: [
       {
