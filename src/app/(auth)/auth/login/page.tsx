@@ -365,6 +365,7 @@ function Login() {
                 </label>
                 <div className="w-full flex flex-col gap-[2px]">
                   <input
+                    id="email"
                     type="text"
                     value={email}
                     onChange={handleEmailChange}
@@ -391,6 +392,7 @@ function Login() {
                 <div className="w-full flex flex-col gap-[2px]">
                   <div className="relative">
                     <input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={handlePasswordChange}
@@ -422,10 +424,13 @@ function Login() {
             </div>
             <div className="mt-[10px] flex justify-between mb-[32px]">
               <div className="flex flex-row gap-[4px] items-center">
-                <Checkbox />
-                <p className="text-[14px] font-[500] leading-[17.64px]">
+                <Checkbox id="remember-me" />
+                <label
+                  htmlFor="remember-me"
+                  className="text-[14px] font-[500] leading-[17.64px]"
+                >
                   Remember me
-                </p>
+                </label>
               </div>
               <Link href="/auth/forgot-password">
                 <p className="text-[14px] font-[500] leading-[21px] hover:text-[#7141F8]">
