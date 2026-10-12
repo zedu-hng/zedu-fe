@@ -193,6 +193,10 @@ const Footer = () => {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
+                      // Clear a previous validation error as soon as the user
+                      // edits the field again, so a stale message never lingers
+                      // while they are correcting the address. React skips the
+                      // state update when the value is unchanged.
                       if (error) setError("");
                     }}
                     className="h-full min-w-0 flex-1 bg-transparent border-none text-sm font-medium text-gray-900 placeholder:text-gray-400 placeholder:font-normal focus:outline-none"
@@ -320,15 +324,13 @@ const Footer = () => {
 
           <div className="flex items-center gap-6">
             {socialLinks.map((item) => (
-              <a
+              <Link
                 key={item.id}
                 href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all hover:opacity-80 cursor-pointer"
+                className="transition-all hover:underline"
               >
                 <Image src={item.icon} width={24} height={24} alt={item.alt} />
-              </a>
+              </Link>
             ))}
           </div>
         </div>
