@@ -36,6 +36,7 @@ const ChannelHeader = () => {
   const id = useParams().id as string;
 
   const [pinCount, setPinCount] = useState(0);
+  const pinFetchId = useRef(0);
 
   // Changes whenever a loaded message or reply is pinned or unpinned
   const pinFlags = [
@@ -54,20 +55,25 @@ const ChannelHeader = () => {
   // Fetch the count, and refetch when a pin is added or removed
   useEffect(() => {
     if (!id) return;
-    let cancelled = false;
+    const requestId = ++pinFetchId.current;
 
     (async () => {
       const res = await GetRequest(`/channels/pin/${id}`);
-      if (cancelled) return;
+      // A newer fetch or a modal update has happened since: ignore this result
+      if (requestId !== pinFetchId.current) return;
       if (res?.status === 200 || res?.status === 201) {
         setPinCount(normalizePins(res?.data?.data).length);
       }
     })();
 
     return () => {
-      cancelled = true;
+      pinFetchId.current += 1;
     };
   }, [id, pinFlags]);
+  const handleModalCountChange = (count: number) => {
+    pinFetchId.current += 1; // cancels any fetch still in flight
+    setPinCount(count);
+  };
 
   const detailsMatch =
     String(channelDetails?.channels_id || "") === String(id || "");
@@ -318,7 +324,7 @@ const ChannelHeader = () => {
         }}
         channelId={id}
         scope="channel"
-        onCountChange={setPinCount}
+        onCountChange={handleModalCountChange}
       />
 
       <StartBuzzConfirmModal
