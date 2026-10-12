@@ -1,9 +1,9 @@
-import type { Contributor } from "~/data/zedu-osprey-contributors";
+import type { Contributor } from "~/app/(homepage)/contributors/zedu-osprey/_lib/contributors";
 
 export const zeduQuetzalContributors: Contributor[] = [
   { name: "Omolara", username: "melancholia" },
   { name: "Tobiloba Similoluwa", username: "Tasiwewe" },
-  { name: "Taiwo Tolani", username: "conversely" },
+  { name: "Taiwo Omotola", username: "conversely" },
   { name: "Isaac Josiah", username: "isaac josiah" },
   { name: "Bigtiffs", username: "Bigtiffs" },
   { name: "Uchechukwu Samuel", username: "usamuelchukwu" },
@@ -57,4 +57,5 @@ export const zeduQuetzalContributors: Contributor[] = [
   { name: "Annie", username: "anniedevkiller" },
   { name: "Michael Ndianaobong Churchill", username: "D-Gen" },
   { name: "Bayode Manuel", username: "Senior Man" },
+  { name: "Weenah", username: "weenah-hub" },
 ];
