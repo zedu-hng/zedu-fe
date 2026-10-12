@@ -13,7 +13,9 @@ import { LoginWebhookRequest } from "~/utils/webhook-request";
 import { useGoogleLogin } from "@react-oauth/google";
 import AppleSignin from "react-apple-signin-auth";
 import { Separator } from "~/components/ui/separator";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mail } from "lucide-react";
+import { AuthHeroBanner } from "~/app/(auth)/_components/auth-hero-banner";
+import { showError } from "~/components/toast/sonner";
 
 //
 
@@ -21,6 +23,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({ email: "", password: "" });
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -123,10 +126,14 @@ function Login() {
       const res = await PostRequest("/auth/login", payload);
 
       if (res?.status === 200 || res?.status === 201) {
-        localStorage.setItem("token", res?.data?.data?.access_token);
-        localStorage.setItem("useremail", res?.data?.data?.user?.email);
-        localStorage.setItem("user", JSON.stringify(res?.data?.data?.user));
-        localStorage.setItem("orgId", res?.data?.data?.user?.current_org);
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem("token", res?.data?.data?.access_token);
+        storage.setItem("useremail", res?.data?.data?.user?.email);
+        storage.setItem("user", JSON.stringify(res?.data?.data?.user));
+        storage.setItem("orgId", res?.data?.data?.user?.current_org);
+        if (!rememberMe) {
+          localStorage.setItem("token", res?.data?.data?.access_token);
+        }
 
         const orgSlug = res.data.data.user.current_organisation_slug;
         if (orgSlug) {
@@ -167,6 +174,9 @@ function Login() {
         );
       } else {
         setLoading(false);
+        if (!res?.response?.data?.message) {
+          showError(res?.message || "Invalid email or password");
+        }
         LoginWebhookRequest(
           trimmedEmail,
           "New User Login",
@@ -253,58 +263,166 @@ function Login() {
   //
 
   return (
-    <>
-      <Toaster />
-      <main className="w-full min-h-screen flex flex-col  items-center ">
-        <div className="flex items-center justify-between w-full py-6 max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Link href="/">
-            <Image src="/Zedu.png" alt="" width={86} height={31} />
+    <div className="h-screen w-full flex flex-col lg:grid lg:grid-cols-2 bg-white overflow-hidden">
+      <AuthHeroBanner
+        title={
+          <>
+            Your team has
+            <br />
+            been busy.
+          </>
+        }
+        subtitle="12 new messages are waiting for you in 3 channels."
+      />
+      <main className="w-full h-full flex flex-col justify-between px-6 py-4 sm:px-10 sm:py-6 lg:px-10 lg:py-6 xl:px-16 xl:py-8 overflow-y-auto">
+        <header className="w-full flex items-center justify-between pb-1 sm:pb-2 shrink-0">
+          <Link
+            href="/"
+            className="text-xl sm:text-2xl font-bold tracking-tight text-gray-950 font-sans"
+          >
+            Zedu
           </Link>
-          <div>
-            Don't have an account?{" "}
-            <Link href={"/auth/sign-up"} className="text-[#7141F8]">
-              Sign up
+          <div className="text-xs sm:text-sm text-gray-500">
+            New to Zedu?{" "}
+            <Link
+              href="/auth/sign-up"
+              className="text-[#635BFF] hover:underline font-medium"
+            >
+              Create an account
             </Link>
           </div>
-        </div>
+        </header>
 
-        <section className="w-full md:w-[55%] flex flex-col max-w-xs md:max-w-lg mx-auto items-start justify-start pt-[20px] md:pt-0">
-          <div className="w-full flex flex-col justify-center mt-[60px] md:mt-[80px] items-center gap-[8px] mb-[32px]">
-            <h1 className="w-full text-center text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px]">
-              Login to Zedu
-            </h1>
-            <p className="w-full text-center text-[14px] md:text-[16px] text-[#344054] font-[400] leading-[21px] md:leading-[27px]">
-              Welcome back! We&apos;ve missed you!
+        <div className="w-full max-w-sm sm:max-w-md mx-auto my-auto py-1 sm:py-2">
+          <div className="mb-3 sm:mb-5">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-950">
+              Welcome back
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Log in to catch up with your team.
             </p>
           </div>
 
-          <div className="flex flex-col gap-[10px] w-full mt-4">
-            {/* Google Login */}
-            <div className="border border-[#D0D0FD] rounded-md mb-2">
-              <div
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-3.5">
+            <div className="space-y-1">
+              <label
+                htmlFor="email"
+                className="block text-xs sm:text-sm font-medium text-gray-700"
+              >
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={handleEmailBlur}
+                placeholder="you@example.com"
+                className={`w-full h-10 px-3 text-sm rounded-lg border ${errors.email ? "border-red-500" : "border-gray-200 focus:border-[#635BFF]"} outline-none focus:ring-2 focus:ring-[#635BFF]/15 transition-colors text-gray-900 placeholder:text-gray-400`}
+              />
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-0.5">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="password"
+                  className="block text-xs sm:text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs text-[#635BFF] hover:underline font-medium"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter your password"
+                  className={`w-full h-10 pl-3 pr-10 text-sm rounded-lg border ${errors.password ? "border-red-500" : "border-gray-200 focus:border-[#635BFF]"} outline-none focus:ring-2 focus:ring-[#635BFF]/15 transition-colors text-gray-900 placeholder:text-gray-400`}
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="text-xs text-red-500 mt-0.5">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 pt-0.5 pb-1">
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onCheckedChange={(checked) => setRememberMe(!!checked)}
+                className="data-[state=checked]:bg-[#635BFF] data-[state=checked]:border-[#635BFF]"
+              />
+              <label
+                htmlFor="remember"
+                className="text-xs sm:text-sm text-gray-600 select-none cursor-pointer"
+              >
+                Keep me logged in
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading || googleloading || appleLoading}
+              className="w-full h-10 bg-[#635BFF] hover:bg-[#5248e3] text-white font-medium rounded-lg text-sm transition-colors shadow-sm"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-pulse">Logging in...</span>
+                  <Loading width="18" height="18" color="#ffffff" />
+                </span>
+              ) : (
+                "Log in"
+              )}
+            </Button>
+
+            <div className="relative my-3 sm:my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-2.5 text-gray-400">or</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
                 onClick={() => login()}
-                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px]"
+                disabled={googleloading || loading}
+                className="w-full h-10 px-3 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-gray-700 transition-colors disabled:opacity-60"
               >
                 <Image
                   src="/dashboard/google.svg"
-                  width={24}
-                  height={24}
-                  alt="google"
+                  width={16}
+                  height={16}
+                  alt="Google"
+                  className="w-4 h-4 shrink-0"
                 />
-                <div className="text-[16px] font-[600] leading-[20.16px]">
-                  {googleloading ? (
-                    <span className="flex items-center gap-x-2">
-                      <span className="animate-pulse">Logging in...</span>
-                      <Loading width="20" height="20" color="#7141F8" />
-                    </span>
-                  ) : (
-                    "Sign in with Google"
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* Apple Login */}
-            <div className="border border-[#D0D0FD] rounded-md  py-[11px] cursor-pointer">
+                <span>{googleloading ? "Signing in..." : "Google"}</span>
+              </button>
+
               <AppleSignin
                 authOptions={{
                   clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
@@ -314,30 +432,24 @@ function Login() {
                   usePopup: true,
                 }}
                 uiType="dark"
-                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px] w-full"
+                className="w-full"
                 noDefaultStyle={true}
                 render={(props: any) => (
-                  <div
+                  <button
+                    type="button"
                     onClick={props.onClick}
-                    className="flex flex-row gap-[10px] items-center justify-center w-full"
+                    disabled={appleLoading || loading}
+                    className="w-full h-10 px-3 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-gray-700 transition-colors disabled:opacity-60"
                   >
                     <Image
                       src="/dashboard/apple.png"
-                      width={24}
-                      height={24}
-                      alt="apple"
+                      width={16}
+                      height={16}
+                      alt="Apple"
+                      className="w-4 h-4 shrink-0 object-contain"
                     />
-                    <div className="text-[16px] font-[600] leading-[20.16px]">
-                      {appleLoading ? (
-                        <span className="flex items-center gap-x-2">
-                          <span className="animate-pulse">Logging in...</span>
-                          <Loading width="20" height="20" color="#000" />
-                        </span>
-                      ) : (
-                        "Sign in with Apple"
-                      )}
-                    </div>
-                  </div>
+                    <span>{appleLoading ? "Signing in..." : "Apple"}</span>
+                  </button>
                 )}
                 onSuccess={handleAppleSuccess}
                 onError={(err: any) => {
@@ -346,127 +458,18 @@ function Login() {
                 }}
               />
             </div>
-          </div>
-          <div className="w-full flex justify-center items-center my-5">
-            <div className="flex items-center justify-center gap-3 max-w-xl w-1/5">
-              <Separator />
-              <p>OR</p>
-              <Separator />
-            </div>
-          </div>
-          <form onSubmit={handleSubmit} className="w-full">
-            <div className="flex flex-col gap-[16px]">
-              <div className="w-full flex flex-col gap-[8px] relative">
-                <label
-                  htmlFor="email"
-                  className="text-[14px] font-[400] leading-[21px]"
-                >
-                  Email address
-                </label>
-                <div className="w-full flex flex-col gap-[2px]">
-                  <input
-                    type="text"
-                    value={email}
-                    onChange={handleEmailChange}
-                    onBlur={handleEmailBlur}
-                    placeholder="Enter your email"
-                    className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
-                      errors.email ? "border-[#F81404]" : "border-[#D0D0FD]"
-                    } outline-none rounded-md py-[13px] pl-[13px]`}
-                  />
-                  {errors.email && (
-                    <small className="text-[12px] text-[#F81404]">
-                      {errors.email}
-                    </small>
-                  )}
-                </div>
-              </div>
-              <div className="w-full flex flex-col gap-[8px] relative">
-                <label
-                  htmlFor="password"
-                  className="text-[14px] font-[400] leading-[21px]"
-                >
-                  Password
-                </label>
-                <div className="w-full flex flex-col gap-[2px]">
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={handlePasswordChange}
-                      placeholder="Password"
-                      className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
-                        errors.password
-                          ? "border-[#F81404]"
-                          : "border-[#D0D0FD]"
-                      } outline-none rounded-md py-[13px] pl-[13px] pr-[40px]`}
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#667085] focus:outline-none"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <small className="text-[12px] text-[#F81404]">
-                      {errors.password}
-                    </small>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="mt-[10px] flex justify-between mb-[32px]">
-              <div className="flex flex-row gap-[4px] items-center">
-                <Checkbox />
-                <p className="text-[14px] font-[500] leading-[17.64px]">
-                  Remember me
-                </p>
-              </div>
-              <Link href="/auth/forgot-password">
-                <p className="text-[14px] font-[500] leading-[21px] hover:text-[#7141F8]">
-                  Forgot Password?
-                </p>
-              </Link>
-            </div>
 
-            <div className="flex flex-col gap-[24px]">
-              <div className="flex flex-col gap-[16px]">
-                <Button
-                  type="submit"
-                  variant="default"
-                  className="py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
-                  disabled={googleloading ? true : false}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-x-2">
-                      <span className="animate-pulse">Logging in...</span>{" "}
-                      <Loading width="20" height="40" />
-                    </span>
-                  ) : (
-                    <span>Login</span>
-                  )}
-                </Button>
-
-                <Link href="/auth/magiclink">
-                  <Button
-                    type="submit"
-                    variant="ghost"
-                    className="w-fit text-startß !p-0 border-none border-[#8760f8] text-[#8760f8] bg-white h-2"
-                  >
-                    Login with magic link
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/auth/magiclink"
+              className="w-full h-10 px-3 border border-gray-200 hover:bg-gray-50 rounded-lg flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-gray-700 transition-colors"
+            >
+              <Mail className="w-4 h-4 text-gray-500" />
+              <span>Email me a login link</span>
+            </Link>
           </form>
-        </section>
+        </div>
       </main>
-    </>
+    </div>
   );
 }
 
