@@ -21,6 +21,18 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
+// normalise legacy national numbers for react-phone-input-2
+// leading 0 is assumed Nigerian (country="ng")
+const toPhoneInputValue = (raw: string): string => {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, "");
+  if (!digits) return "";
+  if (trimmed.startsWith("+")) return digits;
+  if (digits.startsWith("00")) return digits.slice(2);
+  if (digits.startsWith("0")) return `234${digits.slice(1)}`;
+  return digits;
+};
+
 const EditProfileDialog = ({ isOpen, onClose }: any) => {
   const { state, dispatch } = useContext(DataContext);
   const { user } = state;
@@ -238,7 +250,7 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
                 <div className="edit-profile-phone">
                   <PhoneInput
                     country="ng"
-                    value={phone.replace(/\D/g, "")}
+                    value={toPhoneInputValue(phone)}
                     placeholder="801 234 5678"
                     enableSearch
                     onChange={(value, data: any) => {
