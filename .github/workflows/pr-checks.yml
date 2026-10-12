@@ -41,7 +41,7 @@ jobs:
           contains(fromJSON('["opened", "synchronize", "reopened", "ready_for_review"]'), github.event.action) && 'full' ||
           (github.event.action == 'edited' && format('edit-{0}', github.run_id) || 'preview') }}
       cancel-in-progress: true
-    uses: zedu-hng/zedu-ci/.github/workflows/pr-checks-node.yml@b9d38bea7dd72b3414ee1f2049c170b1f90b694a
+    uses: zedu-hng/zedu-ci/.github/workflows/pr-checks-node.yml@f2969e20da08dc048157da6e19265141c0c3e231
     with:
       package_manager: pnpm
       next_types: true
