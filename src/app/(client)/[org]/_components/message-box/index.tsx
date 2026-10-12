@@ -954,6 +954,9 @@ const MessageBox = ({
             </div>
           </div>
         </div>
+        <p className="mt-1 hidden text-right text-[11px] leading-4 text-[#667085] sm:block">
+          <span className="font-semibold">Shift + Enter</span> to add a new line
+        </p>
         {showTyping ? <TypingUsers /> : null}
       </div>
     </div>
