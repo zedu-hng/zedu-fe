@@ -12,6 +12,12 @@ export type ComparisonLink = {
   href: string;
 };
 
+/** External sources have no `href`; they're cited as plain text. */
+export type ComparisonSource = {
+  label: string;
+  href?: string;
+};
+
 export const comparisonRows: ComparisonRow[] = [
   {
     label: "Best for",
@@ -74,24 +80,12 @@ export const comparisonRows: ComparisonRow[] = [
   },
 ];
 
-export const comparisonSources: ComparisonLink[] = [
-  {
-    label: "WhatsApp announcement",
-    href: "https://blog.whatsapp.com/reactions-2gb-file-sharing-512-groups",
-  },
-  {
-    label: "Communities and group limit coverage",
-    href: "https://www.gsmarena.com/whatsapp_unveils_communities_feature_raises_group_limit_to_1024_participants-news-56392.php",
-  },
-  {
-    label: "Communities admin tools",
-    href: "https://www.thenewsminute.com/atom/you-can-have-512-people-group-whatsapp-rolls-out-more-features-163656",
-  },
-  {
-    label: "Admin-only posting in WhatsApp groups",
-    href: "https://www.howtogeek.com/708332/how-to-only-allow-admins-to-send-a-message-in-a-whatsapp-group/",
-  },
-  { label: "Telegram FAQ", href: "https://telegram.org/faq" },
+export const comparisonSources: ComparisonSource[] = [
+  { label: "WhatsApp Blog (announcement of 512-member groups)" },
+  { label: "GSMArena (Communities and the 1,024-member group limit)" },
+  { label: "The News Minute (Communities admin tools)" },
+  { label: "How-To Geek (admin-only posting in WhatsApp groups)" },
+  { label: "Telegram FAQ" },
   { label: "Zedu pricing", href: "/pricing" },
   { label: "Channels", href: "/products/channels" },
   { label: "Buzz", href: "/products/buzz" },

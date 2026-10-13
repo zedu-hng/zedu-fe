@@ -27,7 +27,6 @@ const coverImage = "/images/homepage/resources/zedu-vs-whatsapp-telegram.png";
 const coverImageAlt = "Zedu, WhatsApp and Telegram logos side by side";
 const author = {
   name: "Michael Abu",
-  url: "https://www.linkedin.com/in/abumichael/",
 };
 
 export const metadata: Metadata = {
@@ -59,7 +58,7 @@ export const metadata: Metadata = {
       },
     ],
     type: "article",
-    authors: [author.url],
+    authors: [author.name],
     locale: "en_US",
   },
   twitter: {
@@ -75,16 +74,6 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-};
-
-const faqJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: zeduVsWhatsappTelegramFAQs.map((faq) => ({
-    "@type": "Question",
-    name: faq.question,
-    acceptedAnswer: { "@type": "Answer", text: faq.answer },
-  })),
 };
 
 const linkClass =
@@ -177,12 +166,6 @@ const criteria = [
 const ZeduVsWhatsappTelegramPage = () => {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c"),
-        }}
-      />
       <article className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-12 text-left text-base text-neutral-600 sm:px-8 sm:py-16">
         <header className="flex flex-col gap-5">
           <Link href="/resources" className={`${linkClass} text-sm`}>
@@ -194,14 +177,7 @@ const ZeduVsWhatsappTelegramPage = () => {
           </h1>
           <p className="text-sm">
             By{" "}
-            <a
-              href={author.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={linkClass}
-            >
-              {author.name}
-            </a>{" "}
+            <span className="font-medium text-neutral-900">{author.name}</span>{" "}
             · Last updated October 2026
           </p>
           <Image
@@ -393,18 +369,11 @@ const ZeduVsWhatsappTelegramPage = () => {
           <p className="text-sm">
             Sources, checked October 2026:{" "}
             {comparisonSources.map((source, index) => (
-              <span key={source.href}>
-                {source.href.startsWith("/") ? (
+              <span key={source.label}>
+                {source.href ? (
                   <TextLink href={source.href}>{source.label}</TextLink>
                 ) : (
-                  <a
-                    href={source.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClass}
-                  >
-                    {source.label}
-                  </a>
+                  source.label
                 )}
                 {index < comparisonSources.length - 1 ? ", " : "."}
               </span>
