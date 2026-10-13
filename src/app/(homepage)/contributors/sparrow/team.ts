@@ -142,5 +142,12 @@ export const TEAM: Team = {
       role: "Member",
       field: "Backend Development",
     },
+    {
+      fullName: "Ayomide Abayomi",
+      zeduUsername: "ayomide abayomi",
+      githubUsername: "Ayomide-glitch",
+      role: "Member",
+      field: "FullStack Software Engineer",
+    },
   ],
 };
