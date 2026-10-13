@@ -58,6 +58,7 @@ export const useAttachments = () => {
         if (!ok || !Array.isArray(uploaded) || uploaded.length === 0) {
           throw res;
         }
+        if (removed.current.has(id)) return;
         settle(id, { status: "done", uploaded });
       } catch (error: any) {
         if (removed.current.has(id)) return;
@@ -109,7 +110,10 @@ export const useAttachments = () => {
   );
 
   const clear = useCallback(() => {
-    latest.current.forEach((a) => URL.revokeObjectURL(a.preview));
+    latest.current.forEach((a) => {
+      removed.current.add(a.id);
+      URL.revokeObjectURL(a.preview);
+    });
     setAttachments([]);
   }, []);
 

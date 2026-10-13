@@ -46,11 +46,11 @@ const ChannelHeader = () => {
   const [startBuzzConfirmOpen, setStartBuzzConfirmOpen] = useState(false);
   const [starLoading, setStarLoading] = useState(false);
 
-  const isStarred = Boolean(channelDetails?.is_starred);
+  const isStarred = detailsMatch && Boolean(channelDetails?.is_starred);
 
   const handleToggleStar = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!id || starLoading) return;
+    if (!id || !detailsMatch || starLoading) return;
     setStarLoading(true);
 
     const nextStarred = !isStarred;
@@ -163,6 +163,7 @@ const ChannelHeader = () => {
               type="button"
               aria-label={isStarred ? "Unstar channel" : "Star channel"}
               onClick={handleToggleStar}
+              disabled={!detailsMatch}
               className="p-1.5 rounded-md transition-all duration-150 hover:bg-gray-100 dark:hover:bg-zinc-800 active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
             >
               <StarIcon
