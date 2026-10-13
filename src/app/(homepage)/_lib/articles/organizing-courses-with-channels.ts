@@ -111,12 +111,12 @@ Zedu's free Starter plan includes organized learning channels, basic messaging a
   relatedLinks: [
     {
       label: "Running Active Class Discussions",
-      href: "/resources/running-active-class-discussions",
+      href: "/resources?guide=running-active-class-discussions",
       description: "get students talking once your channels are set up",
     },
     {
       label: "Using an AI Assistant for Learning",
-      href: "/resources/using-an-ai-assistant-for-learning",
+      href: "/resources?guide=using-an-ai-assistant-for-learning",
       description: "catch-up summaries and quick answers",
     },
     { label: "Zedu for universities", href: "/solutions/universities" },

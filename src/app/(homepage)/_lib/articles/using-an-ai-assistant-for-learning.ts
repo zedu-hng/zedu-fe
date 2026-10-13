@@ -100,12 +100,12 @@ Zedu's free Starter plan includes limited AI assistance, and the Pro plan adds A
   relatedLinks: [
     {
       label: "Running Active Class Discussions",
-      href: "/resources/running-active-class-discussions",
+      href: "/resources?guide=running-active-class-discussions",
       description: "the discussions that AI summaries help students revisit",
     },
     {
       label: "Organizing Courses with Channels",
-      href: "/resources/organizing-courses-with-channels",
+      href: "/resources?guide=organizing-courses-with-channels",
       description: "a structure the assistant can work within",
     },
     {

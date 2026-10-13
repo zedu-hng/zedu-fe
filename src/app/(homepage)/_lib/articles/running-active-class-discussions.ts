@@ -38,7 +38,7 @@ Discussion works best in its own space. Keep logistics and discussion apart:
 - **A questions channel** for practical queries such as deadlines, rooms and access.
 - **A discussion channel** for the week's prompt and nothing else.
 
-Pin a short message at the top of the discussion channel saying what it is for, when the weekly prompt goes up, and when replies are due. Students who know what a space is for are more likely to use it. If you are still setting up your channels, [Organizing Courses with Channels](/resources/organizing-courses-with-channels) shows a structure you can copy.
+Pin a short message at the top of the discussion channel saying what it is for, when the weekly prompt goes up, and when replies are due. Students who know what a space is for are more likely to use it. If you are still setting up your channels, [Organizing Courses with Channels](/resources?guide=organizing-courses-with-channels) shows a structure you can copy.
 
 ## Ask prompts that invite replies
 
@@ -123,12 +123,12 @@ Zedu's free Starter plan includes organized learning channels, basic messaging a
   relatedLinks: [
     {
       label: "Organizing Courses with Channels",
-      href: "/resources/organizing-courses-with-channels",
+      href: "/resources?guide=organizing-courses-with-channels",
       description: "the channel structure behind a good discussion",
     },
     {
       label: "Using an AI Assistant for Learning",
-      href: "/resources/using-an-ai-assistant-for-learning",
+      href: "/resources?guide=using-an-ai-assistant-for-learning",
       description: "catch-up summaries and quick answers",
     },
     { label: "Zedu Channels", href: "/products/channels" },

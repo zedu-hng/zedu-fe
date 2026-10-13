@@ -20,4 +20,4 @@ export const articleAuthor = {
 export const getArticleBySlug = (slug: string) =>
   articles.find((article) => article.slug === slug);
 
-export const articlePath = (slug: string) => `/resources/${slug}`;
+export const articlePath = (slug: string) => `/resources?guide=${slug}`;

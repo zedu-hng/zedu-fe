@@ -43,7 +43,7 @@ Zedu's bootcamps page recommends dedicated channels for lessons, projects and di
 | Projects | One channel per team, for focused project work | Team members and their mentor |
 | Staff | Mentor and instructor coordination, not visible to students | Instructors and mentors |
 
-Starter allows up to 3 cohorts and Pro allows unlimited cohorts, so the same template carries over when you launch the next intake. Keep files in folders by cohort, as described in [Zedu File Management](/products/file-management), so each cohort's materials are easy to find. For a deeper look at naming and rules, see [Organizing Courses with Channels](/resources/organizing-courses-with-channels).
+Starter allows up to 3 cohorts and Pro allows unlimited cohorts, so the same template carries over when you launch the next intake. Keep files in folders by cohort, as described in [Zedu File Management](/products/file-management), so each cohort's materials are easy to find. For a deeper look at naming and rules, see [Organizing Courses with Channels](/resources?guide=organizing-courses-with-channels).
 
 ## Run a weekly rhythm of goals and checkpoints
 
@@ -75,7 +75,7 @@ Mentors multiply your capacity, but only if they know their role and can see wha
 - **Use voice for quick unblocking.** A [Buzz](/products/buzz) huddle started from the team channel can clear in minutes what a long text exchange would not. Zedu says it can generate an AI summary after a session ends, which mentors can use to review the key points and decisions.
 - **Plan handovers.** If a mentor leaves or changes track, they should leave a short note in the staff channel on each student's status.
 
-For tips on getting students to engage in the channels themselves, see [Running Active Class Discussions](/resources/running-active-class-discussions).
+For tips on getting students to engage in the channels themselves, see [Running Active Class Discussions](/resources?guide=running-active-class-discussions).
 
 ## Track participation and progress
 
@@ -125,17 +125,17 @@ Running several cohorts or a larger program? [Compare plans](/pricing) or [book 
   relatedLinks: [
     {
       label: "Organizing Courses with Channels",
-      href: "/resources/organizing-courses-with-channels",
+      href: "/resources?guide=organizing-courses-with-channels",
       description: "the channel structure behind each cohort",
     },
     {
       label: "Running Active Class Discussions",
-      href: "/resources/running-active-class-discussions",
+      href: "/resources?guide=running-active-class-discussions",
       description: "keep cohorts engaged",
     },
     {
       label: "Using an AI Assistant for Learning",
-      href: "/resources/using-an-ai-assistant-for-learning",
+      href: "/resources?guide=using-an-ai-assistant-for-learning",
       description: "catch-up summaries and quick answers",
     },
     { label: "Zedu Buzz", href: "/products/buzz" },

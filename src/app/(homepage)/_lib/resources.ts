@@ -41,7 +41,7 @@ export const resources: ResourceItem[] = [
     description:
       "How universities structure course discussions using Zedu to keep topics clear and accessible.",
     image: "/images/homepage/resources/organizing-courses-with-channels.png",
-    link: "/resources/organizing-courses-with-channels",
+    link: "/resources?guide=organizing-courses-with-channels",
   },
   {
     id: 2,
@@ -51,7 +51,7 @@ export const resources: ResourceItem[] = [
     description:
       "Tips for teachers to encourage student participation and build a thriving online classroom.",
     image: "/images/homepage/resources/running-active-class-discussions.jpg",
-    link: "/resources/running-active-class-discussions",
+    link: "/resources?guide=running-active-class-discussions",
   },
   {
     id: 3,
@@ -61,7 +61,7 @@ export const resources: ResourceItem[] = [
     description:
       "How bootcamps organize fast-paced learning programs, coordinate mentors, and track progress.",
     image: "/images/homepage/resources/image-3.png",
-    link: "/resources/managing-bootcamp-cohorts",
+    link: "/resources?guide=managing-bootcamp-cohorts",
   },
   {
     id: 4,
@@ -71,7 +71,7 @@ export const resources: ResourceItem[] = [
     description:
       "Discover how AI helps summarize discussions, answer questions, and support students in your Zedu workspace.",
     image: "/images/homepage/resources/using-an-ai-assistant-for-learning.jpg",
-    link: "/resources/using-an-ai-assistant-for-learning",
+    link: "/resources?guide=using-an-ai-assistant-for-learning",
   },
   {
     id: 6,

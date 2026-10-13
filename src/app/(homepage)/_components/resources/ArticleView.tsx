@@ -1,33 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { siteUrl } from "~/lib/env-urls";
-import { ArrowBtn, OutlineBtn } from "../../_components/ui/Button";
-import { ArticleBody } from "../../_components/resources/ArticleBody";
-import {
-  articleAuthor,
-  articlePath,
-  articles,
-  getArticleBySlug,
-} from "../../_lib/articles";
+import { ArrowBtn, OutlineBtn } from "../ui/Button";
+import { ArticleBody } from "./ArticleBody";
+import { articleAuthor, articlePath, type Article } from "../../_lib/articles";
 
-type ArticlePageProps = {
-  params: Promise<{ slug: string }>;
-};
-
-export const dynamicParams = false;
-
-export const generateStaticParams = () =>
-  articles.map((article) => ({ slug: article.slug }));
-
-export const generateMetadata = async ({
-  params,
-}: ArticlePageProps): Promise<Metadata> => {
-  const { slug } = await params;
-  const article = getArticleBySlug(slug);
-  if (!article) return {};
-
+export const articleMetadata = (article: Article): Metadata => {
   const url = siteUrl(articlePath(article.slug));
   const image = siteUrl(article.image);
 
@@ -80,11 +59,7 @@ const formatDate = (date: string) =>
     timeZone: "UTC",
   });
 
-const ArticlePage = async ({ params }: ArticlePageProps) => {
-  const { slug } = await params;
-  const article = getArticleBySlug(slug);
-  if (!article) notFound();
-
+export const ArticleView = ({ article }: { article: Article }) => {
   return (
     <article className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12 text-left sm:px-8 sm:py-16">
       <header className="flex flex-col gap-5">
@@ -151,5 +126,3 @@ const ArticlePage = async ({ params }: ArticlePageProps) => {
     </article>
   );
 };
-
-export default ArticlePage;

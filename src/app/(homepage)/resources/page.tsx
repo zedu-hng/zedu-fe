@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ResourcesHub } from "./_components/resources-hub";
 import {
+  ArticleView,
+  articleMetadata,
+} from "../_components/resources/ArticleView";
+import { getArticleBySlug } from "../_lib/articles";
+import {
   ZeduVsWhatsappTelegram,
   zeduVsWhatsappTelegramMetadata,
   zeduVsWhatsappTelegramGuide,
@@ -22,9 +27,10 @@ export const generateMetadata = async ({
   searchParams,
 }: ResourcesPageProps): Promise<Metadata> => {
   const slug = await getGuideSlug(searchParams);
-  return slug === zeduVsWhatsappTelegramGuide.slug
-    ? zeduVsWhatsappTelegramMetadata
-    : {};
+  if (slug === zeduVsWhatsappTelegramGuide.slug)
+    return zeduVsWhatsappTelegramMetadata;
+  const article = slug ? getArticleBySlug(slug) : undefined;
+  return article ? articleMetadata(article) : {};
 };
 
 const ResourcesPage = async ({ searchParams }: ResourcesPageProps) => {
@@ -33,7 +39,10 @@ const ResourcesPage = async ({ searchParams }: ResourcesPageProps) => {
   if (slug === zeduVsWhatsappTelegramGuide.slug)
     return <ZeduVsWhatsappTelegram />;
 
-  notFound();
+  const article = getArticleBySlug(slug);
+  if (!article) notFound();
+
+  return <ArticleView article={article} />;
 };
 
 export default ResourcesPage;
