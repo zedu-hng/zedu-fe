@@ -15,7 +15,6 @@ export const articles: Article[] = [
 
 export const articleAuthor = {
   name: "Michael Abu",
-  url: "https://www.linkedin.com/in/abumichael/",
 };
 
 export const getArticleBySlug = (slug: string) =>
