@@ -610,7 +610,7 @@ Branches in your team's fork:
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dev`                       | Mirror of `zedu-hng:dev`. Sync only; never commit to it.                                                                                            |
 | `staging`                   | Team sandbox. Your lead merges ticket branches here to try them live on `<team>.groups.zedu.chat`. Never a PR source; reset it from `dev` any time. |
-| `<type>/<ticket-id>-<desc>` | One ticket. The only branch you open a PR from. (The name format is not enforced for now.)                                                          |
+| `<type>/<ticket-id>-<desc>` | One ticket. The only branch you open a PR from. (The name format is not enforced for now; keep the main ticket in it.)                              |
 
 Fork from **`zedu-hng/zedu-fe`**, not from `zeduchat`. Otherwise your PRs and **Sync fork** point at the wrong repo.
 
