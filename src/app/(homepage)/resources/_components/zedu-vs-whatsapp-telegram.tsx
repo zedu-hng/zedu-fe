@@ -20,7 +20,10 @@ import {
   zeduVsWhatsappTelegramFAQs,
 } from "../../_lib/zeduVsWhatsappTelegramData";
 
-const pagePath = "/resources/zedu-vs-whatsapp-telegram-for-bootcamps";
+export const zeduVsWhatsappTelegramGuide = {
+  slug: "zedu-vs-whatsapp-telegram-for-bootcamps",
+};
+const pagePath = `/resources?guide=${zeduVsWhatsappTelegramGuide.slug}`;
 const pageDescription =
   "WhatsApp and Telegram get a cohort started. Zedu keeps it organised: channels, threads, files and Buzz voice sessions with AI summaries.";
 const coverImage = "/images/homepage/resources/zedu-vs-whatsapp-telegram.png";
@@ -29,7 +32,7 @@ const author = {
   name: "Michael Abu",
 };
 
-export const metadata: Metadata = {
+export const zeduVsWhatsappTelegramMetadata: Metadata = {
   title: "Zedu vs WhatsApp vs Telegram for Bootcamps",
   description: pageDescription,
   authors: [author],
@@ -163,7 +166,7 @@ const criteria = [
   },
 ];
 
-const ZeduVsWhatsappTelegramPage = () => {
+export const ZeduVsWhatsappTelegram = () => {
   return (
     <>
       <article className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-12 text-left text-base text-neutral-600 sm:px-8 sm:py-16">
@@ -595,5 +598,3 @@ const ZeduVsWhatsappTelegramPage = () => {
     </>
   );
 };
-
-export default ZeduVsWhatsappTelegramPage;

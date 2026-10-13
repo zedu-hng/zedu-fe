@@ -31,7 +31,7 @@ export const resources: ResourceItem[] = [
     description:
       "A fair comparison for bootcamps running cohorts in WhatsApp or Telegram groups.",
     image: "/images/homepage/resources/zedu-vs-whatsapp-telegram.png",
-    link: "/resources/zedu-vs-whatsapp-telegram-for-bootcamps",
+    link: "/resources?guide=zedu-vs-whatsapp-telegram-for-bootcamps",
   },
   {
     id: 1,
