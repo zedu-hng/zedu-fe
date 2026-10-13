@@ -76,7 +76,7 @@ const resourcesLinks: FooterLink[] = [
   {
     id: 1,
     label: "Zedu vs WhatsApp & Telegram",
-    href: "/resources/zedu-vs-whatsapp-telegram-for-bootcamps",
+    href: "/resources?guide=zedu-vs-whatsapp-telegram-for-bootcamps",
   },
   { id: 2, label: "Privacy Policy", href: "/policy" },
   { id: 3, label: "Terms of Service", href: "/terms-of-service" },
