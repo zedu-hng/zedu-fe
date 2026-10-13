@@ -8,7 +8,7 @@ import type { HomeFAQ } from "../../_lib/faqData";
 import { DynamicFooter } from "../../_components/footer/dynamic-footer";
 
 export const metadata: Metadata = {
-  title: "Buzz",
+  title: "Buzz: Instant Voice Calls for Learning Teams",
   description:
     "Use Zedu Buzz to start instant voice conversations inside learning channels. Collaborate in real time, clarify lessons faster, and review AI-generated session summaries.",
   keywords: [
@@ -137,7 +137,7 @@ const BuzzProductsPage = () => {
             <div className="relative aspect-[16/11] w-full sm:aspect-[4/3] lg:aspect-[16/10]">
               <Image
                 src="/images/homepage/products/buzz-hero.png"
-                alt="Zedu channels product screenshot"
+                alt="Zedu Buzz interface showing an active screen share, video meeting participants, and mobile call controls"
                 fill
                 priority
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 680px"

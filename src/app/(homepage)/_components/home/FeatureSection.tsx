@@ -25,7 +25,7 @@ export const FeatureSection = () => {
             workspace.
           </p>
           <div>
-            <ArrowBtn text="Get started for free" inverted linkToHome />
+            <ArrowBtn text="Get started for free" linkToHome />
           </div>
         </div>
 
@@ -96,7 +96,7 @@ export const FeatureSection = () => {
               <div>
                 <Image
                   src={"/images/homepage/socials-row.png"}
-                  alt="socials-row"
+                  alt="Icons of common chat and video apps, such as WhatsApp, Slack, Telegram and Discord"
                   height={35}
                   width={225}
                   priority
@@ -104,7 +104,7 @@ export const FeatureSection = () => {
                 />
               </div>
               <div className="mt-1">
-                <ArrowBtn text="Get started for free" inverted linkToHome />
+                <ArrowBtn text="Get started for free" linkToHome />
               </div>
             </div>
 
