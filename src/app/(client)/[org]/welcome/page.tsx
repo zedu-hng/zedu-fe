@@ -2,7 +2,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { GetRequest } from "~/utils/request";
 import { DataContext } from "~/store/GlobalState";
 
@@ -20,6 +20,7 @@ const isAutoCreatedOrg = () => {
 
 const Welcome = () => {
   const router = useRouter();
+  const { org } = useParams<{ org: string }>();
   const [loading, setLoading] = useState(true);
   const { state } = useContext(DataContext);
   const { orgSlug } = state;
@@ -31,12 +32,12 @@ const Welcome = () => {
       const userstatus = await GetRequest("/auth/onboard-status", token);
 
       if (userstatus?.data?.data?.status && !isAutoCreatedOrg()) {
-        router.push(`/${orgSlug}`);
+        router.push(`/${org}`);
       } else {
         setLoading(false);
       }
     })();
-  }, [router, orgSlug]);
+  }, [router, org]);
 
   if (loading) return;
 

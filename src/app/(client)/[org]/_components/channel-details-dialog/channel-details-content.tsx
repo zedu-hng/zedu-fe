@@ -13,7 +13,7 @@ import { cn } from "~/lib/utils";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
 import { PostRequest } from "~/utils/new-request";
-import { showSuccess, showError } from "~/components/toast/sonner";
+import { showSuccess } from "~/components/toast/sonner";
 
 function formatTabCount(count: number) {
   if (count > 1000) {
@@ -67,26 +67,20 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
     const nextStarred = !starred;
     setStarred(nextStarred);
 
-    try {
-      const res = await PostRequest(`/channels/${channelId}/star`);
-      if (res?.status === 200 || res?.status === 201) {
-        const actualStatus = res.data?.data?.is_starred ?? nextStarred;
-        setStarred(actualStatus);
-        dispatch({
-          type: ACTIONS.UPDATE_CHANNEL_STAR,
-          payload: { channelId, isStarred: actualStatus },
-        });
-        showSuccess(
-          res.data?.message ||
-            (actualStatus ? "Channel starred" : "Channel unstarred")
-        );
-      } else {
-        setStarred(!nextStarred);
-        showError("Failed to update starred status");
-      }
-    } catch (err) {
+    const res = await PostRequest(`/channels/${channelId}/star`);
+    if (res?.status === 200 || res?.status === 201) {
+      const actualStatus = res.data?.data?.is_starred ?? nextStarred;
+      setStarred(actualStatus);
+      dispatch({
+        type: ACTIONS.UPDATE_CHANNEL_STAR,
+        payload: { channelId, isStarred: actualStatus },
+      });
+      showSuccess(
+        res.data?.message ||
+          (actualStatus ? "Channel starred" : "Channel unstarred")
+      );
+    } else {
       setStarred(!nextStarred);
-      showError("Failed to update starred status");
     }
   };
 

@@ -25,7 +25,7 @@ const fetchHost = (hostId: string) => {
       }
       const user = res.data?.data;
       return {
-        id: user?.userid || hostId,
+        id: hostId,
         name: user?.display_name || user?.fullname,
         username: user?.username,
         avatar_url: user?.avatar_url,
@@ -70,5 +70,8 @@ export const useBuzzHost = (hostId?: string) => {
     };
   }, [hostId, memberHost]);
 
-  return memberHost || fetchedHost || undefined;
+  // Ignore a host fetched for a previous hostId
+  const currentFetchedHost = fetchedHost?.id === hostId ? fetchedHost : null;
+
+  return memberHost || currentFetchedHost || undefined;
 };

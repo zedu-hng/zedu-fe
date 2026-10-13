@@ -66,11 +66,7 @@ const ChannelHeader = () => {
           res.data?.message ||
             (actualStatus ? "Channel starred" : "Channel unstarred")
         );
-      } else {
-        showError("Failed to update starred status");
       }
-    } catch (err) {
-      showError("Failed to update starred status");
     } finally {
       setStarLoading(false);
     }

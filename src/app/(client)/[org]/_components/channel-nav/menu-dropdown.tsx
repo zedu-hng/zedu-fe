@@ -17,7 +17,7 @@ import { DataContext } from "~/store/GlobalState";
 import { PostRequest } from "~/utils/new-request";
 import Loading from "~/components/ui/loading";
 import { useRBAC } from "~/hooks/useRBAC";
-import { showError, showSuccess } from "~/components/toast/sonner";
+import { showSuccess } from "~/components/toast/sonner";
 
 interface MenuDropdownProps {
   isOpen: boolean;
@@ -80,11 +80,7 @@ const MenuDropdown = ({ isOpen, onClose }: MenuDropdownProps) => {
           res.data?.message ||
             (actualStatus ? "Channel starred" : "Channel unstarred")
         );
-      } else {
-        showError("Failed to update starred status");
       }
-    } catch {
-      showError("Failed to update starred status");
     } finally {
       setButtonLoading(false);
       onClose();

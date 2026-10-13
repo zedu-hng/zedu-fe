@@ -3,6 +3,7 @@
 import { Fragment } from "react";
 import Image from "next/image";
 import { FileIcon, RotateCw, XIcon } from "lucide-react";
+import { Button } from "~/components/ui/button";
 import Loading from "~/components/ui/loading";
 import { VoiceThumbnails } from "../voice/voice-thumbnails";
 import type { Attachment } from "./use-attachments";
@@ -25,14 +26,15 @@ const RetryButton = ({
   onClick: () => void;
   className: string;
 }) => (
-  <button
+  <Button
     type="button"
+    size="icon"
     aria-label={`Retry upload of ${name}`}
     onClick={onClick}
-    className={`flex items-center justify-center rounded-full bg-red-500 text-white h-7 w-7 ${focusRing} ${className}`}
+    className={`rounded-full bg-red-500 hover:bg-red-600 text-white h-7 w-7 ${focusRing} ${className}`}
   >
     <RotateCw size={14} />
-  </button>
+  </Button>
 );
 
 const Tile = ({
@@ -94,14 +96,15 @@ const Tile = ({
       </div>
     )}
 
-    <button
+    <Button
       type="button"
+      size="icon"
       aria-label={`Remove ${file.name}`}
       onClick={() => onRemove(id)}
-      className={`absolute -top-1 -right-2 z-10 p-1 bg-gray-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center ${focusRing}`}
+      className={`absolute -top-1 -right-2 z-10 p-1 bg-gray-500 hover:bg-gray-600 text-white rounded-full w-5 h-5 text-xs ${focusRing}`}
     >
       <XIcon size={14} />
-    </button>
+    </Button>
   </div>
 );
 
