@@ -136,7 +136,7 @@ function Login() {
         if (redirectUrl) {
           // If there's a coworkerId, append it to the redirect URL
           const finalRedirectUrl = coworkerId
-            ? `redirectUrl?coworkerId={coworkerId}`
+            ? `${redirectUrl}?coworkerId=${coworkerId}`
             : redirectUrl;
           setTimeout(() => {
             router.push(finalRedirectUrl);
