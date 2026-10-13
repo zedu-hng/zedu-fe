@@ -12,6 +12,8 @@ export type BuzzHost = {
   default_avatar_url?: string;
 };
 
+const MAX_HOST_RETRIES = 2;
+
 // One request per host, shared by every buzz row that host started
 const hostRequests = new Map<string, Promise<BuzzHost | null>>();
 
@@ -48,6 +50,7 @@ export const useBuzzHost = (hostId?: string) => {
   const { state } = useContext(DataContext);
   const { orgMembers, mentionOrgMembers } = state;
   const [fetchedHost, setFetchedHost] = useState<BuzzHost | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const memberHost = useMemo(
     () =>
@@ -62,13 +65,27 @@ export const useBuzzHost = (hostId?: string) => {
     if (!hostId || memberHost) return;
 
     let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     fetchHost(hostId).then((host) => {
-      if (!cancelled) setFetchedHost(host);
+      if (cancelled) return;
+      if (host) {
+        setFetchedHost(host);
+      } else if (attempt < MAX_HOST_RETRIES) {
+        retryTimer = setTimeout(
+          () => setAttempt((n) => n + 1),
+          2000 * (attempt + 1)
+        );
+      }
     });
     return () => {
       cancelled = true;
+      clearTimeout(retryTimer);
     };
-  }, [hostId, memberHost]);
+  }, [hostId, memberHost, attempt]);
+
+  useEffect(() => {
+    setAttempt(0);
+  }, [hostId]);
 
   // Ignore a host fetched for a previous hostId
   const currentFetchedHost = fetchedHost?.id === hostId ? fetchedHost : null;
