@@ -299,6 +299,29 @@ const reducers = (state: any, action: any) => {
         ],
       };
     }
+    case ACTIONS.UPDATE_DM_FAVOURITE: {
+      const { channelId, isFavourite } = action.payload;
+      const list = state.dms || [];
+      const match = list.find(
+        (dm: any) =>
+          String(dm.channel_id || dm.channels_id) === String(channelId)
+      );
+      if (!match) return state;
+
+      return {
+        ...state,
+        dms: list.map((dm: any) =>
+          String(dm.channel_id || dm.channels_id) === String(channelId)
+            ? { ...dm, is_favourite: isFavourite }
+            : dm
+        ),
+      };
+    }
+    case ACTIONS.DM_RENDER_CALLBACK:
+      return {
+        ...state,
+        dmRenderCallback: !state.dmRenderCallback,
+      };
     case ACTIONS.HOME_DMS:
       return {
         ...state,
