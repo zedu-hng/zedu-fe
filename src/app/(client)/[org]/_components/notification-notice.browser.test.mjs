@@ -10,6 +10,8 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const run = promisify(execFile);
+const testHost = "127.0.0.1";
+const testProtocol = "http:";
 const root = path.resolve(
   fileURLToPath(new URL("../../../../../", import.meta.url))
 );
@@ -277,7 +279,7 @@ for (const width of [1280, 375, 320]) {
             "--virtual-time-budget=30000",
             "--dump-dom",
             `--screenshot=${screenshot}`,
-            `http://127.0.0.1:${server.address().port}`,
+            `${testProtocol}//${testHost}:${server.address().port}`,
           ],
           { timeout: 45000, maxBuffer: 2_000_000 }
         );
