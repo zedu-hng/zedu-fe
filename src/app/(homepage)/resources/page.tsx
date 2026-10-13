@@ -4,7 +4,7 @@ import { ResourcesHub } from "./_components/resources-hub";
 import {
   ZeduVsWhatsappTelegram,
   zeduVsWhatsappTelegramMetadata,
-  zeduVsWhatsappTelegramSlug,
+  zeduVsWhatsappTelegramGuide,
 } from "./_components/zedu-vs-whatsapp-telegram";
 
 type ResourcesPageProps = {
@@ -22,7 +22,7 @@ export const generateMetadata = async ({
   searchParams,
 }: ResourcesPageProps): Promise<Metadata> => {
   const slug = await getGuideSlug(searchParams);
-  return slug === zeduVsWhatsappTelegramSlug
+  return slug === zeduVsWhatsappTelegramGuide.slug
     ? zeduVsWhatsappTelegramMetadata
     : {};
 };
@@ -30,7 +30,8 @@ export const generateMetadata = async ({
 const ResourcesPage = async ({ searchParams }: ResourcesPageProps) => {
   const slug = await getGuideSlug(searchParams);
   if (!slug) return <ResourcesHub />;
-  if (slug === zeduVsWhatsappTelegramSlug) return <ZeduVsWhatsappTelegram />;
+  if (slug === zeduVsWhatsappTelegramGuide.slug)
+    return <ZeduVsWhatsappTelegram />;
 
   notFound();
 };

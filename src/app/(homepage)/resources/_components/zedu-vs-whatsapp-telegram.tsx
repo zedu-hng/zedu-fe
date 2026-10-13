@@ -20,9 +20,10 @@ import {
   zeduVsWhatsappTelegramFAQs,
 } from "../../_lib/zeduVsWhatsappTelegramData";
 
-export const zeduVsWhatsappTelegramSlug =
-  "zedu-vs-whatsapp-telegram-for-bootcamps";
-const pagePath = `/resources?guide=${zeduVsWhatsappTelegramSlug}`;
+export const zeduVsWhatsappTelegramGuide = {
+  slug: "zedu-vs-whatsapp-telegram-for-bootcamps",
+};
+const pagePath = `/resources?guide=${zeduVsWhatsappTelegramGuide.slug}`;
 const pageDescription =
   "WhatsApp and Telegram get a cohort started. Zedu keeps it organised: channels, threads, files and Buzz voice sessions with AI summaries.";
 const coverImage = "/images/homepage/resources/zedu-vs-whatsapp-telegram.png";
