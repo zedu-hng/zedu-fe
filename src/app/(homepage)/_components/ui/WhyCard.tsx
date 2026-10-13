@@ -8,6 +8,7 @@ type WhyCardProps = {
   showBadge?: boolean;
   showArrow?: boolean;
   className?: string;
+  headingLevel?: "h2" | "h3";
 };
 
 export const WhyCard = ({
@@ -16,7 +17,10 @@ export const WhyCard = ({
   showBadge = true,
   showArrow = false,
   className = "",
+  headingLevel = "h2",
 }: WhyCardProps) => {
+  const Heading = headingLevel;
+
   return (
     <div
       className={cn(
@@ -24,10 +28,10 @@ export const WhyCard = ({
         className
       )}
     >
-      <h2 className="text-xl font-bold text-neutral-900 text-left flex w-full gap-2 items-center justify-between">
+      <Heading className="text-xl font-bold text-neutral-900 text-left flex w-full gap-2 items-center justify-between">
         {title}
         {showBadge ? <PurpleVerifiedBadge /> : <div className="size-10" />}
-      </h2>
+      </Heading>
       <p className="text-left   text-neutral-600">{desc}</p>
 
       {showArrow && (

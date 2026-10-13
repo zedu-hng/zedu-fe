@@ -7,6 +7,7 @@ type FeatureCardProps = {
   imageSrc: string;
   imageAlt: string;
   className?: string;
+  headingLevel?: "h2" | "h3";
 };
 
 export const FeatureCard = ({
@@ -15,7 +16,10 @@ export const FeatureCard = ({
   imageSrc,
   imageAlt,
   className,
+  headingLevel = "h2",
 }: FeatureCardProps) => {
+  const Heading = headingLevel;
+
   return (
     <div
       className={cn(
@@ -36,7 +40,9 @@ export const FeatureCard = ({
         </div>
       </div>
       <div className="flex flex-1 flex-col justify-start gap-2 text-left">
-        <h2 className="text-xl font-semibold text-neutral-900">{title}</h2>
+        <Heading className="text-xl font-semibold text-neutral-900">
+          {title}
+        </Heading>
         <p className="text-sm leading-relaxed text-neutral-600">
           {description}
         </p>

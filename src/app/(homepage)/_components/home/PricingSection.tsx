@@ -25,9 +25,9 @@ export const PricingSection = ({
           showSubtitle ? "gap-6" : "gap-3"
         }`}
       >
-        <h1 className=" text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl text-center">
+        <h2 className=" text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl text-center">
           Simple, Flexible Pricing for Education
-        </h1>
+        </h2>
         {showSubtitle ? (
           <p className="max-w-3xl text-sm text-neutral-700 sm:text-base">
             Flexible plans for educators, bootcamps, and institutions building
@@ -83,10 +83,10 @@ export const PricingSection = ({
           />
         ))}
       </div>
-      <h1 className="text-xs sm:text-sm md:text-md font-medium text-neutral-700 ">
+      <h2 className="text-xs sm:text-sm md:text-md font-medium text-neutral-700 ">
         Launching a bootcamp? Let's build a pricing model that fits your cohort
         size.
-      </h1>
+      </h2>
       <Link
         href={"client/settings/organisation/billing/all-plans"}
         className="group flex items-center gap-2 font-semibold text-primary-500"
