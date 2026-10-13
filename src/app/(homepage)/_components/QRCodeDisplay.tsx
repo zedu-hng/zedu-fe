@@ -27,7 +27,7 @@ export const QRCodeDisplay = ({
     setHasError(false);
     QRCode.toDataURL(url, {
       width: size * 3,
-      margin: 1,
+      margin: 4,
       color: {
         dark: "#18181B",
         light: "#FFFFFF",
