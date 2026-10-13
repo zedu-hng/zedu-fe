@@ -22,6 +22,13 @@ const cases = [
     ["@first", "@second"],
   ],
   ["www.person@example.com", ["www.person@example.com"], []],
+  // Regression tests for internationalized email addresses
+  ["josé@example.com", ["josé@example.com"], []],
+  ["**josé@example.com**", ["josé@example.com"], []],
+  ["Contact josé@example.com.", ["josé@example.com"], []],
+  ["用户@example.com", ["用户@example.com"], []],
+  ["person@exämple.com", ["person@exämple.com"], []],
+  ["@username and josé@example.com", ["josé@example.com"], ["@username and"]],
 ];
 
 for (const [input, emails, mentions] of cases) {
