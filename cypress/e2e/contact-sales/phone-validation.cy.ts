@@ -1,6 +1,5 @@
 describe("Contact Sales phone validation", () => {
   it("rejects alphabetic phone input and accepts a valid formatted phone number", () => {
-    const baseUrl = Cypress.env("baseUrl") || "http://localhost:3000";
     let requestCount = 0;
 
     cy.intercept("POST", "**/contact", (request) => {
@@ -12,7 +11,7 @@ describe("Contact Sales phone validation", () => {
       });
     }).as("contactSales");
 
-    cy.visit(`${baseUrl}/contact-sales`);
+    cy.visit("/contact-sales");
 
     cy.get("#name").type("Test User");
     cy.get("#email").type("test@example.com");
