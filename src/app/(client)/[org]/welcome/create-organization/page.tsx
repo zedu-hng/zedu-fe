@@ -106,19 +106,19 @@ const CreateOrganization: React.FC = () => {
     }
 
     const organisation = result?.data?.data?.organisation;
+    const slug = result?.data?.data?.current_organisation_slug || org;
     localStorage.setItem("token", result?.data?.data?.access_token);
     localStorage.setItem("orgId", organisation?.id || target?.id);
-    storeCurrentOrganisation(organisation || target);
+    localStorage.setItem("orgSlug", slug);
+    // The switch response can omit fields such as type, so fall back to the created org
+    storeCurrentOrganisation({ ...target, ...organisation });
 
     const channelId = await resolveChannelIdForOrgSwitch(
       firstChannel,
       organisation?.id || target?.id
     );
 
-    redirectAfterOrgSwitch(
-      result?.data?.data?.current_organisation_slug || org,
-      channelId
-    );
+    redirectAfterOrgSwitch(slug, channelId);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
