@@ -29,6 +29,7 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
     state?.channelDetails?.channels_id || state?.channelDetails?.id;
   const isChannelStarred = Boolean(state?.channelDetails?.is_starred);
   const [starred, setStarred] = useState(isChannelStarred);
+  const [starLoading, setStarLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(state?.activeTab);
 
   useEffect(() => {
@@ -63,11 +64,13 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
   };
 
   const handleStarred = async () => {
-    if (!channelId) return;
+    if (!channelId || starLoading) return;
+    setStarLoading(true);
     const nextStarred = !starred;
     setStarred(nextStarred);
 
     const res = await PostRequest(`/channels/${channelId}/star`);
+    setStarLoading(false);
     if (res?.status === 200 || res?.status === 201) {
       const actualStatus = res.data?.data?.is_starred ?? nextStarred;
       setStarred(actualStatus);
@@ -96,6 +99,7 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
             variant={"outline"}
             className={`h-fit p-[0.435rem] font-semibold text-[0.8125rem] text-[#344054] gap-1 ${starred ? "border-[#EAAA08] bg-amber-50/40" : ""}`}
             onClick={handleStarred}
+            disabled={starLoading}
             aria-label={starred ? "Unstar channel" : "Star channel"}
           >
             <StarIcon
