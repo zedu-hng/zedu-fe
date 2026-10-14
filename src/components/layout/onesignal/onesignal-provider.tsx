@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import OneSignal from "react-onesignal";
 import { initOneSignalSafely } from "~/lib/onesignal/init";
@@ -11,7 +11,7 @@ import {
 } from "~/lib/onesignal/notification-route";
 import {
   registerNotificationBadge,
-  isHomeRoute,
+  isNotificationsRoute,
 } from "~/lib/notifications/notification-badge";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
@@ -115,12 +115,12 @@ export default function OneSignalProvider() {
   const context = useContext(DataContext);
   const dispatch = context?.dispatch;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
 
   const incrementBadgeFromNotification = (notification: any) => {
-    if (!dispatch || isHomeRoute(pathnameRef.current)) return;
+    if (!dispatch || isNotificationsRoute(pathnameRef.current)) return;
 
     const payload = getNotificationData(notification);
     if (!registerNotificationBadge(payload)) return;
