@@ -145,7 +145,11 @@ const Header: React.FC = () => {
                       className="z-[9999] w-56 rounded-lg bg-white p-4"
                     >
                       {section.items.map((item) => (
-                        <DropdownMenuItem key={item.href} asChild>
+                        <DropdownMenuItem
+                          key={item.href}
+                          asChild
+                          className="rounded-md transition-colors duration-200 hover:bg-[#F2F4F7] hover:text-[#5F5FE1] focus:bg-[#F2F4F7] focus:text-[#5F5FE1]"
+                        >
                           <Link
                             href={item.href}
                             className={`cursor-pointer py-2 ${
@@ -315,6 +319,7 @@ const Header: React.FC = () => {
                   <Link
                     href="/contact-sales"
                     className="flex w-full items-center justify-center rounded-lg border border-white/40 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-white/10"
+                    onClick={() => setIsOpen(false)}
                   >
                     Contact Sales
                   </Link>
