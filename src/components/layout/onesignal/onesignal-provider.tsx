@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import OneSignal from "react-onesignal";
 import { initOneSignalSafely } from "~/lib/onesignal/init";
@@ -11,7 +11,7 @@ import {
 } from "~/lib/onesignal/notification-route";
 import {
   registerNotificationBadge,
-  isHomeRoute,
+  isNotificationsRoute,
 } from "~/lib/notifications/notification-badge";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
@@ -107,6 +107,7 @@ const navigateToNotificationTarget = (
   router.push(nextRoute);
 };
 
+/** Handles foreground push delivery and notification navigation. */
 export default function OneSignalProvider() {
   const audioPlayer = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
@@ -115,12 +116,13 @@ export default function OneSignalProvider() {
   const context = useContext(DataContext);
   const dispatch = context?.dispatch;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
 
+  /** Counts eligible, unique push events unless Notifications is already open. */
   const incrementBadgeFromNotification = (notification: any) => {
-    if (!dispatch || isHomeRoute(pathnameRef.current)) return;
+    if (!dispatch || isNotificationsRoute(pathnameRef.current)) return;
 
     const payload = getNotificationData(notification);
     if (!registerNotificationBadge(payload)) return;
