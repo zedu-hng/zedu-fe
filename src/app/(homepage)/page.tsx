@@ -36,6 +36,7 @@ const HomePage = () => {
       <DynamicFooter
         text="Run Your Next Cohort Without Limits"
         description="Join thousands of educators building better learning experiences."
+        headingLevel={2}
       />
     </section>
   );

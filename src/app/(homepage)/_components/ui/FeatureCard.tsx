@@ -36,7 +36,7 @@ export const FeatureCard = ({
         </div>
       </div>
       <div className="flex flex-1 flex-col justify-start gap-2 text-left">
-        <h2 className="text-xl font-semibold text-neutral-900">{title}</h2>
+        <h3 className="text-xl font-semibold text-neutral-900">{title}</h3>
         <p className="text-sm leading-relaxed text-neutral-600">
           {description}
         </p>

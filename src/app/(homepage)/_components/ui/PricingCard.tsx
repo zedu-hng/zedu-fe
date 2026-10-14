@@ -70,7 +70,7 @@ export const PricingCard = ({
       ) : null}
 
       <div className="mx-auto flex max-w-[90%] flex-col items-center gap-2 text-center">
-        <h2 className="text-lg font-semibold text-neutral-900">{title}</h2>
+        <h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
         <p className="text-sm text-neutral-600">{description}</p>
       </div>
 
