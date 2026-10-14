@@ -319,6 +319,7 @@ const Header: React.FC = () => {
                   <Link
                     href="/contact-sales"
                     className="flex w-full items-center justify-center rounded-lg border border-white/40 py-3 text-sm font-medium text-white transition-colors duration-200 hover:bg-white/10"
+                    onClick={() => setIsOpen(false)}
                   >
                     Contact Sales
                   </Link>
