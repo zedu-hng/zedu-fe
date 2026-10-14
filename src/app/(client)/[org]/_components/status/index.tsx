@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -32,26 +32,22 @@ const presets: StatusPreset[] = [
     emoji: "📅",
     text: "In a meeting",
     duration: "1 hour",
-    section: "For HNG Inc",
   },
   {
     emoji: "🚗",
     text: "Commuting",
     duration: "30 minutes",
-    section: "For HNG Inc",
   },
-  { emoji: "🤒", text: "Out sick", duration: "Today", section: "For HNG Inc" },
+  { emoji: "🤒", text: "Out sick", duration: "Today" },
   {
     emoji: "🌴",
     text: "Vacationing",
     duration: "Don’t clear",
-    section: "For HNG Inc",
   },
   {
     emoji: "🏡",
     text: "Working remotely",
     duration: "Today",
-    section: "For HNG Inc",
   },
   {
     emoji: "📅",
@@ -61,19 +57,23 @@ const presets: StatusPreset[] = [
   },
 ];
 
-const groupedPresets = presets.reduce(
-  (acc, preset) => {
-    const section = preset.section || "Other";
-    if (!acc[section]) acc[section] = [];
-    acc[section].push(preset);
-    return acc;
-  },
-  {} as Record<string, StatusPreset[]>
-);
-
 const StatusModal = () => {
   const { state, dispatch } = useContext(DataContext);
-  const { user, statusCallback, status } = state;
+  const { user, statusCallback, status, orgData } = state;
+
+  const workspaceSection = `For ${orgData?.name || "your workspace"}`;
+
+  const groupedPresets = useMemo(() => {
+    return presets.reduce(
+      (acc, preset) => {
+        const section = preset.section || workspaceSection;
+        if (!acc[section]) acc[section] = [];
+        acc[section].push(preset);
+        return acc;
+      },
+      {} as Record<string, StatusPreset[]>
+    );
+  }, [workspaceSection]);
   const [statusText, setStatusText] = useState("");
   const [emoji, setEmoji] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
