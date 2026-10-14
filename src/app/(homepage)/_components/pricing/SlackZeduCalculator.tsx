@@ -22,6 +22,54 @@ const SLIDER_MAX = 5_000;
 const SLIDER_STEP = 10;
 const SLIDER_INITIAL = 350;
 
+// Piecewise scale mapping visual position percentage (0 to 100) to learner count.
+// Corresponds directly to tick marks: 10 (0%), 500 (25%), 1,000 (50%), 3,000 (75%), 5,000+ (100%).
+const SCALE_POINTS: readonly { pos: number; value: number }[] = [
+  { pos: 0, value: SLIDER_MIN },
+  { pos: 25, value: 500 },
+  { pos: 50, value: 1_000 },
+  { pos: 75, value: 3_000 },
+  { pos: 100, value: SLIDER_MAX },
+];
+
+function learnersToPosition(value: number): number {
+  if (isNaN(value) || value <= SCALE_POINTS[0].value)
+    return SCALE_POINTS[0].pos;
+  const lastPoint = SCALE_POINTS[SCALE_POINTS.length - 1];
+  if (value >= lastPoint.value) return lastPoint.pos;
+
+  for (let i = 0; i < SCALE_POINTS.length - 1; i++) {
+    const p0 = SCALE_POINTS[i];
+    const p1 = SCALE_POINTS[i + 1];
+    if (value >= p0.value && value <= p1.value) {
+      const fraction = (value - p0.value) / (p1.value - p0.value);
+      return p0.pos + fraction * (p1.pos - p0.pos);
+    }
+  }
+  return 0;
+}
+
+function positionToLearners(pos: number): number {
+  if (isNaN(pos) || pos <= SCALE_POINTS[0].pos) return SCALE_POINTS[0].value;
+  const lastPoint = SCALE_POINTS[SCALE_POINTS.length - 1];
+  if (pos >= lastPoint.pos) return lastPoint.value;
+
+  for (let i = 0; i < SCALE_POINTS.length - 1; i++) {
+    const p0 = SCALE_POINTS[i];
+    const p1 = SCALE_POINTS[i + 1];
+    if (pos >= p0.pos && pos <= p1.pos) {
+      const fraction = (pos - p0.pos) / (p1.pos - p0.pos);
+      const rawValue = p0.value + fraction * (p1.value - p0.value);
+      const rounded = Math.round(rawValue / SLIDER_STEP) * SLIDER_STEP;
+      return Math.min(
+        lastPoint.value,
+        Math.max(SCALE_POINTS[0].value, rounded)
+      );
+    }
+  }
+  return SCALE_POINTS[0].value;
+}
+
 // Duration options
 type DurationOption = {
   months: number;
@@ -324,6 +372,36 @@ export function SlackZeduCalculator({
   const [learnerCount, setLearnerCount] = useState(SLIDER_INITIAL);
   const [durationMonths, setDurationMonths] = useState(DEFAULT_DURATION_MONTHS);
 
+  const sliderPercent = learnersToPosition(learnerCount);
+
+  const handleSliderKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    let delta = 0;
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      delta = e.shiftKey ? 100 : SLIDER_STEP;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      delta = e.shiftKey ? -100 : -SLIDER_STEP;
+    } else if (e.key === "PageUp") {
+      delta = 100;
+    } else if (e.key === "PageDown") {
+      delta = -100;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setLearnerCount(SLIDER_MIN);
+      return;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setLearnerCount(SLIDER_MAX);
+      return;
+    }
+
+    if (delta !== 0) {
+      e.preventDefault();
+      setLearnerCount((prev) =>
+        Math.min(SLIDER_MAX, Math.max(SLIDER_MIN, prev + delta))
+      );
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -425,7 +503,7 @@ export function SlackZeduCalculator({
                     <div
                       className="pointer-events-none absolute top-0 z-20 flex -translate-x-1/2 flex-col items-center justify-center rounded-full bg-white shadow-md transition-[left] duration-75"
                       style={{
-                        left: `clamp(26px, ${((learnerCount - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100}%, calc(100% - 26px))`,
+                        left: `clamp(26px, ${sliderPercent}%, calc(100% - 26px))`,
                         width: "52px",
                         height: "52px",
                       }}
@@ -445,7 +523,7 @@ export function SlackZeduCalculator({
                         <div
                           className="h-full rounded-full bg-primary-500"
                           style={{
-                            width: `${((learnerCount - SLIDER_MIN) / (SLIDER_MAX - SLIDER_MIN)) * 100}%`,
+                            width: `${sliderPercent}%`,
                           }}
                         />
                       </div>
@@ -454,13 +532,16 @@ export function SlackZeduCalculator({
                       <input
                         id="learner-slider"
                         type="range"
-                        min={SLIDER_MIN}
-                        max={SLIDER_MAX}
-                        step={SLIDER_STEP}
-                        value={learnerCount}
+                        min={0}
+                        max={100}
+                        step="any"
+                        value={sliderPercent}
                         onChange={(e) =>
-                          setLearnerCount(Number(e.target.value))
+                          setLearnerCount(
+                            positionToLearners(Number(e.target.value))
+                          )
                         }
+                        onKeyDown={handleSliderKeyDown}
                         aria-label="Number of learners in your cohort"
                         aria-valuemin={SLIDER_MIN}
                         aria-valuemax={SLIDER_MAX}
