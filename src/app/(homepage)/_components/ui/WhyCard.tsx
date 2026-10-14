@@ -24,10 +24,10 @@ export const WhyCard = ({
         className
       )}
     >
-      <h2 className="text-xl font-bold text-neutral-900 text-left flex w-full gap-2 items-center justify-between">
+      <h3 className="text-xl font-bold text-neutral-900 text-left flex w-full gap-2 items-center justify-between">
         {title}
         {showBadge ? <PurpleVerifiedBadge /> : <div className="size-10" />}
-      </h2>
+      </h3>
       <p className="text-left   text-neutral-600">{desc}</p>
 
       {showArrow && (

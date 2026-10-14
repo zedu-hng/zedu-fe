@@ -19,10 +19,10 @@ export const FAQSection = ({ faqs = homeFAQs }: FAQSectionProps) => {
   return (
     <section className="relative isolate flex w-full flex-col items-center gap-10 overflow-hidden px-4 py-12 text-center sm:px-8 sm:py-16 lg:px-12">
       <div className="flex flex-col items-center gap-3">
-        <h1 className="text-center text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl">
+        <h2 className="text-center text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl md:text-4xl">
           Got a Question?{" "}
           <span className="text-primary-500">We Have an Answer</span>
-        </h1>
+        </h2>
         <p className="text-sm text-neutral-600 sm:text-base">
           Need clarity? We have clear, practical answers to help you move
           forward with confidence.
