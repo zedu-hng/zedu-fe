@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarImage } from "~/components/ui/avatar";
 import { EllipsisVertical, Hash, Lock, Pin } from "lucide-react";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import { ACTIONS } from "~/store/Actions";
 import { Button } from "~/components/ui/button";
@@ -12,9 +12,10 @@ import ChannelDetailsDialog from "../channel-details-dialog";
 import { DataContext } from "~/store/GlobalState";
 import MenuDropdown from "./menu-dropdown";
 import PinnedMessagesModal from "../pinned-messages/pinned-messages-modal";
+import { normalizePins } from "../pinned-messages/resolve-pinned-messages";
 import Tooltips from "../tooltip";
 import { cn } from "~/lib/utils";
-import { PostRequest } from "~/utils/new-request";
+import { GetRequest, PostRequest } from "~/utils/new-request";
 import { showError } from "~/components/toast/sonner";
 import { useParams } from "next/navigation";
 import {
@@ -39,6 +40,48 @@ const ChannelHeader = () => {
     ? channelDetails?.name || state?.channelName
     : state?.channelName;
   const showPrivateIcon = detailsMatch && channelDetails?.is_private;
+
+  const [pinCount, setPinCount] = useState(0);
+  const pinFetchId = useRef(0);
+
+  // Changes whenever a loaded message or reply is pinned or unpinned
+  const pinFlags = [
+    ...(Array.isArray(state?.messages) ? state.messages : []),
+    ...(Array.isArray(state?.replies) ? state.replies : []),
+  ]
+    .filter((m: any) => m?.is_pin)
+    .map((m: any) => String(m?.id || m?.thread_id))
+    .join(",");
+
+  // Reset when switching channels, so the old channel's number never shows
+  useEffect(() => {
+    setPinCount(0);
+  }, [id]);
+
+  // Fetch the count, and refetch when a pin is added or removed
+  useEffect(() => {
+    if (!id) return;
+    const requestId = ++pinFetchId.current;
+
+    (async () => {
+      const res = await GetRequest(`/channels/pin/${id}`);
+      // A newer fetch or a modal update has happened since: ignore this result
+      if (requestId !== pinFetchId.current) return;
+      if (res?.status === 200 || res?.status === 201) {
+        setPinCount(normalizePins(res?.data?.data).length);
+      }
+    })();
+
+    return () => {
+      pinFetchId.current += 1;
+    };
+  }, [id, pinFlags]);
+
+  // Called by the pinned messages modal when it knows the latest count
+  const handleModalCountChange = (count: number) => {
+    pinFetchId.current += 1; // cancels any fetch still in flight
+    setPinCount(count);
+  };
 
   const [startLoading, setStartLoading] = useState(false);
   const [joinLoading, setJoinLoading] = useState(false);
@@ -238,6 +281,7 @@ const ChannelHeader = () => {
         {headerTabs.map((tab) => {
           const active = headerTab === tab.id;
           const Icon = tab.icon;
+          const count = tab.id === "pins" ? pinCount : 0;
           return (
             <button
               key={tab.id}
@@ -255,6 +299,19 @@ const ChannelHeader = () => {
             >
               {Icon ? <Icon className="size-3.5" /> : null}
               {tab.label}
+              {count > 0 ? (
+                <span
+                  aria-label={`${count} pinned messages`}
+                  className={cn(
+                    "inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                    active
+                      ? "bg-[#5757CD] text-white"
+                      : "bg-[#EEF0FF] text-[#5757CD]"
+                  )}
+                >
+                  {count > 99 ? "99+" : count}
+                </span>
+              ) : null}
             </button>
           );
         })}
@@ -268,6 +325,7 @@ const ChannelHeader = () => {
         }}
         channelId={id}
         scope="channel"
+        onCountChange={handleModalCountChange}
       />
 
       <StartBuzzConfirmModal
