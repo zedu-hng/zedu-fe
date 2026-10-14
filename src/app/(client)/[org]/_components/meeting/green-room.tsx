@@ -7,11 +7,19 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { Mic, MicOff, Video, VideoOff, Sparkles, Loader } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Sparkles,
+  Loader,
+  PhoneOff,
+} from "lucide-react";
 import { cn } from "~/lib/utils";
 import { DataContext } from "~/store/GlobalState";
 import { BuzzRequest, GetRequest } from "~/utils/new-request";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ACTIONS } from "~/store/Actions";
 import ParticipantStack from "./participant-stack";
 import BuzzTimeout from "./buzz-timeout";
@@ -24,7 +32,8 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
   const { state, dispatch } = useContext(DataContext);
   const { user, buzzParticipants, buzzData } = state;
   const videoRef = useRef<HTMLDivElement>(null);
-  const { id } = useParams() as { id: string };
+  const { id, org } = useParams() as { id: string; org: string };
+  const router = useRouter();
 
   // Local state for the preview
   const [previewTrack, setPreviewTrack] = useState<any>(null);
@@ -32,10 +41,12 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
   const [isCamOn, setIsCamOn] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [hasEnded, setHasEnded] = useState(false);
 
   useEffect(() => {
     const initiallizeCallState = async () => {
       setLoadError(null);
+      setHasEnded(false);
       setIsInitializing(true);
 
       try {
@@ -44,6 +55,13 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
 
         if (status === 200 || status === 201) {
           const data = res.data.data;
+
+          // An ended meeting can no longer be joined, so don't offer the lobby
+          if (data?.status === "ended" || data?.ended_at) {
+            setHasEnded(true);
+            return;
+          }
+
           const participants = data.participants || [];
 
           // Check if I am already considered "in" the call
@@ -130,6 +148,30 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
   const handleJoin = async () => {
     onJoin({ mic: isMicOn, video: isCamOn });
   };
+
+  if (hasEnded) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#202124] flex items-center justify-center p-4 sm:p-8">
+        <div className="flex flex-col items-center text-center space-y-6 max-w-sm w-full">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10">
+            <PhoneOff size={28} className="text-red-500" />
+          </div>
+          <h1 className="text-3xl font-normal text-[#202124] dark:text-zinc-100">
+            This meeting has ended
+          </h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            It can no longer be joined.
+          </p>
+          <button
+            onClick={() => router.push(`/${org}`)}
+            className="w-full max-w-[280px] bg-[#1A73E8] hover:bg-[#1B66C9] text-white font-medium py-3 rounded-full shadow-sm transition-all text-sm tracking-wide"
+          >
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-8">
