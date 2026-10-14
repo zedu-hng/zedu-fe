@@ -15,6 +15,10 @@ describe("channel search scope (neo-272)", () => {
   });
 
   beforeEach(() => {
+    cy.on("uncaught:exception", (error) => {
+      if (error.message.includes("You need to provide your OneSignal appId."))
+        return false;
+    });
     cy.intercept("https://cdn.onesignal.com/**", {
       headers: { "content-type": "application/javascript" },
       body: "",
@@ -55,6 +59,7 @@ describe("channel search scope (neo-272)", () => {
         }).forEach(([key, value]) => win.localStorage.setItem(key, value));
       },
     });
+    cy.contains("Welcome to #zedu-egret").should("be.visible");
     cy.get('input[placeholder="Search in #zedu-egret"]').should("be.visible");
   });
 
@@ -68,9 +73,13 @@ describe("channel search scope (neo-272)", () => {
 
   ["Enter", "View all results"].forEach((action) => {
     it(`preserves the channel via ${action}, refresh, and filter changes`, () => {
-      cy.get('input[placeholder="Search in #zedu-egret"]')
-        .type("ticket")
-        .should("have.value", "ticket");
+      // The channel composer can autofocus while its data finishes loading.
+      for (const letter of "ticket")
+        cy.get('input[placeholder="Search in #zedu-egret"]').type(letter);
+      cy.get('input[placeholder="Search in #zedu-egret"]').should(
+        "have.value",
+        "ticket"
+      );
       cy.wait("@search");
       if (action === "Enter") {
         cy.get('input[placeholder="Search in #zedu-egret"]').type("{enter}");
@@ -86,12 +95,29 @@ describe("channel search scope (neo-272)", () => {
         .its("request.query.query")
         .should("eq", "ticket in:zedu-egret");
       expectScope();
+      cy.contains("button", "Sort:").click();
+      cy.contains("button", /^Newest$/).click();
+      cy.wait("@search");
       cy.contains("button", "In: #zedu-egret").find("svg.lucide-x").click();
       cy.wait("@search").its("request.query.query").should("eq", "ticket");
+      cy.contains("button", "Sort: Newest").should("be.visible");
       cy.contains("button", /^In$/).should("be.visible");
       cy.contains("general").should("be.visible");
-      cy.get('input[placeholder^="Search"]').first().type("ticket{enter}");
       cy.location("search").should("eq", "?query=ticket");
+      cy.reload();
+      cy.wait("@search").its("request.query.query").should("eq", "ticket");
+      cy.contains("button", /^In$/).click();
+      cy.get('[role="dialog"]').contains("button", "zedu-egret").click();
+      cy.wait("@search")
+        .its("request.query.query")
+        .should("eq", "ticket in:zedu-egret");
+      expectScope();
+      cy.reload();
+      cy.wait("@search")
+        .its("request.query.query")
+        .should("eq", "ticket in:zedu-egret");
+      expectScope();
+      cy.contains("button", "In: #zedu-egret").find("svg.lucide-x").click();
       cy.wait("@search").its("request.query.query").should("eq", "ticket");
     });
   });
