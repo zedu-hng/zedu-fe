@@ -34,7 +34,7 @@ const ThreadsSidebar = ({ handleSendMessage, fetchMoreData, hasMore }: any) => {
     <div className="relative h-[calc(100vh-80px)] w-full overflow-y-auto">
       <ReplyConnection />
 
-      <div className="relative flex min-h-[56px] shrink-0 items-center justify-between border-b px-4 font-bold text-base sm:min-h-[70px] sm:px-5 lg:text-lg">
+      <div className="sticky top-0 z-20 flex min-h-[56px] shrink-0 items-center justify-between border-b bg-white px-4 font-bold text-base sm:min-h-[70px] sm:px-5 lg:text-lg">
         Thread
         <button
           type="button"
