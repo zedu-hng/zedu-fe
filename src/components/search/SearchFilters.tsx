@@ -8,7 +8,8 @@ import {
 } from "~/components/ui/popover";
 
 interface SearchFiltersProps {
-  // eslint-disable-next-line no-unused-vars
+  channel?: string;
+
   onFilterChange: (filters: {
     type?: "messages" | "people";
     from?: string;
@@ -48,6 +49,7 @@ type UserOption = {
 
 export const SearchFilters = ({
   onFilterChange,
+  channel,
   channels = [],
   users = [],
 }: SearchFiltersProps) => {
@@ -55,9 +57,6 @@ export const SearchFilters = ({
     "messages" | "people" | null
   >("messages");
   const [selectedFrom, setSelectedFrom] = useState<UserOption | null>(null);
-  const [selectedChannel, setSelectedChannel] = useState<ChannelOption | null>(
-    null
-  );
   const [selectedDate, setSelectedDate] = useState<{
     type: string;
     value: string;
@@ -97,6 +96,14 @@ export const SearchFilters = ({
     channel.name.toLowerCase().includes(channelSearch.toLowerCase())
   );
 
+  const selectedChannel = channel
+    ? normalizedChannels.find((option) => option.name === channel) || {
+        id: channel,
+        channel_id: channel,
+        name: channel,
+      }
+    : null;
+
   const availableChannels = selectedChannel
     ? filteredChannels.filter(
         (channel) => channel.channel_id !== selectedChannel.channel_id
@@ -117,7 +124,6 @@ export const SearchFilters = ({
     setSelectedType(type);
     if (type === "people") {
       setSelectedFrom(null);
-      setSelectedChannel(null);
       setSelectedDate(null);
       onFilterChange({
         type,
@@ -149,7 +155,6 @@ export const SearchFilters = ({
   };
 
   const handleChannelSelect = (channel: ChannelOption) => {
-    setSelectedChannel(channel);
     onFilterChange({
       type: selectedType || undefined,
       from: selectedFrom?.name,
@@ -189,7 +194,6 @@ export const SearchFilters = ({
     const newDate = filterType === "date" ? null : selectedDate;
     if (filterType === "type") setSelectedType(null);
     if (filterType === "from") setSelectedFrom(null);
-    if (filterType === "channel") setSelectedChannel(null);
     if (filterType === "date") setSelectedDate(null);
     onFilterChange({
       type: newType || undefined,
