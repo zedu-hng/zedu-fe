@@ -1,5 +1,12 @@
 "use client";
-import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useContext,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   Popover,
   PopoverContent,
@@ -21,6 +28,51 @@ export interface User {
   default_avatar_url: string;
 }
 
+const UserRow = React.memo(function UserRow({
+  user,
+  index,
+  highlighted,
+  onSelect,
+  onHover,
+}: {
+  user: User;
+  index: number;
+  highlighted: boolean;
+  onSelect: (user: User) => void;
+  onHover: (index: number) => void;
+}) {
+  return (
+    <div
+      data-row-index={index}
+      onMouseDown={(e) => e.preventDefault()}
+      onMouseEnter={() => onHover(index)}
+      onClick={() => onSelect(user)}
+      className={`flex items-center gap-[10px] px-4 py-[10px] hover:bg-[#F1F1FE] cursor-pointer ${
+        highlighted ? "bg-[#F1F1FE]" : ""
+      }`}
+    >
+      <Image
+        src={user?.avatar_url || user?.default_avatar_url || images?.user}
+        alt={user?.name}
+        width={20}
+        height={20}
+        className="rounded-[5px] size-6 object-cover border"
+      />
+      <div className="flex items-center gap-[6px]">
+        <span className="text-[#101828] text-sm font-semibold">
+          {user?.name}
+        </span>
+        {user?.username && (
+          <>
+            <div className="w-1 h-1 rounded-full bg-[#E4E7EC]" />
+            <span className="text-[14px] text-[#344054]">{user?.username}</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const NewChatHeader = ({ onUsersSelected }: any) => {
   const { state } = useContext(DataContext);
   const [open, setOpen] = useState(false);
@@ -34,7 +86,7 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
   const triggerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverContentRef = useRef<HTMLDivElement>(null);
-  const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const orgId =
     state.orgId ||
@@ -60,7 +112,51 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
 
   useEffect(() => {
     highlightRef.current = highlightIndex;
-    rowRefs.current[highlightIndex]?.scrollIntoView({ block: "nearest" });
+
+    // VS Code-style "minimal reveal": scroll only the list container (never
+    // an ancestor), move just enough to bring the row into view, and animate
+    // it — each new press retargets the same short ease instead of stacking
+    // instant scrollIntoView jumps.
+    const container = listRef.current;
+    const row = container?.querySelector<HTMLElement>(
+      `[data-row-index="${highlightIndex}"]`
+    );
+    if (!container || !row) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    let delta = 0;
+    if (rowRect.top < containerRect.top) {
+      delta = rowRect.top - containerRect.top;
+    } else if (rowRect.bottom > containerRect.bottom) {
+      delta = rowRect.bottom - containerRect.bottom;
+    }
+    if (delta === 0) return;
+
+    const from = container.scrollTop;
+    const to = Math.max(
+      0,
+      Math.min(from + delta, container.scrollHeight - container.clientHeight)
+    );
+    const reduceMotion = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduceMotion || Math.abs(to - from) < 2) {
+      container.scrollTop = to;
+      return;
+    }
+
+    const duration = 120;
+    const start = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      container.scrollTop = from + (to - from) * eased;
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
   }, [highlightIndex]);
 
   useEffect(() => {
@@ -74,14 +170,19 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
     if (!open) setOpen(true);
   };
 
-  const handleSelectUser = (user: User) => {
+  const handleSelectUser = useCallback((user: User) => {
     setSelectedUsers((prev) => [...prev, user]);
     setInputValue("");
     highlightRef.current = 0;
     setHighlightIndex(0);
     setOpen(false);
     setTimeout(() => inputRef.current?.focus(), 10);
-  };
+  }, []);
+
+  const handleHoverRow = useCallback((index: number) => {
+    highlightRef.current = index;
+    setHighlightIndex(index);
+  }, []);
 
   const handleRemoveUser = (userId: string) => {
     setSelectedUsers((prev) => prev.filter((user) => user?.id !== userId));
@@ -247,51 +348,20 @@ const NewChatHeader = ({ onUsersSelected }: any) => {
             }}
           >
             <div
+              ref={listRef}
               className="py-2 w-full max-h-[400px] overflow-auto"
               onScroll={handleListScroll}
             >
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user, index) => (
-                  <div
+                  <UserRow
                     key={user?.id}
-                    ref={(el) => {
-                      rowRefs.current[index] = el;
-                    }}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onMouseEnter={() => {
-                      highlightRef.current = index;
-                      setHighlightIndex(index);
-                    }}
-                    onClick={() => handleSelectUser(user)}
-                    className={`flex items-center gap-[10px] px-4 py-[10px] hover:bg-[#F1F1FE] cursor-pointer ${
-                      index === highlightIndex ? "bg-[#F1F1FE]" : ""
-                    }`}
-                  >
-                    <Image
-                      src={
-                        user?.avatar_url ||
-                        user?.default_avatar_url ||
-                        images?.user
-                      }
-                      alt={user?.name}
-                      width={20}
-                      height={20}
-                      className="rounded-[5px] size-6 object-cover border"
-                    />
-                    <div className="flex items-center gap-[6px]">
-                      <span className="text-[#101828] text-sm font-semibold">
-                        {user?.name}
-                      </span>
-                      {user?.username && (
-                        <>
-                          <div className="w-1 h-1 rounded-full bg-[#E4E7EC]" />
-                          <span className="text-[14px] text-[#344054]">
-                            {user?.username}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                    user={user}
+                    index={index}
+                    highlighted={index === highlightIndex}
+                    onSelect={handleSelectUser}
+                    onHover={handleHoverRow}
+                  />
                 ))
               ) : (
                 <div className="px-3 py-2 text-[#667085]">
