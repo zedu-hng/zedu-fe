@@ -51,7 +51,7 @@ const ResourcesPage = () => {
         <div className="w-full max-w-6xl overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex md:justify-center md:overflow-visible">
           <div
             role="tablist"
-            className="inline-flex w-max items-center gap-2 rounded-full bg-purple-100 p-2 md:gap-3"
+            className="inline-flex w-max items-center gap-2 rounded-full bg-[#F3E7FF] p-2 md:gap-3"
           >
             {tabs.map((tab) => (
               <button
@@ -67,7 +67,7 @@ const ResourcesPage = () => {
                 className={`shrink-0 rounded-full px-5 py-2 text-sm font-medium transition-colors md:px-6 ${
                   activeTab === tab.id
                     ? "bg-white text-primary-500 shadow-sm"
-                    : "text-neutral-600 hover:text-neutral-900"
+                    : "text-neutral-600 hover:bg-white hover:text-primary-500"
                 }`}
               >
                 {tab.label}

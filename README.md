@@ -55,6 +55,8 @@ its resources. Moving into the content keeps the category selected so you can
 scroll through it without clicking. Click, touch, and keyboard activation
 remain available; touch scrolling over the category bar does not select a tab.
 The current search query is preserved and filters the selected category.
+The category bar uses a lavender (`#F3E7FF`) background, with a white pill and
+purple text for the hovered or selected category.
 Categories without matching resources continue to show the existing empty state.
 
 To verify, run `pnpm dev` and open `/resources`. Hover between Guides and Webinars,
