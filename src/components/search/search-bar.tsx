@@ -182,12 +182,14 @@ export const SearchInput = ({ name, orgId }: SearchInputProps) => {
       if (!trimmed || !orgSlug) return;
 
       saveRecentSearch(trimmed);
-      router.push(`/${orgSlug}/search?query=${encodeURIComponent(trimmed)}`);
+      const params = new URLSearchParams({ query: trimmed });
+      if (channelName) params.set("channel", channelName);
+      router.push(`/${orgSlug}/search?${params.toString()}`);
       setIsOpen(false);
       setActiveIndex(-1);
       setSearchQuery("");
     },
-    [orgSlug, router, saveRecentSearch]
+    [channelName, orgSlug, router, saveRecentSearch]
   );
 
   const openMessageResult = useCallback(
