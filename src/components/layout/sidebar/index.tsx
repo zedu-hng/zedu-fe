@@ -23,6 +23,7 @@ import {
   isNotificationsRoute,
 } from "~/lib/notifications/notification-badge";
 
+/** Shows navigation and clears the session badge when Notifications is opened. */
 const SideBar: React.FC = () => {
   const pathname = usePathname();
   const { state, dispatch } = useContext(DataContext);

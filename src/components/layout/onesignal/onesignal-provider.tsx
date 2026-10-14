@@ -107,6 +107,7 @@ const navigateToNotificationTarget = (
   router.push(nextRoute);
 };
 
+/** Handles foreground push delivery and notification navigation. */
 export default function OneSignalProvider() {
   const audioPlayer = useRef<HTMLAudioElement | null>(null);
   const router = useRouter();
@@ -119,6 +120,7 @@ export default function OneSignalProvider() {
     pathnameRef.current = pathname;
   }, [pathname]);
 
+  /** Counts eligible, unique push events unless Notifications is already open. */
   const incrementBadgeFromNotification = (notification: any) => {
     if (!dispatch || isNotificationsRoute(pathnameRef.current)) return;
 

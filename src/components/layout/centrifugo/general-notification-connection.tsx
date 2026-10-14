@@ -22,6 +22,7 @@ const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL;
 
 //
 
+/** Receives real-time events and updates the session badge outside Notifications. */
 export default function GeneralNotificationConnection() {
   const { state, dispatch } = useContext(DataContext);
   const { orgId, channelCallback } = state;
