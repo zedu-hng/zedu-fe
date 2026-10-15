@@ -19,6 +19,7 @@ import {
 } from "~/components/ui/popover";
 import { cn } from "~/lib/utils";
 import { InviteModal } from "./buzzInviteModal";
+import Tooltips from "../tooltip";
 import { showInfo, showRecordingSaved } from "~/components/toast/sonner";
 import { PostRequest } from "~/utils/new-request";
 import { DataContext } from "~/store/GlobalState";
@@ -249,15 +250,19 @@ export function BuzzMenu({
     <>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <button
-            disabled={buzzLoading}
-            className={cn(
-              "p-1.5 sm:p-2 rounded-md w-8 h-8 sm:w-9 sm:h-9 border border-[#E4E7EC] flex items-center justify-center transition-colors flex-shrink-0",
-              buzzLoading && "opacity-50 cursor-not-allowed pointer-events-none"
-            )}
-          >
-            <MoreVertical size={16} className="text-white" />
-          </button>
+          <Tooltips text="More options">
+            <button
+              aria-label="More options"
+              disabled={buzzLoading}
+              className={cn(
+                "p-1.5 sm:p-2 rounded-md w-8 h-8 sm:w-9 sm:h-9 border border-[#E4E7EC] flex items-center justify-center transition-colors flex-shrink-0",
+                buzzLoading &&
+                  "opacity-50 cursor-not-allowed pointer-events-none"
+              )}
+            >
+              <MoreVertical size={16} className="text-white" />
+            </button>
+          </Tooltips>
         </PopoverTrigger>
 
         <PopoverContent

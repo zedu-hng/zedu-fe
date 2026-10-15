@@ -26,6 +26,8 @@ import { RaiseHandAnimation } from "~/components/raise-hand/raise-hand-animation
 import HuddleEmojiReactions from "./HuddleEmojiReactions";
 import CallParticipantList from "./CallParticipantList";
 import { BuzzMenu } from "./buzz-menu";
+import Tooltips from "../tooltip";
+import { TooltipProvider } from "~/components/ui/tooltip";
 import { useParams } from "next/navigation";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
@@ -223,152 +225,200 @@ const MeetingRoom: React.FC<MeetingRoomProps> = ({
 
       {/* Bottom section */}
       <footer className="shrink-0 w-full px-4 pb-4 pt-2 flex items-center justify-center z-50 bg-[#202124] border-t border-zinc-800/80 relative">
-        {/* Center: Controls */}
-        <div className="flex items-center gap-3">
-          {/* Audio Toggle */}
-          <button
-            disabled={!joined}
-            onClick={isRecorderView ? noop : toggleAudio}
-            className={cn(
-              "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full transition-all border",
-              !isAudioPublishing
-                ? "bg-[#ea4335] border-transparent"
-                : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
-            )}
-          >
-            {!isAudioPublishing ? (
-              <MicOff size={20} className="text-white" />
-            ) : (
-              <Mic size={20} className="text-white" />
-            )}
-          </button>
-
-          {/* Video Toggle */}
-          <button
-            disabled={!joined}
-            onClick={isRecorderView ? noop : toggleVideo}
-            className={cn(
-              "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full transition-all border",
-              !isVideoPublishing
-                ? "bg-[#ea4335] border-transparent"
-                : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
-            )}
-          >
-            {!isVideoPublishing ? (
-              <VideoOff size={20} className="text-white" />
-            ) : (
-              <Video size={20} className="text-white" />
-            )}
-          </button>
-
-          {/* Screen Share */}
-          <button
-            disabled={!joined}
-            onClick={isRecorderView ? noop : toggleScreenShare}
-            className={cn(
-              "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3c4043] border border-zinc-600 hover:bg-[#434649] transition-all",
-              isScreenSharing ? "text-white" : "text-white"
-            )}
-          >
-            {isScreenSharing ? (
-              <ScreenShare size={20} />
-            ) : (
-              <MonitorOff size={20} />
-            )}
-          </button>
-
-          {/* Reactions */}
-          <div
-            className={cn(
-              "hidden sm:block",
-              isRecorderView && "pointer-events-none"
-            )}
-          >
-            <HuddleEmojiReactions
-              name={localParticipant?.username}
-              isOpen={showQuickEmojis}
-              setIsOpen={setShowQuickEmojis}
+        <TooltipProvider delayDuration={300}>
+          {/* Center: Controls */}
+          <div className="flex items-center gap-3">
+            {/* Audio Toggle */}
+            <Tooltips
+              text={
+                isAudioPublishing ? "Turn off microphone" : "Turn on microphone"
+              }
             >
-              <button className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3c4043] border border-zinc-600 hover:bg-[#434649] text-white">
-                <Smile size={20} />
+              <button
+                disabled={!joined}
+                onClick={isRecorderView ? noop : toggleAudio}
+                aria-label={
+                  isAudioPublishing
+                    ? "Turn off microphone"
+                    : "Turn on microphone"
+                }
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full transition-all border",
+                  !isAudioPublishing
+                    ? "bg-[#ea4335] border-transparent"
+                    : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
+                )}
+              >
+                {!isAudioPublishing ? (
+                  <MicOff size={20} className="text-white" />
+                ) : (
+                  <Mic size={20} className="text-white" />
+                )}
               </button>
-            </HuddleEmojiReactions>
-          </div>
+            </Tooltips>
 
-          {/* Hand Raise */}
-          <div className="relative">
-            <button
-              disabled={!joined}
-              onClick={isRecorderView ? noop : toggleHandRaise}
+            {/* Video Toggle */}
+            <Tooltips
+              text={isVideoPublishing ? "Turn off camera" : "Turn on camera"}
+            >
+              <button
+                disabled={!joined}
+                onClick={isRecorderView ? noop : toggleVideo}
+                aria-label={
+                  isVideoPublishing ? "Turn off camera" : "Turn on camera"
+                }
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full transition-all border",
+                  !isVideoPublishing
+                    ? "bg-[#ea4335] border-transparent"
+                    : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
+                )}
+              >
+                {!isVideoPublishing ? (
+                  <VideoOff size={20} className="text-white" />
+                ) : (
+                  <Video size={20} className="text-white" />
+                )}
+              </button>
+            </Tooltips>
+
+            {/* Screen Share */}
+            <Tooltips
+              text={isScreenSharing ? "Stop presenting" : "Present your screen"}
+            >
+              <button
+                disabled={!joined}
+                onClick={isRecorderView ? noop : toggleScreenShare}
+                aria-label={
+                  isScreenSharing ? "Stop presenting" : "Present your screen"
+                }
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3c4043] border border-zinc-600 hover:bg-[#434649] transition-all",
+                  isScreenSharing ? "text-white" : "text-white"
+                )}
+              >
+                {isScreenSharing ? (
+                  <ScreenShare size={20} />
+                ) : (
+                  <MonitorOff size={20} />
+                )}
+              </button>
+            </Tooltips>
+
+            {/* Reactions */}
+            <div
               className={cn(
-                "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border transition-all",
-                isHandRaised
-                  ? "bg-blue-400 text-white border-transparent"
-                  : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
+                "hidden sm:block",
+                isRecorderView && "pointer-events-none"
               )}
             >
-              <Hand size={20} />
-            </button>
-            <div className="absolute bottom-full right-0 mb-2 pointer-events-none">
-              <RaiseHandAnimation
-                trigger={isHandRaised}
-                position="bottom-right"
-                useRelativePosition={true}
-              />
+              <HuddleEmojiReactions
+                name={localParticipant?.username}
+                isOpen={showQuickEmojis}
+                setIsOpen={setShowQuickEmojis}
+              >
+                <Tooltips text="Send a reaction">
+                  <button
+                    aria-label="Send a reaction"
+                    className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#3c4043] border border-zinc-600 hover:bg-[#434649] text-white"
+                  >
+                    <Smile size={20} />
+                  </button>
+                </Tooltips>
+              </HuddleEmojiReactions>
             </div>
+
+            {/* Hand Raise */}
+            <div className="relative">
+              <Tooltips text={isHandRaised ? "Lower hand" : "Raise hand"}>
+                <button
+                  disabled={!joined}
+                  onClick={isRecorderView ? noop : toggleHandRaise}
+                  aria-label={isHandRaised ? "Lower hand" : "Raise hand"}
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border transition-all",
+                    isHandRaised
+                      ? "bg-blue-400 text-white border-transparent"
+                      : "bg-[#3c4043] border-zinc-600 hover:bg-[#434649] text-white"
+                  )}
+                >
+                  <Hand size={20} />
+                </button>
+              </Tooltips>
+              <div className="absolute bottom-full right-0 mb-2 pointer-events-none">
+                <RaiseHandAnimation
+                  trigger={isHandRaised}
+                  position="bottom-right"
+                  useRelativePosition={true}
+                />
+              </div>
+            </div>
+
+            {/* More Menu */}
+            <BuzzMenu
+              readOnlyUi={isRecorderView}
+              setShowParticipant={setShowParticipant}
+              setShowBuzzChat={setShowBuzzchat}
+            />
+
+            {/* Leave Call */}
+            <Tooltips text={"Leave call"}>
+              <button
+                disabled={!joined}
+                onClick={isRecorderView ? noop : handleLeave}
+                aria-label={"Leave call"}
+                className="flex items-center justify-center w-12 h-10 md:w-16 md:h-12 rounded-full bg-[#ea4335] hover:bg-[#d93025] transition-all"
+              >
+                <Image
+                  src="/PhoneSlash.svg"
+                  alt="leave"
+                  width={24}
+                  height={24}
+                  className="brightness-0 invert"
+                />
+              </button>
+            </Tooltips>
           </div>
 
-          {/* More Menu */}
-          <BuzzMenu
-            readOnlyUi={isRecorderView}
-            setShowParticipant={setShowParticipant}
-            setShowBuzzChat={setShowBuzzchat}
-          />
-
-          {/* Leave Call */}
-          <button
-            disabled={!joined}
-            onClick={isRecorderView ? noop : handleLeave}
-            className="flex items-center justify-center w-12 h-10 md:w-16 md:h-12 rounded-full bg-[#ea4335] hover:bg-[#d93025] transition-all"
-          >
-            <Image
-              src="/PhoneSlash.svg"
-              alt="leave"
-              width={24}
-              height={24}
-              className="brightness-0 invert"
-            />
-          </button>
-        </div>
-
-        {/* Side Actions */}
-        <div className="hidden md:flex items-center gap-1 absolute right-4">
-          <button
-            onClick={toggleChatSidebar}
-            className={cn(
-              "p-3 rounded-full transition-colors",
-              showBuzzchat
-                ? "bg-blue-600 text-white"
-                : "text-white hover:bg-zinc-800"
-            )}
-          >
-            <MessageCircleMore size={22} />
-          </button>
-          <button
-            onClick={toggleParticipantSidebar}
-            className={cn(
-              "flex items-center gap-1 p-3 rounded-full transition-colors",
-              showParticipant
-                ? "bg-blue-600 text-white"
-                : "text-white hover:bg-zinc-800"
-            )}
-          >
-            <Users size={22} />
-            <span className="text-xs font-bold">
-              {visibleParticipants.length || 0}
-            </span>
-          </button>
-        </div>
+          {/* Side Actions */}
+          <div className="hidden md:flex items-center gap-1 absolute right-4">
+            <Tooltips text={showBuzzchat ? "Hide chat" : "Show chat"}>
+              <button
+                onClick={toggleChatSidebar}
+                aria-label={showBuzzchat ? "Hide chat" : "Show chat"}
+                className={cn(
+                  "p-3 rounded-full transition-colors",
+                  showBuzzchat
+                    ? "bg-blue-600 text-white"
+                    : "text-white hover:bg-zinc-800"
+                )}
+              >
+                <MessageCircleMore size={22} />
+              </button>
+            </Tooltips>
+            <Tooltips
+              text={showParticipant ? "Hide participants" : "Show participants"}
+            >
+              <button
+                onClick={toggleParticipantSidebar}
+                aria-label={
+                  showParticipant ? "Hide participants" : "Show participants"
+                }
+                className={cn(
+                  "flex items-center gap-1 p-3 rounded-full transition-colors",
+                  showParticipant
+                    ? "bg-blue-600 text-white"
+                    : "text-white hover:bg-zinc-800"
+                )}
+              >
+                <Users size={22} />
+                <span className="text-xs font-bold">
+                  {visibleParticipants.length || 0}
+                </span>
+              </button>
+            </Tooltips>
+          </div>
+        </TooltipProvider>
       </footer>
 
       {!isRecorderView && (

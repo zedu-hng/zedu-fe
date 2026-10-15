@@ -4,29 +4,46 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import { TooltipArrow } from "@radix-ui/react-tooltip";
-import { ReactNode } from "react";
+import {
+  ComponentPropsWithoutRef,
+  ElementRef,
+  forwardRef,
+  ReactNode,
+} from "react";
 
-interface TooltipProps {
+type TooltipTriggerProps = Omit<
+  ComponentPropsWithoutRef<typeof TooltipTrigger>,
+  "children" | "asChild"
+>;
+
+interface TooltipProps extends TooltipTriggerProps {
   text: string;
   children: ReactNode;
   side?: "bottom" | "top" | "right" | "left";
 }
 
-const Tooltips = ({ text, children, side = "top" }: TooltipProps) => {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
+// Props and ref are forwarded to the trigger so this wrapper can be used as the
+// child of another `asChild` trigger (e.g. PopoverTrigger) without breaking it.
+const Tooltips = forwardRef<ElementRef<typeof TooltipTrigger>, TooltipProps>(
+  ({ text, children, side = "top", ...triggerProps }, ref) => {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild ref={ref} {...triggerProps}>
+          {children}
+        </TooltipTrigger>
 
-      <TooltipContent
-        side={side}
-        className="bg-black text-white p-2 rounded-md text-sm"
-      >
-        <TooltipArrow className="fill-black" />
+        <TooltipContent
+          side={side}
+          className="bg-black text-white p-2 rounded-md text-sm"
+        >
+          <TooltipArrow className="fill-black" />
 
-        {text}
-      </TooltipContent>
-    </Tooltip>
-  );
-};
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+);
+Tooltips.displayName = "Tooltips";
 
 export default Tooltips;
