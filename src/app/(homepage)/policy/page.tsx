@@ -38,17 +38,8 @@ const scrollToPolicySection = (
   window.scrollTo({ top, behavior });
 };
 
-// Set document title for client component
-const useDocumentTitle = (title: string) => {
-  useEffect(() => {
-    document.title = title;
-  }, [title]);
-};
 function Policy() {
   const [activeSection, setActiveSection] = useState<string>("");
-
-  // Set document title
-  useDocumentTitle("Privacy Policy - Zedu");
 
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
