@@ -285,7 +285,11 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
                   className="w-full px-3 py-2 border border-[#E6EAEF] rounded-md text-[15px] text-[#344054] focus:outline-none focus:ring-2 focus:ring-[#6868F7]"
                 />
                 {phoneError && (
-                  <p id="phone-error" role="alert" className="text-xs text-red-500">
+                  <p
+                    id="phone-error"
+                    role="alert"
+                    className="text-xs text-red-500"
+                  >
                     {phoneError}
                   </p>
                 )}

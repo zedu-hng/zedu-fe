@@ -22,13 +22,9 @@ const end = source.indexOf("const EditProfileDialog", start);
 
 assert.ok(start >= 0 && end > start, "Phone validator not found");
 
-const code = source
-  .slice(start, end)
-  .replace("(value: string)", "(value)");
+const code = source.slice(start, end).replace("(value: string)", "(value)");
 
-const isValidPhone = new Function(
-  code + "\nreturn isValidPhone;"
-)();
+const isValidPhone = new Function(code + "\nreturn isValidPhone;")();
 
 test("phone validation accepts valid and rejects invalid values", () => {
   const cases = [
@@ -61,7 +57,10 @@ test("phone validation accepts valid and rejects invalid values", () => {
 test("legacy phone safeguard is present", () => {
   assert.match(source, /const originalPhoneRef = useRef\(""\)/);
   assert.match(source, /originalPhoneRef\.current = savedPhone/);
-  assert.match(source, /const phoneChanged = phone !== originalPhoneRef\.current/);
+  assert.match(
+    source,
+    /const phoneChanged = phone !== originalPhoneRef\.current/
+  );
   assert.match(source, /if \(phoneChanged && !isValidPhone\(phone\)\)/);
   assert.match(
     source,
