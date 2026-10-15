@@ -130,10 +130,7 @@ export default function PeopleTab() {
                   <div className="p-3">
                     <div className="flex items-center gap-1 min-w-0">
                       <Tooltips text={user.name || ""}>
-                        <span
-                          className="font-bold text-[15px] truncate"
-                          title={user.name}
-                        >
+                        <span className="font-bold text-[15px] truncate">
                           {user.name}
                         </span>
                       </Tooltips>
@@ -144,20 +141,14 @@ export default function PeopleTab() {
                     </div>
                     {user.email && (
                       <Tooltips text={user.email}>
-                        <p
-                          className="text-[13px] text-gray-500 mt-0.5 line-clamp-1"
-                          title={user.email}
-                        >
+                        <p className="text-[13px] text-gray-500 mt-0.5 line-clamp-1">
                           {user.email}
                         </p>
                       </Tooltips>
                     )}
                     {user.phone_number && (
                       <Tooltips text={user.phone_number}>
-                        <p
-                          className="text-[13px] text-gray-500 mt-1 line-clamp-1"
-                          title={user.phone_number}
-                        >
+                        <p className="text-[13px] text-gray-500 mt-1 line-clamp-1">
                           {user.phone_number}
                         </p>
                       </Tooltips>
