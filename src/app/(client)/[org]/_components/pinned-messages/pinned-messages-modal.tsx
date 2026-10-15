@@ -242,8 +242,6 @@ const PinnedMessagesModal = ({
     const operationChannelId = channelId;
     setUnpinningId(pin.pinId);
 
-    setUnpinningId(pin.pinId);
-
     const target = pinKind(pin.message, pin.pinId);
     const threadUrl = `/channels/pin/${channelId}/thread/${target.id}`;
     const messageUrl = `/channels/pin/${channelId}/message/${target.id}`;
