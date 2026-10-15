@@ -11,6 +11,10 @@ import {
 import FilesTabContainer from "./files-tab-container";
 import { cn } from "~/lib/utils";
 import { DataContext } from "~/store/GlobalState";
+import { ACTIONS } from "~/store/Actions";
+import { PutRequest } from "~/utils/request";
+import { showError } from "~/components/toast/sonner";
+import { useParams } from "next/navigation";
 
 function formatTabCount(count: number) {
   if (count > 1000) {
@@ -20,9 +24,21 @@ function formatTabCount(count: number) {
 }
 
 export const ChannelDetailsContent = ({ setIsOpen }: any) => {
-  const { state } = useContext(DataContext);
+  const { state, dispatch } = useContext(DataContext);
+  const params = useParams();
   const [muted, setMuted] = useState(false);
-  const [starred, setStarred] = useState(false);
+  const [savingFavourite, setSavingFavourite] = useState(false);
+
+  const channelId = String(
+    state?.channelDetails?.id ||
+      state?.channelDetails?.channels_id ||
+      params?.id ||
+      ""
+  );
+  const channel = state?.channels?.find(
+    (item: any) => String(item?.channels_id) === channelId
+  );
+  const starred = Boolean(channel?.is_favourite);
   const [activeTab, setActiveTab] = useState(state?.activeTab);
 
   const TABS_LIST = useMemo(() => {
@@ -53,10 +69,32 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
   };
 
   const handleStarred = async () => {
-    setStarred(!starred);
-    // const res = await PostRequest("/");
-    // if (res.status === 200 || res.status === 201) {
-    // }
+    if (!channel || savingFavourite) return;
+
+    const nextValue = !starred;
+    setSavingFavourite(true);
+    dispatch({
+      type: ACTIONS.UPDATE_CHANNEL_FAVOURITE,
+      payload: { channels_id: channelId, is_favourite: nextValue },
+    });
+
+    const res = await PutRequest(`/channels/${channelId}/favourite`, {
+      is_favourite: nextValue,
+    });
+
+    if (res?.status !== 200) {
+      dispatch({
+        type: ACTIONS.UPDATE_CHANNEL_FAVOURITE,
+        payload: { channels_id: channelId, is_favourite: !nextValue },
+      });
+      if (!res?.response) {
+        showError(
+          "Could not update favourites. Check your connection and try again."
+        );
+      }
+    }
+
+    setSavingFavourite(false);
   };
 
   return (
@@ -71,6 +109,11 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
             variant={"outline"}
             className={`h-fit p-[0.435rem] font-semibold text-[0.8125rem] text-[#344054] gap-1 ${starred ? "border-primary-500" : ""}`}
             onClick={handleStarred}
+            disabled={!channel || savingFavourite}
+            aria-pressed={starred}
+            aria-label={
+              starred ? "Remove from favourites" : "Add to favourites"
+            }
           >
             <StarIcon color={starred ? "rgb(113, 65, 248)" : ""} />
           </Button>
