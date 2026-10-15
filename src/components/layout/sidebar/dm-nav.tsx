@@ -37,6 +37,7 @@ const dedupeDmList = (dms: any[] | undefined) => {
   return list;
 };
 
+/** Returns the DM list with favourited entries first, stable order within each group. */
 const sortFavouritesFirst = (dms: any[]) => {
   const favourites: any[] = [];
   const rest: any[] = [];
