@@ -78,7 +78,9 @@ const ChannelHeader = () => {
   }, [id, pinFlags]);
 
   // Called by the pinned messages modal when it knows the latest count
-  const handleModalCountChange = (count: number) => {
+  const handleModalCountChange = (channelId: string, count: number) => {
+    // ignore updates that belong to a previously opened channel
+    if (String(channelId) !== String(id)) return;
     pinFetchId.current += 1; // cancels any fetch still in flight
     setPinCount(count);
   };

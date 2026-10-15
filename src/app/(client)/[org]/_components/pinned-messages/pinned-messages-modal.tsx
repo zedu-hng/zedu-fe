@@ -33,7 +33,7 @@ type PinnedMessagesModalProps = {
   onOpenChange: (open: boolean) => void;
   channelId: string;
   scope: PinScope;
-  onCountChange?: (count: number) => void;
+  onCountChange?: (channelId: string, count: number) => void;
 };
 
 const formatStamp = (value?: string) => {
@@ -163,7 +163,7 @@ const PinnedMessagesModal = ({
       if (cancelled) return;
 
       setPins(resolved);
-      onCountChangeRef.current?.(resolved.length);
+      onCountChangeRef.current?.(channelId, resolved.length);
       setLoading(false);
     };
 
@@ -239,6 +239,9 @@ const PinnedMessagesModal = ({
   const unpin = async (pin: ResolvedPin) => {
     if (!channelId || unpinningId) return;
 
+    const operationChannelId = channelId;
+    setUnpinningId(pin.pinId);
+
     setUnpinningId(pin.pinId);
 
     const target = pinKind(pin.message, pin.pinId);
@@ -286,7 +289,10 @@ const PinnedMessagesModal = ({
     }
 
     setPins((current) => current.filter((item) => item.pinId !== pin.pinId));
-    onCountChange?.(Math.max(0, pins.length - 1));
+    onCountChangeRef.current?.(
+      operationChannelId,
+      Math.max(0, pins.length - 1)
+    );
     setUnpinningId(null);
   };
 
