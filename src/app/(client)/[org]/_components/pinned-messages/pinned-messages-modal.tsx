@@ -116,6 +116,8 @@ const PinnedMessagesModal = ({
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [unpinningId, setUnpinningId] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
+  const loadGenerationRef = useRef(0);
   const knownMessagesRef = useRef<any[]>([]);
   const onCountChangeRef = useRef(onCountChange);
   onCountChangeRef.current = onCountChange;
@@ -137,6 +139,8 @@ const PinnedMessagesModal = ({
     if (!open || !channelId) return;
 
     let cancelled = false;
+    // Increment and capture current load generation
+    const loadGeneration = ++loadGenerationRef.current;
 
     const load = async () => {
       setPins([]);
@@ -145,7 +149,7 @@ const PinnedMessagesModal = ({
 
       const res = await GetRequest(`/channels/pin/${channelId}`);
 
-      if (cancelled) return;
+      if (cancelled || loadGeneration !== loadGenerationRef.current) return;
 
       if (!(res?.status === 200 || res?.status === 201)) {
         setFailed(true);
@@ -172,7 +176,7 @@ const PinnedMessagesModal = ({
     return () => {
       cancelled = true;
     };
-  }, [open, channelId, scope]);
+  }, [open, channelId, scope, refreshToken]);
 
   const openThread = (message: Record<string, any>) => {
     dispatch({ type: ACTIONS.THREAD, payload: message });
@@ -285,12 +289,13 @@ const PinnedMessagesModal = ({
         },
       });
     }
-
+    loadGenerationRef.current += 1;
     setPins((current) => current.filter((item) => item.pinId !== pin.pinId));
     onCountChangeRef.current?.(
       operationChannelId,
       Math.max(0, pins.length - 1)
     );
+    setRefreshToken((current) => current + 1);
     setUnpinningId(null);
   };
 
