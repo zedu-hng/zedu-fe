@@ -14,7 +14,7 @@ const Page = () => {
   const { orgId } = state;
   const [participant, setParticipant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isFavourite, setIsFavourite] = useState(false);
+  const [isFavourite, setIsFavourite] = useState<boolean>();
   const params = useParams();
   const id = params.id as string;
 

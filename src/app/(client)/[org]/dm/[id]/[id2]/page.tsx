@@ -31,7 +31,7 @@ const DmPage = () => {
   const { state, dispatch } = useContext(DataContext);
   const { orgId, reply, participant: previewParticipant, user } = state;
   const [participant, setParticipant] = useState<any>(null);
-  const [isFavourite, setIsFavourite] = useState(false);
+  const [isFavourite, setIsFavourite] = useState<boolean>();
   const params = useParams();
   const id = params.id as string;
   const id2 = params.id2 as string;

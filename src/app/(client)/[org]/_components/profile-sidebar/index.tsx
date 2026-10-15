@@ -23,13 +23,13 @@ const ProfileSidebar = ({
   isFavourite?: boolean;
 }) => {
   const { state, dispatch } = useContext(DataContext);
-  const [localIsFavourite, setLocalIsFavourite] = useState(
-    Boolean(initialIsFavourite)
+  const [localIsFavourite, setLocalIsFavourite] = useState<boolean | null>(
+    initialIsFavourite ?? null
   );
   const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
-    setLocalIsFavourite(Boolean(initialIsFavourite));
+    setLocalIsFavourite(initialIsFavourite ?? null);
   }, [initialIsFavourite]);
 
   const orgId = state?.orgId || "";
@@ -38,12 +38,13 @@ const ProfileSidebar = ({
     (dm: any) =>
       String(dm.channel_id || dm.channels_id) === String(channelId || "")
   );
+  const isFavouriteKnown = Boolean(dmInStore) || localIsFavourite !== null;
   const isFavourite = dmInStore
     ? Boolean(dmInStore.is_favourite)
-    : localIsFavourite;
+    : (localIsFavourite ?? false);
 
   const handleToggleFavourite = async () => {
-    if (!channelId || !orgId || isToggling) return;
+    if (!channelId || !orgId || isToggling || !isFavouriteKnown) return;
 
     const next = !isFavourite;
     setIsToggling(true);
@@ -55,6 +56,7 @@ const ProfileSidebar = ({
 
     if (res?.status === 200 || res?.status === 201) {
       const serverState = Boolean(res?.data?.data?.is_favourite);
+      setLocalIsFavourite(serverState);
       dispatch({
         type: ACTIONS.UPDATE_DM_FAVOURITE,
         payload: { channelId, isFavourite: serverState },
@@ -150,7 +152,7 @@ const ProfileSidebar = ({
                   isFavourite && "border-[#F59E0B] bg-[#FFFBEB]"
                 )}
                 onClick={handleToggleFavourite}
-                disabled={isToggling}
+                disabled={isToggling || !isFavouriteKnown}
                 aria-pressed={isFavourite}
                 aria-label={
                   isFavourite ? "Remove from favourites" : "Add to favourites"

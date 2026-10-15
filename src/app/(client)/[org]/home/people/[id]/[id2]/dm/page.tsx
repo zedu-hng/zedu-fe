@@ -36,7 +36,7 @@ const DmPage = () => {
   const [participant, setParticipant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
-  const [isFavourite, setIsFavourite] = useState(false);
+  const [isFavourite, setIsFavourite] = useState<boolean>();
   const isSmUp = useIsSmUp();
   const params = useParams();
   const id = params.id as string;
