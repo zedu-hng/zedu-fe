@@ -49,7 +49,7 @@ const ChannelHeader = () => {
     ...(Array.isArray(state?.messages) ? state.messages : []),
     ...(Array.isArray(state?.replies) ? state.replies : []),
   ]
-    .filter((m: any) => m?.is_pin)
+    .filter((m: any) => m?.is_pinned)
     .map((m: any) => String(m?.id || m?.thread_id))
     .join(",");
 
