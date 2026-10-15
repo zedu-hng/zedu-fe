@@ -117,6 +117,8 @@ const PinnedMessagesModal = ({
   const [failed, setFailed] = useState(false);
   const [unpinningId, setUnpinningId] = useState<string | null>(null);
   const knownMessagesRef = useRef<any[]>([]);
+  const onCountChangeRef = useRef(onCountChange);
+  onCountChangeRef.current = onCountChange;
   const primaryMessages = scope === "chat" ? state?.chats : state?.messages;
   const secondaryMessages = scope === "chat" ? state?.messages : state?.chats;
 
@@ -161,7 +163,7 @@ const PinnedMessagesModal = ({
       if (cancelled) return;
 
       setPins(resolved);
-      onCountChange?.(resolved.length);
+      onCountChangeRef.current?.(resolved.length);
       setLoading(false);
     };
 
