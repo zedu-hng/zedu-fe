@@ -323,7 +323,7 @@ const ClientLayout = ({
             <SideBar />
             <div
               className={`w-full relative ${
-                state.showUserProfile ? "xl:mr-[408px]" : ""
+                state.showUserProfile ? "sm:mr-[408px]" : ""
               }`}
             >
               {children}
