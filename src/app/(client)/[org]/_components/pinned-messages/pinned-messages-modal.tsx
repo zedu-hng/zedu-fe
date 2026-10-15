@@ -164,7 +164,7 @@ const PinnedMessagesModal = ({
         channelId,
       });
 
-      if (cancelled) return;
+      if (cancelled || loadGeneration !== loadGenerationRef.current) return;
 
       setPins(resolved);
       onCountChangeRef.current?.(channelId, resolved.length);
