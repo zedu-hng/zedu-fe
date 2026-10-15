@@ -5,7 +5,7 @@ import { BellSimpleSlashIcon, ClockIcon, CopyIcon, MailIcon } from "~/svgs";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
 import { PostRequest } from "~/utils/new-request";
-import { showError, showSuccess } from "~/components/toast/sonner";
+import { showSuccess } from "~/components/toast/sonner";
 import { cn } from "~/lib/utils";
 
 import { CopyToClipboardWithTooltip } from "../copy-to-clipboard";
@@ -68,7 +68,6 @@ const ProfileSidebar = ({
       );
     } else {
       setLocalIsFavourite(!next);
-      showError("Could not update favourite status. Please try again.");
     }
 
     setIsToggling(false);
