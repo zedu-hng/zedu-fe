@@ -80,8 +80,8 @@ export const FeatureSection = () => {
           </div>
         </div>
       </section>
-      <section className="relative isolate flex w-full flex-col items-center gap-5 overflow-hidden px-4 py-10 sm:gap-6 sm:px-12 sm:py-14 ll lg:gap-8 lg:px-20 bg-blue-50/30">
-        <div className="w-full max-w-7xl space-y-16 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+      <section className="relative isolate flex w-full flex-col items-center gap-5 overflow-hidden px-4 pt-4 pb-10 sm:gap-6 sm:px-12 sm:pt-6 sm:pb-14 lg:gap-8 lg:px-20 bg-blue-50/30">
+        <div className="w-full max-w-7xl space-y-16 px-4 pt-0 pb-6 sm:px-8 sm:pt-2 sm:pb-8 lg:px-10 lg:pt-2 lg:pb-10">
           <div className="flex w-full flex-col gap-8 md:flex-row md:items-center md:justify-between">
             <div className="flex w-full max-w-2xl flex-col gap-3 text-left md:w-7/12">
               <h2 className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl lg:text-4xl">
