@@ -321,7 +321,11 @@ const ClientLayout = ({
           <Topbar />
           <div className="w-full flex relative">
             <SideBar />
-            <div className={`w-full relative`}>
+            <div
+              className={`w-full relative ${
+                state.showUserProfile ? "xl:mr-[408px]" : ""
+              }`}
+            >
               {children}
               <UserSidebar />
             </div>
