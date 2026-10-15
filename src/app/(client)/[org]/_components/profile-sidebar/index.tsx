@@ -39,9 +39,10 @@ const ProfileSidebar = ({
       String(dm.channel_id || dm.channels_id) === String(channelId || "")
   );
   const isFavouriteKnown = Boolean(dmInStore) || localIsFavourite !== null;
-  const isFavourite = dmInStore
-    ? Boolean(dmInStore.is_favourite)
-    : (localIsFavourite ?? false);
+  const isFavourite =
+    !isToggling && dmInStore
+      ? Boolean(dmInStore.is_favourite)
+      : (localIsFavourite ?? false);
 
   const handleToggleFavourite = async () => {
     if (!channelId || !orgId || isToggling || !isFavouriteKnown) return;
