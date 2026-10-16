@@ -22,8 +22,17 @@ interface TooltipProps extends TooltipTriggerProps {
   side?: "bottom" | "top" | "right" | "left";
 }
 
-// Props and ref are forwarded to the trigger so this wrapper can be used as the
-// child of another `asChild` trigger (e.g. PopoverTrigger) without breaking it.
+/**
+ * Wraps a single child element with a hover tooltip.
+ *
+ * The ref and any extra trigger props are forwarded to the underlying
+ * `TooltipTrigger`, so this component can be nested inside another `asChild`
+ * trigger (for example `PopoverTrigger`) without breaking it.
+ *
+ * @param text - Text shown inside the tooltip.
+ * @param children - The element that shows the tooltip on hover or focus.
+ * @param side - Side of the trigger where the tooltip appears. Defaults to "top".
+ */
 const Tooltips = forwardRef<ElementRef<typeof TooltipTrigger>, TooltipProps>(
   ({ text, children, side = "top", ...triggerProps }, ref) => {
     return (
