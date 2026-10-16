@@ -74,30 +74,35 @@ const groupedPresets = presets.reduce(
 const StatusModal = () => {
   const { state, dispatch } = useContext(DataContext);
   const { user, statusCallback, status } = state;
-  const [statusText, setStatusText] = useState(user?.text);
-  const [emoji, setEmoji] = useState(user?.icon);
+  const [statusText, setStatusText] = useState("");
+  const [emoji, setEmoji] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [removeAfter, setRemoveAfter] = useState(user?.status_timeout);
+  const [removeAfter, setRemoveAfter] = useState("Today");
   const [pauseNotifications, setPauseNotifications] = useState<boolean>(
     user?.pause_notification
   );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setStatusText(user?.text);
-    setEmoji(user?.icon);
-    setRemoveAfter(user?.status_timeout);
-    setPauseNotifications(user?.pause_notification);
+    if (status) {
+      setStatusText("");
+      setEmoji("");
+      setRemoveAfter("Today");
+      setShowEmojiPicker(false);
+      setPauseNotifications(user?.pause_notification);
+    }
 
     if (statusCallback) {
       setStatusText("");
       setEmoji("");
     }
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       dispatch({ type: ACTIONS.STATUS_CALLBACK, payload: false });
     }, 2000);
-  }, [user?.text, user?.icon, statusCallback]);
+
+    return () => clearTimeout(timer);
+  }, [status, statusCallback, user?.pause_notification, dispatch]);
 
   const removeOptions = [
     "30 minutes",
