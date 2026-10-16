@@ -80,6 +80,7 @@ const SearchPaginationLink = ({
   />
 );
 
+/** Reads the query and channel scope from the URL, resetting results for new queries. */
 export default function Search() {
   const searchParams = useSearchParams();
   const baseQuery = searchParams.get("query");
@@ -94,6 +95,7 @@ export default function Search() {
   );
 }
 
+/** Fetches and displays search results while synchronizing channel filters with the URL. */
 function SearchResults({
   baseQuery,
   initialChannel,
