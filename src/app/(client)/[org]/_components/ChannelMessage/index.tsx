@@ -62,7 +62,7 @@ const ChannelsMessage = () => {
     }
     await GetRequest(`/threads/channels/${id}?page=1&limit=1`);
     clearChannelUnread();
-  }, [id, clearChannelUnread]);
+  }, [id, clearChannelUnread, state?.threadCount]);
 
   // Reset unread capture when channel changes
   useEffect(() => {
