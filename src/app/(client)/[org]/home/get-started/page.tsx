@@ -1,18 +1,35 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import Image from "next/image";
 import { DataContext } from "~/store/GlobalState";
 import images from "~/assets/images";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { GetRequest } from "~/utils/new-request";
+import { GetRequest, PostRequest } from "~/utils/new-request";
+import { Button } from "~/components/ui/button";
+import { isUserDeactivated } from "~/utils/user-deactivation";
+
+type SuggestedTeammate = {
+  id?: string;
+  user_id?: string;
+  name: string;
+  avatar_url?: string;
+  default_avatar_url?: string;
+  is_online?: boolean;
+  is_deactivated?: boolean | string;
+};
 
 const GetStarted = () => {
   const { state } = useContext(DataContext);
   const { user, orgData, orgSlug } = state;
   const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [openingTeammateId, setOpeningTeammateId] = useState<string | null>(
+    null
+  );
+  const [conversationError, setConversationError] = useState("");
+  const openingConversation = useRef(false);
 
   useEffect(() => {
     const orgId = localStorage.getItem("orgId") || "";
@@ -26,6 +43,61 @@ const GetStarted = () => {
   }, []);
 
   const teammates = (data?.org_users_profile ?? []).slice(0, 14);
+
+  const canMessage = (teammate: SuggestedTeammate) => {
+    const participantId = teammate.user_id ?? teammate.id;
+    return (
+      Boolean(participantId) &&
+      participantId !== (user?.user_id ?? user?.id) &&
+      !isUserDeactivated(teammate)
+    );
+  };
+
+  const openConversation = async (teammate: SuggestedTeammate) => {
+    const participantId = teammate.user_id ?? teammate.id;
+    if (
+      !participantId ||
+      !canMessage(teammate) ||
+      openingConversation.current
+    ) {
+      return;
+    }
+
+    openingConversation.current = true;
+    setOpeningTeammateId(participantId);
+    setConversationError("");
+
+    try {
+      const orgId = localStorage.getItem("orgId") || "";
+      if (!orgId || !orgSlug) throw new Error("Missing organisation");
+
+      const res = await PostRequest(`/organisations/${orgId}/dms`, {
+        chat_type: "user",
+        participant_id: participantId,
+      });
+      const conversation = res?.data?.data;
+
+      if (
+        (res?.status !== 200 && res?.status !== 201) ||
+        !conversation?.channel_id ||
+        !conversation?.participant_id
+      ) {
+        throw new Error("Could not open conversation");
+      }
+
+      localStorage.setItem("channelName", teammate.name);
+      router.push(
+        `/${orgSlug}/home/people/${conversation.channel_id}/${conversation.participant_id}/dm`
+      );
+    } catch {
+      setConversationError(
+        "Couldn't open the conversation. Please select the teammate again to retry."
+      );
+    } finally {
+      openingConversation.current = false;
+      setOpeningTeammateId(null);
+    }
+  };
 
   return (
     <div className="bg-[#f6f7f9] h-screen overflow-y-auto px-4 sm:px-6 lg:px-10 py-10 relative w-full scrollbar-hide scroll-smooth m-auto">
@@ -50,13 +122,27 @@ const GetStarted = () => {
         )}
 
         <div className="py-2 max-w-6xl">
+          {conversationError && (
+            <p role="alert" className="mb-3 text-sm text-red-600">
+              {conversationError}
+            </p>
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {teammates.map((teamMate: any, index: number) => (
-              <div
+            {teammates.map((teamMate: SuggestedTeammate, index: number) => (
+              <Button
                 key={teamMate.id ?? index}
-                className="bg-white border rounded-md shadow cursor-pointer overflow-hidden"
+                type="button"
+                variant="ghost"
+                className="block h-auto p-0 text-left font-normal whitespace-normal bg-white hover:bg-white border rounded-md shadow cursor-pointer overflow-hidden focus-visible:ring-purple-800"
+                onClick={() => openConversation(teamMate)}
+                disabled={!canMessage(teamMate) || openingTeammateId !== null}
+                aria-label={`Message ${teamMate.name}`}
+                aria-busy={
+                  openingTeammateId !== null &&
+                  openingTeammateId === (teamMate.user_id ?? teamMate.id)
+                }
               >
-                <div className="overflow-hidden rounded-t-md">
+                <span className="block overflow-hidden rounded-t-md">
                   <Image
                     src={
                       teamMate.avatar_url ||
@@ -69,21 +155,21 @@ const GetStarted = () => {
                     width={100}
                     unoptimized
                   />
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold truncate">
+                </span>
+                <span className="block p-3">
+                  <span className="flex items-center gap-2">
+                    <span className="text-sm font-semibold truncate">
                       {teamMate.name.slice(0, 15)}
-                    </p>
-                    <div
+                    </span>
+                    <span
                       className={`shrink-0 border rounded-full h-2.5 w-2.5 border-gray-600 ${teamMate.is_online && "bg-green-600"}`}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-500">
+                    ></span>
+                  </span>
+                  <span className="block text-xs text-gray-500">
                     {teamMate.is_online ? "Active" : "Away"}
-                  </p>
-                </div>
-              </div>
+                  </span>
+                </span>
+              </Button>
             ))}
           </div>
         </div>
