@@ -9,9 +9,6 @@ import { appStoreUrl, playStoreUrl } from "~/lib/env-urls";
 
 const APP_STORE_URL = appStoreUrl();
 const PLAY_STORE_URL = playStoreUrl();
-const TARGET_PLAY_STORE_URL =
-  PLAY_STORE_URL ||
-  "https://play.google.com/store/apps/details?id=net.emerj.zedu&pcampaignid=web_share";
 
 export const metadata: Metadata = {
   title: "Download Zedu App | Mobile and Desktop Learning Workspace",
@@ -109,7 +106,7 @@ const DownLoadPage = () => {
             text="GET IT ON"
             description="Google Play"
             leftIcon="google"
-            href={TARGET_PLAY_STORE_URL}
+            href={PLAY_STORE_URL}
           />
         </div>
 
@@ -184,7 +181,7 @@ const DownLoadPage = () => {
                 text="GET IT ON"
                 description="Google Play"
                 leftIcon="google"
-                href={TARGET_PLAY_STORE_URL}
+                href={PLAY_STORE_URL}
                 dark
                 iconColor="#FFFFFF"
                 className="!px-4 !py-2 sm:!px-5"
@@ -192,7 +189,7 @@ const DownLoadPage = () => {
             </div>
 
             <div className="flex w-full max-w-md items-center gap-4 rounded-2xl border border-neutral-200 px-4 py-3">
-              <QRCodeDisplay url={TARGET_PLAY_STORE_URL} size={80} />
+              <QRCodeDisplay url={PLAY_STORE_URL} size={80} />
 
               <div>
                 <p className="text-sm font-semibold text-neutral-900">
