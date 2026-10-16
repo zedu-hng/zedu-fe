@@ -1,6 +1,12 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { ArrowUpRight, Pin, PinOff, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import Loading from "~/components/ui/loading";
@@ -120,7 +126,17 @@ const PinnedMessagesModal = ({
   const loadGenerationRef = useRef(0);
   const knownMessagesRef = useRef<any[]>([]);
   const onCountChangeRef = useRef(onCountChange);
-  onCountChangeRef.current = onCountChange;
+  const conversationRef = useRef({ channelId, scope });
+  useLayoutEffect(() => {
+    onCountChangeRef.current = onCountChange;
+  }, [onCountChange]);
+  useLayoutEffect(() => {
+    conversationRef.current = { channelId, scope };
+    setUnpinningId(null);
+    return () => {
+      conversationRef.current = { channelId: "", scope };
+    };
+  }, [channelId, scope]);
   const primaryMessages = scope === "chat" ? state?.chats : state?.messages;
   const secondaryMessages = scope === "chat" ? state?.messages : state?.chats;
 
@@ -243,7 +259,7 @@ const PinnedMessagesModal = ({
   const unpin = async (pin: ResolvedPin) => {
     if (!channelId || unpinningId) return;
 
-    const operationChannelId = channelId;
+    const operationConversation = conversationRef.current;
     setUnpinningId(pin.pinId);
 
     const target = pinKind(pin.message, pin.pinId);
@@ -255,11 +271,15 @@ const PinnedMessagesModal = ({
         ? await DeleteSavedMessage(messageUrl)
         : await DeleteSavedMessage(threadUrl);
 
+    if (conversationRef.current !== operationConversation) return;
+
     if (!(res?.status === 200 || res?.status === 201) && !pin.message) {
       res = await DeleteSavedMessage(
         target.kind === "message" ? threadUrl : messageUrl
       );
     }
+
+    if (conversationRef.current !== operationConversation) return;
 
     if (!(res?.status === 200 || res?.status === 201)) {
       showError("Could not unpin this message");
@@ -291,10 +311,6 @@ const PinnedMessagesModal = ({
     }
     loadGenerationRef.current += 1;
     setPins((current) => current.filter((item) => item.pinId !== pin.pinId));
-    onCountChangeRef.current?.(
-      operationChannelId,
-      Math.max(0, pins.length - 1)
-    );
     setRefreshToken((current) => current + 1);
     setUnpinningId(null);
   };
