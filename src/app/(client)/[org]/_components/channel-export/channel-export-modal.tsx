@@ -308,7 +308,7 @@ function HistoryRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="truncate text-[13px] font-semibold text-[#101828]">
+          <p className="truncate text-[13px] font-semibold text-[#101828] dark:text-[#F3F3F7]">
             {moment(item.created_at).format("MMM D, YYYY")}
           </p>
           <StatusBadge status={item.status} />
@@ -449,10 +449,10 @@ export default function ChannelExportModal({
                     </div>
                   ) : history.length === 0 ? (
                     <div className="flex flex-col items-center px-6 py-10 text-center">
-                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F2F4F7] text-[#667085] dark:text-[#B4B6C0]">
+                      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F2F4F7] text-[#667085] dark:bg-[#3A3B45] dark:text-[#B4B6C0]">
                         <FileArchive className="h-5 w-5" />
                       </div>
-                      <p className="text-sm font-medium text-[#344054]">
+                      <p className="text-sm font-medium text-[#344054] dark:text-[#F3F3F7]">
                         No exports yet
                       </p>
                       <p className="mt-1 max-w-[280px] text-[13px] leading-5 text-[#667085] dark:text-[#B4B6C0]">
