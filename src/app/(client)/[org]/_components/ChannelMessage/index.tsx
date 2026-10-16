@@ -41,6 +41,12 @@ const ChannelsMessage = () => {
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
   const hasDispatchedRef = useRef(false);
   const unreadCountRef = useRef<number>(0);
+  const threadCountRef = useRef<number>(0);
+
+  // Keep threadCount in a ref so getData's identity stays stable
+  useEffect(() => {
+    threadCountRef.current = state?.threadCount || 0;
+  }, [state?.threadCount]);
 
   const clearChannelUnread = useCallback(() => {
     dispatch({
@@ -58,11 +64,11 @@ const ChannelsMessage = () => {
     if (!id) return;
     // Capture unread count once per channel opening (before clearing)
     if (unreadCountRef.current === 0) {
-      unreadCountRef.current = state?.threadCount || 0;
+      unreadCountRef.current = threadCountRef.current;
     }
     await GetRequest(`/threads/channels/${id}?page=1&limit=1`);
     clearChannelUnread();
-  }, [id, clearChannelUnread, state?.threadCount]);
+  }, [id, clearChannelUnread]);
 
   // Reset unread capture when channel changes
   useEffect(() => {
