@@ -117,12 +117,12 @@ const ChannelsMessage = () => {
     if (messages && messages.length > 0 && unreadCountRef.current > 0) {
       // In column-reverse, messages[0] is newest (bottom), messages[length-1] is oldest (top)
       // Unread messages are the newest ones, so divider goes before messages[unreadCount]
-      const unreadIndex = Math.min(unreadCountRef.current, messages.length);
+      const unreadIndex = Math.min(unreadCountRef.current, messages.length - 1);
       const firstUnread = messages[unreadIndex];
       if (firstUnread) {
         // Issue 2 fix: if unread boundary is beyond loaded messages, use the oldest loaded message
         const targetMsg =
-          unreadCountRef.current > messages.length
+          unreadCountRef.current >= messages.length
             ? messages[messages.length - 1]
             : firstUnread;
         setUnreadDividerId(`unread-divider-${targetMsg.thread_id}`);
