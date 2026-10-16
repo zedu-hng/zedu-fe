@@ -373,7 +373,9 @@ function Policy() {
           <br />
           <br />
 
-          <ol className="list-decimal p-4 gap-[72px]">
+          {/* Section headings receive focus from the mobile contents menu but
+              aren't controls, so Safari's focus ring shouldn't show on them */}
+          <ol className="list-decimal p-4 gap-[72px] [&>li]:outline-none">
             <li
               className="text-xl md:text-2xl font-semibold leading-6 pb-3"
               id="info-collected"
