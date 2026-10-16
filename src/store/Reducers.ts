@@ -238,7 +238,7 @@ const reducers = (state: any, action: any) => {
         ...state,
         channels: payload,
       };
-    case ACTIONS.UPDATE_CHANNEL_FAVOURITE:
+        case ACTIONS.UPDATE_CHANNEL_FAVOURITE:
       return {
         ...state,
         channels: (state.channels || []).map((channel: any) =>
@@ -246,7 +246,13 @@ const reducers = (state: any, action: any) => {
             ? { ...channel, is_favourite: Boolean(payload?.is_favourite) }
             : channel
         ),
+        allChannels: (state.allChannels || []).map((channel: any) =>
+          String(channel.channels_id) === String(payload?.channels_id)
+            ? { ...channel, is_favourite: Boolean(payload?.is_favourite) }
+            : channel
+        ),
       };
+
     case ACTIONS.ALL_CHANNELS:
       return {
         ...state,

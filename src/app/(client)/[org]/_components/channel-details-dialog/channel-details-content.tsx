@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useContext, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { DialogHeader, DialogTitle } from "~/components/ui/dialog";
@@ -35,9 +37,12 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
       params?.id ||
       ""
   );
-  const channel = state?.channels?.find(
-    (item: any) => String(item?.channels_id) === channelId
-  );
+
+  // Look up channel across both primary channels and the allChannels collection
+  const channel =
+    state?.channels?.find((item: any) => String(item?.channels_id) === channelId) ??
+    state?.allChannels?.find((item: any) => String(item?.channels_id) === channelId);
+
   const starred = Boolean(channel?.is_favourite);
   const [activeTab, setActiveTab] = useState(state?.activeTab);
 
@@ -68,8 +73,14 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
     // }
   };
 
+  /**
+   * Toggles the channel's favourite status and persists it via a PUT request.
+   * Dispatches optimistic state updates and handles error rollbacks with notification toast.
+   */
   const handleStarred = async () => {
     if (!channel || savingFavourite) return;
+
+    const token = localStorage.getItem("token") || "";
 
     const nextValue = !starred;
     setSavingFavourite(true);
@@ -78,20 +89,24 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
       payload: { channels_id: channelId, is_favourite: nextValue },
     });
 
-    const res = await PutRequest(`/channels/${channelId}/favourite`, {
-      is_favourite: nextValue,
-    });
+    const res = await PutRequest(
+      `/channels/${channelId}/favourite`,
+      {
+        is_favourite: nextValue,
+      },
+      token
+    );
 
     if (res?.status !== 200) {
       dispatch({
         type: ACTIONS.UPDATE_CHANNEL_FAVOURITE,
         payload: { channels_id: channelId, is_favourite: !nextValue },
       });
-      if (!res?.response) {
-        showError(
-          "Could not update favourites. Check your connection and try again."
-        );
-      }
+      
+      // Removed the !res?.response gate to always notify users when updates fail
+      showError(
+        "Could not update favourites. Check your connection and try again."
+      );
     }
 
     setSavingFavourite(false);

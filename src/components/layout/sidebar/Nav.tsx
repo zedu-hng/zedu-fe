@@ -76,10 +76,19 @@ export default function ChannelNav({
       if (!saved) return defaults;
 
       const savedValues: string[] = JSON.parse(saved);
+
       // Open Favourites once for people who saved their sidebar state before it existed
       if (!localStorage.getItem("favouritesAccordionInit")) {
         localStorage.setItem("favouritesAccordionInit", "true");
-        return ["favourites", ...savedValues];
+
+        // Ensure "favourites" isn't duplicated, then combine arrays
+        const migratedValues = savedValues.includes("favourites")
+          ? savedValues
+          : ["favourites", ...savedValues];
+
+        // 👈 FIX: Persist the migrated values so it doesn't close on refresh!
+        localStorage.setItem("openAccordions", JSON.stringify(migratedValues));
+        return migratedValues;
       }
       return savedValues;
     }
