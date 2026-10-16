@@ -74,6 +74,8 @@ export interface Channel {
   /** When false, automated system notices are hidden for this channel */
   system_message?: boolean;
   restricted?: boolean;
+  /** True when the current user has favourited this channel */
+  is_favourite?: boolean;
 }
 
 export interface Pagination {

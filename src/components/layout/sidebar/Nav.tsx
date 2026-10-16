@@ -64,13 +64,38 @@ export default function ChannelNav({
   };
 
   const [openAccordions, setOpenAccordions] = useState<string[]>(() => {
+    const defaults = [
+      "favourites",
+      "channels",
+      "workflows",
+      "agents",
+      "people",
+    ];
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("openAccordions");
-      return saved
-        ? JSON.parse(saved)
-        : ["channels", "workflows", "agents", "people"];
+      if (!saved) {
+        localStorage.setItem("favouritesAccordionInit", "true");
+        return defaults;
+      }
+
+      const savedValues: string[] = JSON.parse(saved);
+
+      // Open Favourites once for people who saved their sidebar state before it existed
+      if (!localStorage.getItem("favouritesAccordionInit")) {
+        localStorage.setItem("favouritesAccordionInit", "true");
+
+        // Ensure "favourites" isn't duplicated, then combine arrays
+        const migratedValues = savedValues.includes("favourites")
+          ? savedValues
+          : ["favourites", ...savedValues];
+
+        // 👈 FIX: Persist the migrated values so it doesn't close on refresh!
+        localStorage.setItem("openAccordions", JSON.stringify(migratedValues));
+        return migratedValues;
+      }
+      return savedValues;
     }
-    return ["channels", "workflows", "agents", "people"];
+    return defaults;
   });
 
   const handleAccordionChanges = (values: string[]) => {
@@ -101,6 +126,44 @@ export default function ChannelNav({
         return nameA.localeCompare(nameB);
       })
     : [];
+
+  const favouriteChannels = sortedChannels.filter(
+    (channel: any) => channel?.is_favourite
+  );
+  const otherChannels = sortedChannels.filter(
+    (channel: any) => !channel?.is_favourite
+  );
+
+  const renderChannelGroup = (
+    value: string,
+    title: string,
+    channels: any[]
+  ) => (
+    <AccordionItem value={value} className="border-none">
+      <AccordionTrigger className="font-normal w-full py-0">
+        <div className="relative py-3 mx-4 flex items-center gap-1 rounded-lg cursor-pointer w-full">
+          <DropdownIcon
+            className={`transition-transform duration-300 ${
+              openAccordions.includes(value) ? "rotate-0" : "-rotate-90"
+            }`}
+          />
+          <h3 className="text-[15px]  font-medium">{title}</h3>
+        </div>
+      </AccordionTrigger>
+      <AccordionContent onClick={handleClose}>
+        <ul className="flex flex-col gap-1">
+          {channels.map((item: any, index: number) => (
+            <ChannelCard
+              {...item}
+              key={item?.channels_id ?? item?.channel_slug ?? index}
+              selectedChannelId={selectedChannelId}
+              onSelectChannel={setPendingChannelId}
+            />
+          ))}
+        </ul>
+      </AccordionContent>
+    </AccordionItem>
+  );
 
   return (
     <>
@@ -180,34 +243,13 @@ export default function ChannelNav({
                   onValueChange={handleAccordionChanges}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <AccordionItem value="channels" className="border-none">
-                    <AccordionTrigger className="font-normal w-full py-0">
-                      <div className="relative py-3 mx-4 flex items-center gap-1 rounded-lg cursor-pointer w-full">
-                        <DropdownIcon
-                          className={`transition-transform duration-300 ${
-                            openAccordions.includes("channels")
-                              ? "rotate-0"
-                              : "-rotate-90"
-                          }`}
-                        />
-                        <h3 className="text-[15px]  font-medium">Channels</h3>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent onClick={handleClose}>
-                      <ul className="flex flex-col gap-1">
-                        {sortedChannels.map((item: any, index: number) => (
-                          <ChannelCard
-                            {...item}
-                            key={
-                              item?.channels_id ?? item?.channel_slug ?? index
-                            }
-                            selectedChannelId={selectedChannelId}
-                            onSelectChannel={setPendingChannelId}
-                          />
-                        ))}
-                      </ul>
-                    </AccordionContent>
-                  </AccordionItem>
+                  {favouriteChannels.length > 0 &&
+                    renderChannelGroup(
+                      "favourites",
+                      "Favourites",
+                      favouriteChannels
+                    )}
+                  {renderChannelGroup("channels", "Channels", otherChannels)}
                 </Accordion>
 
                 <Link
