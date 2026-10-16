@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef } from "react";
 import { DataContext } from "~/store/GlobalState";
 import { ACTIONS } from "~/store/Actions";
 import { ToastContainer } from "react-toastify";
@@ -9,7 +9,6 @@ import { showInfo } from "~/components/toast/sonner";
 import { playBuzzParticipantJoinSound } from "~/lib/buzz/play-join-sound";
 import {
   registerNotificationBadge,
-  isHomeRoute,
   isNotificationsRoute,
 } from "~/lib/notifications/notification-badge";
 import {
@@ -23,6 +22,7 @@ const CLIENT_URL = process.env.NEXT_PUBLIC_CLIENT_URL;
 
 //
 
+/** Receives real-time events and updates the session badge outside Notifications. */
 export default function GeneralNotificationConnection() {
   const { state, dispatch } = useContext(DataContext);
   const { orgId, channelCallback } = state;
@@ -31,7 +31,7 @@ export default function GeneralNotificationConnection() {
   const id = params.id as string;
   const pathnameRef = useRef(pathname);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
 
@@ -75,7 +75,6 @@ export default function GeneralNotificationConnection() {
       dispatch({ type: ACTIONS.NOTIFY, payload: ctx?.data?.data });
 
       if (
-        !isHomeRoute(pathnameRef.current) &&
         !isNotificationsRoute(pathnameRef.current) &&
         registerNotificationBadge(ctx?.data)
       ) {
