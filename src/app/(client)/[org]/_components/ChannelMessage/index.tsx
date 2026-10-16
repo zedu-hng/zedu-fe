@@ -36,6 +36,7 @@ const ChannelsMessage = () => {
   const [showBadge, setShowBadge] = useState(false);
   const [popupId, setPopupId] = useState<any>(null);
   const [unreadDividerId, setUnreadDividerId] = useState<string | null>(null);
+  const [dividerOnTop, setDividerOnTop] = useState(false);
 
   const scrollableContainerRef = useRef<HTMLDivElement>(null);
   const hasDispatchedRef = useRef(false);
@@ -126,6 +127,7 @@ const ChannelsMessage = () => {
             ? messages[messages.length - 1]
             : firstUnread;
         setUnreadDividerId(`unread-divider-${targetMsg.thread_id}`);
+        setDividerOnTop(unreadCountRef.current >= messages.length);
       }
     } else {
       setUnreadDividerId(null);
@@ -243,29 +245,31 @@ const ChannelsMessage = () => {
               const isFirstUnread =
                 unreadDividerId === `unread-divider-${item.thread_id}`;
 
+              const unreadDividerEl = isFirstUnread ? (
+                <div
+                  id={unreadDividerId}
+                  className="flex items-center gap-3 my-3 px-5"
+                >
+                  <div
+                    className="flex-1 h-px"
+                    style={{ backgroundColor: "#e5e7eb" }}
+                  ></div>
+                  <span
+                    className="text-[11px] font-semibold uppercase tracking-wide"
+                    style={{ color: "#9CA3AF" }}
+                  >
+                    Unread messages
+                  </span>
+                  <div
+                    className="flex-1 h-px"
+                    style={{ backgroundColor: "#e5e7eb" }}
+                  ></div>
+                </div>
+              ) : null;
+
               return (
                 <React.Fragment key={index}>
-                  {isFirstUnread && (
-                    <div
-                      id={unreadDividerId}
-                      className="flex items-center gap-3 my-3 px-5"
-                    >
-                      <div
-                        className="flex-1 h-px"
-                        style={{ backgroundColor: "#e5e7eb" }}
-                      ></div>
-                      <span
-                        className="text-[11px] font-semibold uppercase tracking-wide"
-                        style={{ color: "#9CA3AF" }}
-                      >
-                        Unread messages
-                      </span>
-                      <div
-                        className="flex-1 h-px"
-                        style={{ backgroundColor: "#e5e7eb" }}
-                      ></div>
-                    </div>
-                  )}
+                  {isFirstUnread && !dividerOnTop && unreadDividerEl}
                   {isEdit && thread?.thread_id === item?.thread_id ? (
                     <div
                       className={`flex mb-5 mt-2 z-10 px-5 py-3 bg-blue-50 w-full`}
@@ -317,6 +321,7 @@ const ChannelsMessage = () => {
                       )}
                     </div>
                   )}
+                  {isFirstUnread && dividerOnTop && unreadDividerEl}
                 </React.Fragment>
               );
             })}
