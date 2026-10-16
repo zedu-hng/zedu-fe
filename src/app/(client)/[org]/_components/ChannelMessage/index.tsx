@@ -42,6 +42,7 @@ const ChannelsMessage = () => {
   const hasDispatchedRef = useRef(false);
   const unreadCountRef = useRef<number>(0);
   const threadCountRef = useRef<number>(0);
+  const capturedRef = useRef(false);
 
   // Keep threadCount in a ref so getData's identity stays stable
   useEffect(() => {
@@ -63,7 +64,8 @@ const ChannelsMessage = () => {
   const getData = useCallback(async () => {
     if (!id) return;
     // Capture unread count once per channel opening (before clearing)
-    if (unreadCountRef.current === 0) {
+    if (!capturedRef.current) {
+      capturedRef.current = true;
       unreadCountRef.current = threadCountRef.current;
     }
     await GetRequest(`/threads/channels/${id}?page=1&limit=1`);
@@ -73,6 +75,7 @@ const ChannelsMessage = () => {
   // Reset unread capture when channel changes
   useEffect(() => {
     unreadCountRef.current = 0;
+    capturedRef.current = false;
     setUnreadDividerId(null);
   }, [id]);
 
