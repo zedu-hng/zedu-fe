@@ -10,6 +10,7 @@ import {
   pricingComparisonPlans,
 } from "../_lib/pricingComparisonData";
 import { CircleHelp } from "lucide-react";
+import { pricingFAQs } from "../_lib/faqData";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -108,7 +109,7 @@ const PricingPage = () => {
           />
         ))}
       </div>
-      <FAQSection />
+      <FAQSection faqs={pricingFAQs} />
       <DynamicFooter
         text="Start Building Structured Learning Today"
         description="Create organized channels, manage cohorts, and bring AI into your learning environment.
