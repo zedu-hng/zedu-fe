@@ -251,7 +251,7 @@ function Policy() {
           </ul>
         </div>
 
-        <div className="mt-16 md:mt-10 w-[375px] md:w-[700px] lg:w-[815px] py-3 px-5 text-black">
+        <div className="mt-16 md:mt-10 w-full min-w-0 md:w-[700px] lg:w-[815px] py-3 px-5 text-black">
           <p className="text-2xl md:text-4xl font-semibold leading-10 pb-5">
             Our Privacy Policy
           </p>
@@ -471,7 +471,7 @@ function Policy() {
             </p>
             <br />
             <li
-              className="text-xl md:text-2xl font-semibold leading-6 py-5 whitespace-nowrap"
+              className="text-xl md:text-2xl font-semibold leading-6 py-5"
               id="policy"
             >
               Changes to This Privacy Policy
@@ -482,7 +482,7 @@ function Policy() {
               operational, legal, or regulatory reasons.
             </p>
             <li
-              className="text-xl md:text-2xl font-semibold leading-6 py-5 whitespace-nowrap"
+              className="text-xl md:text-2xl font-semibold leading-6 py-5"
               id="cookie"
             >
               Cookies and Tracking Technologies
@@ -495,7 +495,7 @@ function Policy() {
               affect the availability and functionality of the site.
             </p>
             <li
-              className="text-xl md:text-2xl font-semibold leading-6 py-5 whitespace-nowrap"
+              className="text-xl md:text-2xl font-semibold leading-6 py-5"
               id="data-retention"
             >
               Data Retention
@@ -506,7 +506,7 @@ function Policy() {
               required by law.
             </p>
             <li
-              className="text-xl md:text-2xl font-semibold leading-6 py-5 whitespace-nowrap"
+              className="text-xl md:text-2xl font-semibold leading-6 py-5"
               id="contact-us"
             >
               Contact Us
