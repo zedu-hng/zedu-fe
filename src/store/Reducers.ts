@@ -238,7 +238,7 @@ const reducers = (state: any, action: any) => {
         ...state,
         channels: payload,
       };
-        case ACTIONS.UPDATE_CHANNEL_FAVOURITE:
+    case ACTIONS.UPDATE_CHANNEL_FAVOURITE:
       return {
         ...state,
         channels: (state.channels || []).map((channel: any) =>

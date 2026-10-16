@@ -73,7 +73,10 @@ export default function ChannelNav({
     ];
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("openAccordions");
-      if (!saved) return defaults;
+      if (!saved) {
+        localStorage.setItem("favouritesAccordionInit", "true");
+        return defaults;
+      }
 
       const savedValues: string[] = JSON.parse(saved);
 

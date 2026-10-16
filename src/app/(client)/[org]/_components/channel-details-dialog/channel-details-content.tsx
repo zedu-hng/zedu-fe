@@ -40,8 +40,12 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
 
   // Look up channel across both primary channels and the allChannels collection
   const channel =
-    state?.channels?.find((item: any) => String(item?.channels_id) === channelId) ??
-    state?.allChannels?.find((item: any) => String(item?.channels_id) === channelId);
+    state?.channels?.find(
+      (item: any) => String(item?.channels_id) === channelId
+    ) ??
+    state?.allChannels?.find(
+      (item: any) => String(item?.channels_id) === channelId
+    );
 
   const starred = Boolean(channel?.is_favourite);
   const [activeTab, setActiveTab] = useState(state?.activeTab);
@@ -102,7 +106,7 @@ export const ChannelDetailsContent = ({ setIsOpen }: any) => {
         type: ACTIONS.UPDATE_CHANNEL_FAVOURITE,
         payload: { channels_id: channelId, is_favourite: !nextValue },
       });
-      
+
       // Removed the !res?.response gate to always notify users when updates fail
       showError(
         "Could not update favourites. Check your connection and try again."
