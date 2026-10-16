@@ -122,6 +122,39 @@ describe("channel search scope (neo-272)", () => {
     });
   });
 
+  it("ignores a scoped response that finishes after the channel is cleared", () => {
+    let releaseScoped;
+    let scopedStarted = false;
+    const pending = new Cypress.Promise((resolve) => (releaseScoped = resolve));
+    cy.intercept("**/search/organisation/oracle-org?*", (req) => {
+      if (new URL(req.url).searchParams.get("query").includes(" in:")) {
+        req.alias = "delayedScope";
+        scopedStarted = true;
+        return pending.then(() =>
+          req.reply({ body: { data: [result(channel.name)] } })
+        );
+      }
+      req.alias = "workspace";
+      req.reply({ body: { data: [result("general")] } });
+    });
+    cy.visit("/oracle/search?query=ticket&channel=zedu-egret");
+    cy.wrap(null).should(() => expect(scopedStarted).to.eq(true));
+    cy.contains("button", "In: #zedu-egret").find("svg.lucide-x").click();
+    cy.wait("@workspace");
+    cy.contains("general").should("be.visible");
+    cy.then(() => releaseScoped());
+    cy.wait("@delayedScope");
+    cy.window().then(
+      (win) =>
+        new Cypress.Promise((resolve) =>
+          win.requestAnimationFrame(() => win.requestAnimationFrame(resolve))
+        )
+    );
+    cy.contains("button", /^In$/).should("be.visible");
+    cy.contains("general").should("be.visible");
+    cy.contains("Filtered query:").should("not.exist");
+  });
+
   it("decodes channel names and resets scope when the URL changes", () => {
     const name = "oracle & team";
     cy.visit(`/oracle/search?query=ticket&channel=${encodeURIComponent(name)}`);

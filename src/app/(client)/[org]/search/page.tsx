@@ -132,51 +132,59 @@ function SearchResults({
     avatar_url: member.avatar_url || member.profile_url,
   }));
 
-  const fetchAllResults = useCallback(async () => {
-    if (!baseQuery?.trim() || !orgData?.id) {
-      setResults([]);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const searchType = filters.type || "messages";
-
-      if (searchType === "messages") {
-        const messages = await searchMessages(orgData.id, baseQuery, {
-          from: filters.from,
-          channel: filters.channel,
-          date: filters.date,
-          sortBy: filters.sortBy,
-        });
-        setResults(messages);
-      } else {
-        const userResults = await searchUsers(orgData.id, baseQuery);
-        setResults(userResults);
+  const fetchAllResults = useCallback(
+    async (isCurrent: () => boolean) => {
+      if (!baseQuery?.trim() || !orgData?.id) {
+        setResults([]);
+        return;
       }
-    } catch (error) {
-      console.error("Search failed:", error);
-      showError("An error occurred while searching");
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    baseQuery,
-    orgData?.id,
-    filters.type,
-    filters.from,
-    filters.channel,
-    filters.date,
-    filters.sortBy,
-  ]);
+
+      setLoading(true);
+
+      try {
+        const searchType = filters.type || "messages";
+
+        if (searchType === "messages") {
+          const messages = await searchMessages(orgData.id, baseQuery, {
+            from: filters.from,
+            channel: filters.channel,
+            date: filters.date,
+            sortBy: filters.sortBy,
+          });
+          if (isCurrent()) setResults(messages);
+        } else {
+          const userResults = await searchUsers(orgData.id, baseQuery);
+          if (isCurrent()) setResults(userResults);
+        }
+      } catch (error) {
+        if (!isCurrent()) return;
+        console.error("Search failed:", error);
+        showError("An error occurred while searching");
+        setResults([]);
+      } finally {
+        if (isCurrent()) setLoading(false);
+      }
+    },
+    [
+      baseQuery,
+      orgData?.id,
+      filters.type,
+      filters.from,
+      filters.channel,
+      filters.date,
+      filters.sortBy,
+    ]
+  );
 
   useEffect(() => {
+    let active = true;
     if (baseQuery && orgData?.id) {
       setCurrentPage(1);
-      void fetchAllResults();
+      void fetchAllResults(() => active);
     }
+    return () => {
+      active = false;
+    };
   }, [baseQuery, orgData?.id, fetchAllResults]);
 
   const handleFilterChange = (newFilters: {
