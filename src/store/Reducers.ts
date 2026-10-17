@@ -332,6 +332,34 @@ const reducers = (state: any, action: any) => {
         ],
       };
     }
+    case ACTIONS.UPDATE_DM_FAVOURITE: {
+      const { channelId, isFavourite } = action.payload;
+
+      const updateDm = (dm: any) => {
+        const dmId = dm?.channel_id || dm?.channels_id;
+        if (String(dmId) !== String(channelId)) return dm;
+        return { ...dm, is_favourite: isFavourite };
+      };
+
+      const dmsList = state.dms || [];
+      const homeDmsList = state.homeDms || [];
+
+      const dmsMatch = dmsList.some((dm: any) => updateDm(dm) !== dm);
+      const homeDmsMatch = homeDmsList.some((dm: any) => updateDm(dm) !== dm);
+
+      if (!dmsMatch && !homeDmsMatch) return state;
+
+      return {
+        ...state,
+        dms: dmsList.map(updateDm),
+        homeDms: homeDmsList.map(updateDm),
+      };
+    }
+    case ACTIONS.DM_RENDER_CALLBACK:
+      return {
+        ...state,
+        dmRenderCallback: !state.dmRenderCallback,
+      };
     case ACTIONS.HOME_DMS:
       return {
         ...state,
