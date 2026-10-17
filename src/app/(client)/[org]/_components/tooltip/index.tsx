@@ -7,6 +7,7 @@ import { TooltipArrow } from "@radix-ui/react-tooltip";
 import {
   ComponentPropsWithoutRef,
   ElementRef,
+  ForwardedRef,
   forwardRef,
   ReactNode,
 } from "react";
@@ -29,29 +30,36 @@ interface TooltipProps extends TooltipTriggerProps {
  * `TooltipTrigger`, so this component can be nested inside another `asChild`
  * trigger (for example `PopoverTrigger`) without breaking it.
  *
- * @param text - Text shown inside the tooltip.
- * @param children - The element that shows the tooltip on hover or focus.
- * @param side - Side of the trigger where the tooltip appears. Defaults to "top".
+ * @param props - `text` is the tooltip content, `children` is the element that
+ * shows it on hover or focus, and `side` is where it appears (defaults to
+ * "top"). Any other props are passed to the trigger.
+ * @param ref - Ref forwarded to the trigger element.
+ * @returns The child element wrapped with its tooltip.
  */
+function TooltipsBase(
+  { text, children, side = "top", ...triggerProps }: TooltipProps,
+  ref: ForwardedRef<ElementRef<typeof TooltipTrigger>>
+) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild ref={ref} {...triggerProps}>
+        {children}
+      </TooltipTrigger>
+
+      <TooltipContent
+        side={side}
+        className="bg-black text-white p-2 rounded-md text-sm"
+      >
+        <TooltipArrow className="fill-black" />
+
+        {text}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 const Tooltips = forwardRef<ElementRef<typeof TooltipTrigger>, TooltipProps>(
-  ({ text, children, side = "top", ...triggerProps }, ref) => {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild ref={ref} {...triggerProps}>
-          {children}
-        </TooltipTrigger>
-
-        <TooltipContent
-          side={side}
-          className="bg-black text-white p-2 rounded-md text-sm"
-        >
-          <TooltipArrow className="fill-black" />
-
-          {text}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
+  TooltipsBase
 );
 Tooltips.displayName = "Tooltips";
 
