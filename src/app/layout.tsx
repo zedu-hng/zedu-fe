@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   icons: {
     icon: "/TelexIcon.svg",
   },
+  ...(process.env.NEXT_PUBLIC_IOS_APP_ID && {
+    itunes: { appId: process.env.NEXT_PUBLIC_IOS_APP_ID },
+  }),
 };
 
 export default function RootLayout({
