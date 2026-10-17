@@ -149,6 +149,14 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
     onJoin({ mic: isMicOn, video: isCamOn });
   };
 
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#202124] flex items-center justify-center">
+        <Loader size={24} className="animate-spin text-zinc-500" />
+      </div>
+    );
+  }
+
   if (hasEnded) {
     return (
       <div className="min-h-screen bg-white dark:bg-[#202124] flex items-center justify-center p-4 sm:p-8">
