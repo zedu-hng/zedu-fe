@@ -6,6 +6,7 @@ import { PricingCard } from "../ui/PricingCard";
 import Link from "next/link";
 import { PurpleArrowRight } from "../svgs";
 import { SlackZeduCalculator } from "../pricing/SlackZeduCalculator";
+import { Dialog, DialogTrigger } from "~/components/ui/dialog";
 
 type PricingSectionProps = {
   showSubtitle?: boolean;
@@ -26,7 +27,7 @@ export const PricingSection = ({
   }, []);
 
   return (
-    <>
+    <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
       <section className="relative isolate flex w-full flex-col items-center gap-6 overflow-hidden px-4 py-12 text-center sm:gap-6 sm:px-8 sm:py-16  lg:gap-8 lg:px-12">
         <div
           className={`flex flex-col items-center ${
@@ -110,24 +111,21 @@ export const PricingSection = ({
         </Link>
 
         {/* New CTA: open Slack vs. Zedu comparison calculator */}
-        <button
-          type="button"
-          onClick={() => setCalculatorOpen(true)}
-          className="group flex items-center -mt-4 gap-1.5 text-sm font-semibold text-primary-500 hover:text-primary-400 transition-colors duration-150 focus:outline-none focus-visible:underline"
-          aria-haspopup="dialog"
-        >
-          Compare Zedu with other platform
-          <span className="inline-flex transition-transform duration-300 ease-out group-hover:translate-x-1">
-            <PurpleArrowRight />
-          </span>
-        </button>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="group flex items-center -mt-4 gap-1.5 text-sm font-semibold text-primary-500 hover:text-primary-400 transition-colors duration-150 focus:outline-none focus-visible:underline"
+          >
+            Compare Zedu with other platform
+            <span className="inline-flex transition-transform duration-300 ease-out group-hover:translate-x-1">
+              <PurpleArrowRight />
+            </span>
+          </button>
+        </DialogTrigger>
       </section>
 
       {/* Calculator modal — rendered outside the section so it can use a portal-like overlay */}
-      <SlackZeduCalculator
-        open={calculatorOpen}
-        onClose={() => setCalculatorOpen(false)}
-      />
-    </>
+      <SlackZeduCalculator />
+    </Dialog>
   );
 };

@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import { X } from "lucide-react";
 import Link from "next/link";
 import { cn } from "~/lib/utils";
+import {
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "~/components/ui/dialog";
 
 // ---------------------------------------------------------------------------
 // Pricing constants — illustrative rates inferred from the reference screenshot
@@ -359,16 +363,7 @@ const ZeduLogo = () => (
 // ---------------------------------------------------------------------------
 // Main SlackZeduCalculator component (modal)
 // ---------------------------------------------------------------------------
-type SlackZeduCalculatorProps = {
-  open: boolean;
-  onClose: () => void;
-};
-
-export function SlackZeduCalculator({
-  open,
-  onClose,
-}: SlackZeduCalculatorProps) {
-  const [mounted, setMounted] = useState(false);
+export function SlackZeduCalculator() {
   const [learnerCount, setLearnerCount] = useState(SLIDER_INITIAL);
   const [durationMonths, setDurationMonths] = useState(DEFAULT_DURATION_MONTHS);
 
@@ -402,10 +397,6 @@ export function SlackZeduCalculator({
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const pricing = calcPricing(learnerCount, durationMonths);
 
   const selectedDuration = DURATION_OPTIONS.find(
@@ -415,234 +406,196 @@ export function SlackZeduCalculator({
     ? `${selectedDuration.label}${selectedDuration.sublabel ? ` (${selectedDuration.sublabel})` : ""}`
     : `${durationMonths} Month${durationMonths !== 1 ? "s" : ""}`;
 
-  // Close on Escape key
-  useEffect(() => {
-    if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
-
-  // Prevent body scroll while open
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  if (!open || !mounted) return null;
-
-  return createPortal(
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm"
-        aria-hidden="true"
-        onClick={onClose}
-      />
-
-      {/* Panel */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="slack-zedu-calc-title"
-        className="fixed inset-0 z-[10001] flex items-center justify-center overflow-y-auto p-3 sm:p-4"
-      >
-        <div className="relative my-auto w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
-          {/* Close button */}
+  return (
+    <DialogContent
+      overlayClassName="bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[10001] flex h-full w-full max-w-none translate-x-0 translate-y-0 items-center justify-center overflow-y-auto rounded-none border-0 bg-transparent p-3 shadow-none sm:p-4"
+    >
+      <div className="relative my-auto w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+        {/* Close button */}
+        <DialogClose asChild>
           <button
             type="button"
-            onClick={onClose}
             aria-label="Close calculator"
             className="absolute right-3.5 top-3.5 z-10 rounded-full p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
             <X className="h-5 w-5" />
           </button>
+        </DialogClose>
 
-          {/* Header */}
-          <div className="px-4 pb-2 pt-4 text-center sm:px-6">
-            <h2
-              id="slack-zedu-calc-title"
-              className="text-base font-bold text-neutral-900 sm:text-lg"
-            >
-              See the Difference: Slack vs. Zedu
-            </h2>
-            <p className="mx-auto mt-0.5 max-w-md text-xs text-neutral-500">
-              Calculate how much you&apos;ll save by switching from Slack&apos;s
-              per-student fees to Zedu&apos;s flat pricing.
-            </p>
-          </div>
+        {/* Header */}
+        <div className="px-4 pb-2 pt-4 text-center sm:px-6">
+          <DialogTitle className="text-base font-bold text-neutral-900 sm:text-lg">
+            See the Difference: Slack vs. Zedu
+          </DialogTitle>
+          <p className="mx-auto mt-0.5 max-w-md text-xs text-neutral-500">
+            Calculate how much you&apos;ll save by switching from Slack&apos;s
+            per-student fees to Zedu&apos;s flat pricing.
+          </p>
+        </div>
 
-          {/* Calculator card */}
-          <div className="mx-3.5 mb-2 rounded-xl border border-primary-200 shadow-sm sm:mx-5">
-            <div className="flex flex-col divide-y divide-neutral-100 md:flex-row md:divide-x md:divide-y-0">
-              {/* ---- Left column: inputs ---- */}
-              <div className="flex flex-1 flex-col justify-between gap-3 p-3.5 sm:p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-primary-500">
-                  Estimate Your Cohort
-                </p>
+        {/* Calculator card */}
+        <div className="mx-3.5 mb-2 rounded-xl border border-primary-200 shadow-sm sm:mx-5">
+          <div className="flex flex-col divide-y divide-neutral-100 md:flex-row md:divide-x md:divide-y-0">
+            {/* ---- Left column: inputs ---- */}
+            <div className="flex flex-1 flex-col justify-between gap-3 p-3.5 sm:p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-primary-500">
+                Estimate Your Cohort
+              </p>
 
-                {/* Learner slider */}
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="learner-slider"
-                    className="text-xs font-medium text-neutral-700 sm:text-sm"
+              {/* Learner slider */}
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="learner-slider"
+                  className="text-xs font-medium text-neutral-700 sm:text-sm"
+                >
+                  1. How many learners in your cohort?
+                </label>
+
+                <div className="relative pb-1 pt-14">
+                  {/* White circular tooltip sitting directly above the slider thumb */}
+                  <div
+                    className="pointer-events-none absolute top-0 z-20 flex -translate-x-1/2 flex-col items-center justify-center rounded-full bg-white shadow-md transition-[left] duration-75"
+                    style={{
+                      left: `clamp(26px, ${sliderPercent}%, calc(100% - 26px))`,
+                      width: "52px",
+                      height: "52px",
+                    }}
                   >
-                    1. How many learners in your cohort?
-                  </label>
+                    <span className="text-sm font-bold leading-tight text-neutral-900">
+                      {learnerCount.toLocaleString("en-NG")}
+                    </span>
+                    <span className="text-[9px] font-normal leading-tight text-neutral-700">
+                      Learners
+                    </span>
+                  </div>
 
-                  <div className="relative pb-1 pt-14">
-                    {/* White circular tooltip sitting directly above the slider thumb */}
-                    <div
-                      className="pointer-events-none absolute top-0 z-20 flex -translate-x-1/2 flex-col items-center justify-center rounded-full bg-white shadow-md transition-[left] duration-75"
-                      style={{
-                        left: `clamp(26px, ${sliderPercent}%, calc(100% - 26px))`,
-                        width: "52px",
-                        height: "52px",
-                      }}
-                    >
-                      <span className="text-sm font-bold leading-tight text-neutral-900">
-                        {learnerCount.toLocaleString("en-NG")}
-                      </span>
-                      <span className="text-[9px] font-normal leading-tight text-neutral-700">
-                        Learners
-                      </span>
-                    </div>
-
-                    {/* Track and slider */}
-                    <div className="relative flex h-6 items-center">
-                      {/* Background & filled track */}
-                      <div className="pointer-events-none absolute inset-x-0 h-1.5 overflow-hidden rounded-full bg-neutral-200">
-                        <div
-                          className="h-full rounded-full bg-primary-500"
-                          style={{
-                            width: `${sliderPercent}%`,
-                          }}
-                        />
-                      </div>
-
-                      {/* Native range slider thumb sitting on track below the badge */}
-                      <input
-                        id="learner-slider"
-                        type="range"
-                        min={0}
-                        max={100}
-                        step="any"
-                        value={sliderPercent}
-                        onChange={(e) =>
-                          setLearnerCount(
-                            positionToLearners(Number(e.target.value))
-                          )
-                        }
-                        onKeyDown={handleSliderKeyDown}
-                        aria-label="Number of learners in your cohort"
-                        aria-valuemin={SLIDER_MIN}
-                        aria-valuemax={SLIDER_MAX}
-                        aria-valuenow={learnerCount}
-                        className="zedu-slider relative z-10 h-6 w-full cursor-pointer appearance-none bg-transparent"
+                  {/* Track and slider */}
+                  <div className="relative flex h-6 items-center">
+                    {/* Background & filled track */}
+                    <div className="pointer-events-none absolute inset-x-0 h-1.5 overflow-hidden rounded-full bg-neutral-200">
+                      <div
+                        className="h-full rounded-full bg-primary-500"
+                        style={{
+                          width: `${sliderPercent}%`,
+                        }}
                       />
                     </div>
 
-                    {/* Tick marks */}
-                    <div className="mt-1 flex justify-between text-[10px] text-neutral-400">
-                      {["10", "500", "1,000", "3,000", "5,000+"].map((t) => (
-                        <span key={t}>{t}</span>
-                      ))}
-                    </div>
+                    {/* Native range slider thumb sitting on track below the badge */}
+                    <input
+                      id="learner-slider"
+                      type="range"
+                      min={0}
+                      max={100}
+                      step="any"
+                      value={sliderPercent}
+                      onChange={(e) =>
+                        setLearnerCount(
+                          positionToLearners(Number(e.target.value))
+                        )
+                      }
+                      onKeyDown={handleSliderKeyDown}
+                      aria-label="Number of learners in your cohort"
+                      aria-valuemin={SLIDER_MIN}
+                      aria-valuemax={SLIDER_MAX}
+                      aria-valuenow={learnerCount}
+                      className="zedu-slider relative z-10 h-6 w-full cursor-pointer appearance-none bg-transparent"
+                    />
                   </div>
-                </div>
 
-                {/* Duration selector */}
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-medium text-neutral-700 sm:text-sm">
-                    2. How long is your cohort?
-                  </p>
-                  <CohortDurationSelector
-                    selected={durationMonths}
-                    onChange={setDurationMonths}
-                  />
+                  {/* Tick marks */}
+                  <div className="mt-1 flex justify-between text-[10px] text-neutral-400">
+                    {["10", "500", "1,000", "3,000", "5,000+"].map((t) => (
+                      <span key={t}>{t}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* ---- Right column: estimates ---- */}
-              <div className="flex flex-1 flex-col gap-2.5 p-3.5 sm:p-4">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
-                  Estimated Costs
+              {/* Duration selector */}
+              <div className="flex flex-col gap-1.5">
+                <p className="text-xs font-medium text-neutral-700 sm:text-sm">
+                  2. How long is your cohort?
                 </p>
-
-                {/* Side-by-side cost cards */}
-                <div className="flex flex-col gap-2.5 sm:flex-row">
-                  <CostEstimateCard
-                    platform="Slack"
-                    logo={<SlackLogo />}
-                    monthlyLabel="Estimated monthly"
-                    monthlyAmount={formatNaira(pricing.slackMonthlyEstimate)}
-                    durationLabel={`Total for ${durationLabelStr}`}
-                    durationAmount={formatNaira(pricing.slackDurationTotal)}
-                    isEstimated
-                  />
-                  <CostEstimateCard
-                    platform="Zedu Pro"
-                    logo={<ZeduLogo />}
-                    monthlyLabel="Flat monthly price"
-                    monthlyAmount={formatNaira(pricing.zeduMonthlyPrice)}
-                    durationLabel={`Total for ${durationLabelStr}`}
-                    durationAmount={formatNaira(pricing.zeduDurationTotal)}
-                    highlight
-                  />
-                </div>
-
-                {/* Savings panel */}
-                <SavingsIndicator
-                  monthlySavings={pricing.monthlySavings}
-                  savingsPercentage={pricing.savingsPercentage}
+                <CohortDurationSelector
+                  selected={durationMonths}
+                  onChange={setDurationMonths}
                 />
+              </div>
+            </div>
 
-                {/* CTA — reuses exact Pro plan href from PricingCard */}
-                <div className="flex flex-col items-center gap-1.5">
-                  <Link href={PRO_PLAN_HREF} className="w-full">
-                    <button
-                      type="button"
-                      className="group flex w-full items-center justify-center gap-2 rounded-full bg-primary-500 px-5 py-2.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-primary-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 sm:text-sm"
+            {/* ---- Right column: estimates ---- */}
+            <div className="flex flex-1 flex-col gap-2.5 p-3.5 sm:p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+                Estimated Costs
+              </p>
+
+              {/* Side-by-side cost cards */}
+              <div className="flex flex-col gap-2.5 sm:flex-row">
+                <CostEstimateCard
+                  platform="Slack"
+                  logo={<SlackLogo />}
+                  monthlyLabel="Estimated monthly"
+                  monthlyAmount={formatNaira(pricing.slackMonthlyEstimate)}
+                  durationLabel={`Total for ${durationLabelStr}`}
+                  durationAmount={formatNaira(pricing.slackDurationTotal)}
+                  isEstimated
+                />
+                <CostEstimateCard
+                  platform="Zedu Pro"
+                  logo={<ZeduLogo />}
+                  monthlyLabel="Flat monthly price"
+                  monthlyAmount={formatNaira(pricing.zeduMonthlyPrice)}
+                  durationLabel={`Total for ${durationLabelStr}`}
+                  durationAmount={formatNaira(pricing.zeduDurationTotal)}
+                  highlight
+                />
+              </div>
+
+              {/* Savings panel */}
+              <SavingsIndicator
+                monthlySavings={pricing.monthlySavings}
+                savingsPercentage={pricing.savingsPercentage}
+              />
+
+              {/* CTA — reuses exact Pro plan href from PricingCard */}
+              <div className="flex flex-col items-center gap-1.5">
+                <Link href={PRO_PLAN_HREF} className="w-full">
+                  <button
+                    type="button"
+                    className="group flex w-full items-center justify-center gap-2 rounded-full bg-primary-500 px-5 py-2.5 text-xs font-medium text-white transition-colors duration-200 hover:bg-primary-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 sm:text-sm"
+                  >
+                    Start Saving with Zedu Pro
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 26 26"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="transition-transform duration-300 ease-out group-hover:translate-x-1"
+                      aria-hidden="true"
                     >
-                      Start Saving with Zedu Pro
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 26 26"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="transition-transform duration-300 ease-out group-hover:translate-x-1"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M13 0C10.4288 0 7.91543 0.762437 5.77759 2.1909C3.63975 3.61935 1.97351 5.64968 0.989572 8.02512C0.0056327 10.4006 -0.251811 13.0144 0.249797 15.5362C0.751405 18.0579 1.98953 20.3743 3.80762 22.1924C5.6257 24.0105 7.94208 25.2486 10.4638 25.7502C12.9856 26.2518 15.5995 25.9944 17.9749 25.0104C20.3503 24.0265 22.3807 22.3603 23.8091 20.2224C25.2376 18.0846 26 15.5712 26 13C25.9964 9.5533 24.6256 6.24882 22.1884 3.81163C19.7512 1.37445 16.4467 0.00363977 13 0ZM18.7075 13.7075L14.7075 17.7075C14.5199 17.8951 14.2654 18.0006 14 18.0006C13.7346 18.0006 13.4801 17.8951 13.2925 17.7075C13.1049 17.5199 12.9994 17.2654 12.9994 17C12.9994 16.7346 13.1049 16.4801 13.2925 16.2925L15.5863 14H8.00001C7.73479 14 7.48044 13.8946 7.2929 13.7071C7.10536 13.5196 7.00001 13.2652 7.00001 13C7.00001 12.7348 7.10536 12.4804 7.2929 12.2929C7.48044 12.1054 7.73479 12 8.00001 12H15.5863L13.2925 9.7075C13.1049 9.51986 12.9994 9.26536 12.9994 9C12.9994 8.73464 13.1049 8.48014 13.2925 8.2925C13.4801 8.10486 13.7346 7.99944 14 7.99944C14.2654 7.99944 14.5199 8.10486 14.7075 8.2925L18.7075 12.2925C18.8005 12.3854 18.8742 12.4957 18.9246 12.6171C18.9749 12.7385 19.0008 12.8686 19.0008 13C19.0008 13.1314 18.9749 13.2615 18.9246 13.3829C18.8742 13.5043 18.8005 13.6146 18.7075 13.7075Z"
-                          fill="white"
-                        />
-                      </svg>
-                    </button>
-                  </Link>
-                  <p className="text-[11px] text-neutral-400">
-                    Instant migration • No credit card required
-                  </p>
-                </div>
+                      <path
+                        d="M13 0C10.4288 0 7.91543 0.762437 5.77759 2.1909C3.63975 3.61935 1.97351 5.64968 0.989572 8.02512C0.0056327 10.4006 -0.251811 13.0144 0.249797 15.5362C0.751405 18.0579 1.98953 20.3743 3.80762 22.1924C5.6257 24.0105 7.94208 25.2486 10.4638 25.7502C12.9856 26.2518 15.5995 25.9944 17.9749 25.0104C20.3503 24.0265 22.3807 22.3603 23.8091 20.2224C25.2376 18.0846 26 15.5712 26 13C25.9964 9.5533 24.6256 6.24882 22.1884 3.81163C19.7512 1.37445 16.4467 0.00363977 13 0ZM18.7075 13.7075L14.7075 17.7075C14.5199 17.8951 14.2654 18.0006 14 18.0006C13.7346 18.0006 13.4801 17.8951 13.2925 17.7075C13.1049 17.5199 12.9994 17.2654 12.9994 17C12.9994 16.7346 13.1049 16.4801 13.2925 16.2925L15.5863 14H8.00001C7.73479 14 7.48044 13.8946 7.2929 13.7071C7.10536 13.5196 7.00001 13.2652 7.00001 13C7.00001 12.7348 7.10536 12.4804 7.2929 12.2929C7.48044 12.1054 7.73479 12 8.00001 12H15.5863L13.2925 9.7075C13.1049 9.51986 12.9994 9.26536 12.9994 9C12.9994 8.73464 13.1049 8.48014 13.2925 8.2925C13.4801 8.10486 13.7346 7.99944 14 7.99944C14.2654 7.99944 14.5199 8.10486 14.7075 8.2925L18.7075 12.2925C18.8005 12.3854 18.8742 12.4957 18.9246 12.6171C18.9749 12.7385 19.0008 12.8686 19.0008 13C19.0008 13.1314 18.9749 13.2615 18.9246 13.3829C18.8742 13.5043 18.8005 13.6146 18.7075 13.7075Z"
+                        fill="white"
+                      />
+                    </svg>
+                  </button>
+                </Link>
+                <p className="text-[11px] text-neutral-400">
+                  Instant migration • No credit card required
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Disclaimer */}
-          <p className="px-4 pb-2 text-center text-[10px] text-neutral-400 sm:px-6">
-            * Slack cost is an illustrative estimate at ₦13,500 per
-            learner/month. Actual Slack pricing may vary.
-          </p>
         </div>
+
+        {/* Disclaimer */}
+        <p className="px-4 pb-2 text-center text-[10px] text-neutral-400 sm:px-6">
+          * Slack cost is an illustrative estimate at ₦13,500 per learner/month.
+          Actual Slack pricing may vary.
+        </p>
       </div>
 
       {/* Slider thumb styling injected inline to avoid extra CSS files */}
@@ -675,7 +628,6 @@ export function SlackZeduCalculator({
           background: transparent;
         }
       `}</style>
-    </>,
-    document.body
+    </DialogContent>
   );
 }
