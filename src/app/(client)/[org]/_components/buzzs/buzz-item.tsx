@@ -35,18 +35,30 @@ interface BuzzItemProps {
 
 export const BuzzItem = ({ buzz }: BuzzItemProps) => {
   const { state } = useContext(DataContext);
-  const { orgSlug, orgMembers, channels } = state;
+  const { orgSlug, orgMembers, mentionOrgMembers, channels, allChannels } =
+    state;
   const [joinLoading, setJoinLoading] = useState(false);
 
-  const host = orgMembers?.find(
-    (member: { id?: string }) => member.id === buzz.host_id
-  );
+  // orgMembers is paginated (50 per page); mentionOrgMembers holds the full list
+  const host = useMemo(() => {
+    const isHost = (member: { id?: string; user_id?: string }) =>
+      (member?.id ?? member?.user_id) === buzz.host_id;
+    return mentionOrgMembers?.find(isHost) || orgMembers?.find(isHost) || null;
+  }, [mentionOrgMembers, orgMembers, buzz.host_id]);
   const hostName =
-    host?.name || host?.username || host?.email?.split("@")[0] || "Someone";
+    host?.name ||
+    host?.profile?.full_name ||
+    host?.profile?.display_name ||
+    host?.username ||
+    host?.email?.split("@")[0] ||
+    "Someone";
 
-  const channel = channels?.find(
-    (item: { channels_id?: string }) => item.channels_id === buzz.channel_id
-  );
+  // channels only holds joined channels; allChannels covers the whole org
+  const channel = useMemo(() => {
+    const isBuzzChannel = (item: { channels_id?: string }) =>
+      item?.channels_id === buzz.channel_id;
+    return channels?.find(isBuzzChannel) || allChannels?.find(isBuzzChannel);
+  }, [channels, allChannels, buzz.channel_id]);
   const channelName = channel?.name || channel?.channel_slug;
 
   const active = isBuzzActive(buzz);
@@ -124,12 +136,18 @@ export const BuzzItem = ({ buzz }: BuzzItemProps) => {
         <p className="mt-0.5 truncate text-[13px] text-[#667085]">
           {relativeTime}
           {duration ? ` · ${duration}` : ""}
-          {contextLabel ? ` · ${contextLabel}` : ""}
+          {contextLabel && " · "}
+          {contextLabel && channelHref ? (
+            <Link
+              href={channelHref}
+              className="font-medium text-[#1264A3] hover:underline"
+            >
+              {contextLabel}
+            </Link>
+          ) : (
+            contextLabel
+          )}
         </p>
-
-        {buzz.buzz_code && (
-          <p className="mt-1 text-xs text-[#98A2B3]">{buzz.buzz_code}</p>
-        )}
       </div>
 
       <div className="hidden items-center sm:flex">
@@ -137,8 +155,13 @@ export const BuzzItem = ({ buzz }: BuzzItemProps) => {
           {avatarStack.map((member: any, index) => (
             <FallbackImage
               key={member?.id ?? index}
-              src={member?.avatar_url || member?.default_avatar_url}
-              alt={member?.name || member?.username || "Participant"}
+              src={
+                member?.avatar_url ||
+                member?.profile_url ||
+                member?.profile?.avatar_url ||
+                member?.default_avatar_url
+              }
+              alt={hostName}
               width={28}
               height={28}
               className="size-7 rounded-full border-2 border-white object-cover"
