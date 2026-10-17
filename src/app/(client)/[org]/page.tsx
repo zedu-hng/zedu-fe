@@ -59,7 +59,7 @@ const People = () => {
     };
   }, []);
 
-  const [windowWidth, setWindowWidth] = useState(0);
+  const [windowWidth, setWindowWidth] = useState<number | null>(null);
   const router = useRouter();
   const { state } = useContext(DataContext);
 
@@ -70,7 +70,7 @@ const People = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isLargeScreen = windowWidth >= 1024;
+  const isLargeScreen = windowWidth !== null && windowWidth >= 1024;
   const channels = Array.isArray(state?.channels) ? state.channels : [];
   const defaultChannel =
     channels.find(
@@ -82,6 +82,8 @@ const People = () => {
     null;
 
   useEffect(() => {
+    if (windowWidth === null) return;
+
     if (!isLargeScreen && defaultChannel && state?.orgSlug) {
       const channelId =
         defaultChannel?.channels_id ??
@@ -92,7 +94,7 @@ const People = () => {
         router.replace(`/${state.orgSlug}/home/channels/${channelId}`);
       }
     }
-  }, [defaultChannel, isLargeScreen, router, state?.orgSlug]);
+  }, [defaultChannel, isLargeScreen, router, state?.orgSlug, windowWidth]);
 
   const handleSelectChannel = (channelId: string) => {
     if (!channelId) return;
