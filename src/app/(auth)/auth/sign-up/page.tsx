@@ -14,6 +14,11 @@ import { Separator } from "~/components/ui/separator";
 import AppleSignin from "react-apple-signin-auth";
 import { Eye, EyeOff } from "lucide-react";
 
+// The backend auto-creates a workspace at signup, so `is_onboarded` being
+// true does not mean the user ever chose one. A missing type is never default.
+const isAutoCreatedOrg = (type?: string) =>
+  (type ?? "").trim().toLowerCase() === "user default org";
+
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +58,10 @@ function SignUp() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          if (user?.is_onboarded) {
+          if (
+            user?.is_onboarded &&
+            !isAutoCreatedOrg(user?.organisation?.type)
+          ) {
             router.push(`/${orgSlug}`);
           } else {
             router.push(`/${orgSlug}/welcome`);
@@ -189,7 +197,10 @@ function SignUp() {
           }, 100);
         } else {
           setTimeout(() => {
-            if (res?.data?.data?.user?.is_onboarded) {
+            if (
+              res?.data?.data?.user?.is_onboarded &&
+              !isAutoCreatedOrg(res?.data?.data?.user?.organisation?.type)
+            ) {
               router.push(`/${orgSlug}`);
             } else {
               router.push(`/${orgSlug}/welcome`);
@@ -244,10 +255,13 @@ function SignUp() {
           if (redirectUrl) {
             router.push(redirectUrl);
           } else {
-            if (user?.is_onboarded) {
+            if (
+              user?.is_onboarded &&
+              !isAutoCreatedOrg(user?.organisation?.type)
+            ) {
               router.push(`/${orgSlug}`);
             } else {
-              router.push(`${orgSlug}/welcome`);
+              router.push(`/${orgSlug}/welcome`);
             }
           }
 
@@ -310,6 +324,7 @@ function SignUp() {
               </label>
               <div className="w-full flex flex-col gap-[2px]">
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={handleEmailChange}
@@ -336,6 +351,7 @@ function SignUp() {
               <div className="w-full flex flex-col gap-[2px]">
                 <div className="relative ">
                   <input
+                    id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={handlePasswordChange}
