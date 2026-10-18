@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
@@ -54,11 +55,24 @@ interface ErrorStateProps {
   variant: ErrorStateVariant;
   /** Only used by the network variant; defaults to reloading the page. */
   onRetry?: () => void;
+  /** Overrides the variant's default copy, e.g. "Channel not found". */
+  title?: string;
+  description?: string;
+  /** In-app primary action shown instead of "Go to my workspaces". */
+  action?: { label: string; href: string };
   className?: string;
 }
 
-const ErrorState = ({ variant, onRetry, className }: ErrorStateProps) => {
-  const { title, description } = COPY[variant];
+const ErrorState = ({
+  variant,
+  onRetry,
+  title,
+  description,
+  action,
+  className,
+}: ErrorStateProps) => {
+  const router = useRouter();
+  const copy = COPY[variant];
 
   const handleRetry = () => {
     if (onRetry) onRetry();
@@ -86,9 +100,11 @@ const ErrorState = ({ variant, onRetry, className }: ErrorStateProps) => {
         className="w-60 h-40"
       />
       <h1 className="text-xl font-semibold leading-6 text-slate-700">
-        {title}
+        {title ?? copy.title}
       </h1>
-      <p className="max-w-md text-sm leading-5 text-slate-600">{description}</p>
+      <p className="max-w-md text-sm leading-5 text-slate-600">
+        {description ?? copy.description}
+      </p>
       <div className="flex flex-wrap items-center justify-center gap-3 mt-2">
         {variant === "network" && (
           <Button onClick={handleRetry} variant="outline">
@@ -96,10 +112,10 @@ const ErrorState = ({ variant, onRetry, className }: ErrorStateProps) => {
           </Button>
         )}
         <Button
-          onClick={goToWorkspaces}
+          onClick={action ? () => router.push(action.href) : goToWorkspaces}
           className="bg-primary-500 text-white hover:bg-primary-500/90"
         >
-          Go to my workspaces
+          {action?.label ?? "Go to my workspaces"}
         </Button>
       </div>
       <p className="text-xs text-slate-500">

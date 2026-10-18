@@ -32,6 +32,21 @@ import ConversationSearchSidebar, {
   getConversationSearchSidebarWidth,
 } from "../../../_components/conversation-search/conversation-search-sidebar";
 
+const CHANNEL_ERROR_COPY: Partial<
+  Record<ErrorStateVariant, { title: string; description: string }>
+> = {
+  "not-found": {
+    title: "Channel not found",
+    description:
+      "This channel doesn't exist or has been deleted. Check the link, or pick a channel from the list.",
+  },
+  "no-access": {
+    title: "You don't have access to this channel",
+    description:
+      "It may be private, or you may have been removed. Ask a channel admin to add you.",
+  },
+};
+
 const ChannelsPage = () => {
   const params = useParams();
   const channelId = params?.id;
@@ -193,7 +208,15 @@ const ChannelsPage = () => {
     return (
       <div className="flex h-[calc(100dvh-70px)] relative w-full overflow-hidden">
         <UseGetSingleChannel onError={handleChannelError} />
-        <ErrorState variant={channelError} className="min-h-0 h-full" />
+        <ErrorState
+          variant={channelError}
+          {...CHANNEL_ERROR_COPY[channelError]}
+          action={{
+            label: "Go to channels",
+            href: `/${params?.org}/home/channels`,
+          }}
+          className="min-h-0 h-full"
+        />
       </div>
     );
   }

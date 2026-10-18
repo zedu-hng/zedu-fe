@@ -40,7 +40,12 @@ const UseGetSingleChannel = ({ onError }: Props = {}) => {
             });
           }
         } else if (status !== 401) {
-          // 401 is handled by the session-expiry flow.
+          // 401 is handled by the session-expiry flow. Otherwise drop the
+          // previous channel's details and name so nothing (composer label,
+          // search chip, header) keeps pointing at it.
+          localStorage.removeItem("channelName");
+          dispatch({ type: ACTIONS.CHANNEL_DETAILS, payload: null });
+          dispatch({ type: ACTIONS.CHANNEL_NAME, payload: "" });
           onError?.(status);
         }
         dispatch({
