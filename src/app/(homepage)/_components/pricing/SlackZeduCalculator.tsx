@@ -363,7 +363,11 @@ const ZeduLogo = () => (
 // ---------------------------------------------------------------------------
 // Main SlackZeduCalculator component (modal)
 // ---------------------------------------------------------------------------
-export function SlackZeduCalculator() {
+export function SlackZeduCalculator({
+  onCloseAutoFocus,
+}: {
+  onCloseAutoFocus?: (event: Event) => void;
+}) {
   const [learnerCount, setLearnerCount] = useState(SLIDER_INITIAL);
   const [durationMonths, setDurationMonths] = useState(DEFAULT_DURATION_MONTHS);
 
@@ -408,6 +412,7 @@ export function SlackZeduCalculator() {
 
   return (
     <DialogContent
+      onCloseAutoFocus={onCloseAutoFocus}
       overlayClassName="bg-black/60 backdrop-blur-sm"
       className="fixed inset-0 z-[10001] flex h-full w-full max-w-none translate-x-0 translate-y-0 items-center justify-center overflow-y-auto rounded-none border-0 bg-transparent p-3 shadow-none sm:p-4"
     >

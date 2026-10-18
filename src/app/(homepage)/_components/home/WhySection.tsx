@@ -26,11 +26,15 @@ export const WhySection = () => {
               title={card.title}
               desc={card.desc}
               cta={
-                card.title === "No Per-Student Pricing" ? (
+                card.title === "No Per-Seat Fees" ? (
                   <button
                     type="button"
-                    onClick={() =>
-                      window.dispatchEvent(new Event("open-zedu-calculator"))
+                    onClick={(e) =>
+                      window.dispatchEvent(
+                        new CustomEvent("open-zedu-calculator", {
+                          detail: e.currentTarget,
+                        })
+                      )
                     }
                     className="group mt-1 inline-flex items-center gap-1.5 rounded-full border border-primary-500 bg-transparent px-4 py-1.5 text-sm font-semibold text-primary-500 transition-colors duration-150 hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                   >

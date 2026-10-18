@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { pricingCardsByCycle } from "../../_lib/pricingData";
 import { PricingCard } from "../ui/PricingCard";
 import Link from "next/link";
@@ -19,14 +19,29 @@ export const PricingSection = ({
     "monthly"
   );
   const [calculatorOpen, setCalculatorOpen] = useState(false);
+  // Button outside the dialog that opened it, so focus can return there
+  const externalOpenerRef = useRef<HTMLElement | null>(null);
   const plans = pricingCardsByCycle[billingCycle];
 
   // Listen for the custom event dispatched by the "Calculate Your Savings" button
   useEffect(() => {
-    const handler = () => setCalculatorOpen(true);
+    const handler = (event: Event) => {
+      const opener = (event as CustomEvent).detail;
+      externalOpenerRef.current = opener instanceof HTMLElement ? opener : null;
+      setCalculatorOpen(true);
+    };
     window.addEventListener("open-zedu-calculator", handler);
     return () => window.removeEventListener("open-zedu-calculator", handler);
   }, []);
+
+  const handleCalculatorCloseAutoFocus = (event: Event) => {
+    const opener = externalOpenerRef.current;
+    externalOpenerRef.current = null;
+    if (opener) {
+      event.preventDefault();
+      opener.focus();
+    }
+  };
 
   return (
     <Dialog open={calculatorOpen} onOpenChange={setCalculatorOpen}>
@@ -130,7 +145,7 @@ export const PricingSection = ({
       </section>
 
       {/* Calculator modal — rendered outside the section so it can use a portal-like overlay */}
-      <SlackZeduCalculator />
+      <SlackZeduCalculator onCloseAutoFocus={handleCalculatorCloseAutoFocus} />
     </Dialog>
   );
 };
