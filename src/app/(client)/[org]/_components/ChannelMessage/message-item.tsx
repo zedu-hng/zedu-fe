@@ -268,7 +268,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
           return (
             <GlobalMention
               key={`${part.slice(1)}-${i}`}
-              id={props["data-id"]}
+              id={props["data-id"] || part.slice(1).trim()}
               trigger="@"
               label={part.slice(1).trim()}
               item={item}
@@ -322,6 +322,14 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
                     }}
                   >
                     {React.Children.map(children, (child) => {
+                      if (
+                        typeof child === "string" &&
+                        item?.type === "system"
+                      ) {
+                        return renderTextWithMentions({
+                          props: { children: child },
+                        });
+                      }
                       return typeof child === "string"
                         ? linkifyText(child, linkifyOptions)
                         : renderTextWithMentions(child);
