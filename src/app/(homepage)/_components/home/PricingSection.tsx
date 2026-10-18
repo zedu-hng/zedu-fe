@@ -90,6 +90,11 @@ export const PricingSection = ({
               ctaVariant={plan.ctaVariant}
               variant={plan.variant}
               badgeText={plan.badgeText}
+              className={
+                plan.variant === "enterprise"
+                  ? "sm:col-span-2 sm:justify-self-center lg:col-span-1 lg:justify-self-stretch"
+                  : undefined
+              }
             />
           ))}
         </div>

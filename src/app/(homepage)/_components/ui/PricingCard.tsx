@@ -20,6 +20,7 @@ type PricingCardProps = {
   ctaVariant: "outline" | "filled";
   variant: "starter" | "popular" | "enterprise";
   badgeText?: string;
+  className?: string;
 };
 
 export const CheckIcon = () => {
@@ -52,6 +53,7 @@ export const PricingCard = ({
   ctaVariant,
   variant,
   badgeText,
+  className,
 }: PricingCardProps) => {
   const isPopular = variant === "popular";
   const router = useRouter();
@@ -60,7 +62,8 @@ export const PricingCard = ({
     <article
       className={cn(
         "relative flex h-full w-full max-w-[350px] flex-col gap-5 rounded-2xl bg-white p-6 shadow-md sm:p-8",
-        isPopular && "bg-[#f6f3ff] sm:scale-[1.01]"
+        isPopular && "bg-[#f6f3ff] sm:scale-[1.01]",
+        className
       )}
     >
       {badgeText ? (
