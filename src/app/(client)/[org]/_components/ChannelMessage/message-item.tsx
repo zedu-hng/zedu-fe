@@ -226,6 +226,29 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
     }
   }, [trimmedMessage]);
 
+  const renderPlainTextWithMentions = (text: string, id?: string) =>
+    React.Children.map(linkifyText(text, linkifyOptions), (child) => {
+      if (typeof child !== "string") return child;
+      return tokenizeMessageText(child).map(
+        ({ text: part, isEmail, isMention }, i) => {
+          if (isEmail) return part;
+          if (isMention && (part.startsWith("@") || part.startsWith("#"))) {
+            return (
+              <GlobalMention
+                key={`${part.slice(1)}-${i}`}
+                id={id ?? ""}
+                trigger={part.startsWith("@") ? "@" : "#"}
+                label={part.slice(1).trim()}
+                item={item}
+                currentUser={currentUser}
+              />
+            );
+          }
+          return part;
+        }
+      );
+    });
+
   const renderTextWithMentions = (node: any) => {
     if (!node || !node.props) return node;
 
@@ -262,36 +285,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
     }
 
     if (typeof children === "string") {
-      const parts = tokenizeMessageText(children);
-
-      return parts.map(({ text: part, isEmail, isMention }, i) => {
-        if (isEmail) return part;
-        if (isMention && part.startsWith("@")) {
-          return (
-            <GlobalMention
-              key={`${part.slice(1)}-${i}`}
-              id={props["data-id"]}
-              trigger="@"
-              label={part.slice(1).trim()}
-              item={item}
-              currentUser={currentUser}
-            />
-          );
-        }
-        if (isMention && part.startsWith("#")) {
-          return (
-            <GlobalMention
-              key={`${part.slice(1)}-${i}`}
-              id={props["data-id"]}
-              trigger="#"
-              label={part.slice(1).trim()}
-              item={item}
-              currentUser={currentUser}
-            />
-          );
-        }
-        return linkifyText(part, linkifyOptions);
-      });
+      return renderPlainTextWithMentions(children, props["data-id"]);
     }
 
     return node;
@@ -323,7 +317,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
                   >
                     {React.Children.map(children, (child) => {
                       return typeof child === "string"
-                        ? linkifyText(child, linkifyOptions)
+                        ? renderPlainTextWithMentions(child)
                         : renderTextWithMentions(child);
                     })}
                   </p>

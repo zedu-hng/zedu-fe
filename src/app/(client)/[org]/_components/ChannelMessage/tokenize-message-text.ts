@@ -1,7 +1,7 @@
 export function tokenizeMessageText(text: string) {
   const emailRegex =
     /(?<![\p{L}\p{N}!#$%&'+/=?^_`{|}~-])[\p{L}\p{N}!#$%&'+/=?^_`{|}~-]+(?:\.[\p{L}\p{N}!#$%&'*+/=?^_`{|}~-]+)*@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+[\p{L}]{2,}/gu;
-  const mentionRegex = /([@#][a-zA-Z0-9_.-]+(?:\s[a-zA-Z0-9_.-]+)*)/g;
+  const mentionRegex = /([@#][a-zA-Z0-9_]+(?:[.-][a-zA-Z0-9_]+)*)/g;
   const spans: { text: string; isEmail: boolean }[] = [];
   let cursor = 0;
 
