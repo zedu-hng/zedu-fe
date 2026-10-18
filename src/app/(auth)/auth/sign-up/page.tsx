@@ -10,9 +10,9 @@ import Loading from "~/components/ui/loading";
 import { PostRequest } from "~/utils/request";
 import { useGoogleLogin } from "@react-oauth/google";
 import { RegisterWebhookRequest } from "~/utils/webhook-request";
+import { Separator } from "~/components/ui/separator";
 import AppleSignin from "react-apple-signin-auth";
 import { Eye, EyeOff } from "lucide-react";
-import AuthSideBanner from "~/app/(auth)/_components/auth-side-banner";
 
 function SignUp() {
   const [email, setEmail] = useState("");
@@ -277,171 +277,162 @@ function SignUp() {
   //
 
   return (
-    <main className="w-full min-h-screen flex flex-col lg:flex-row bg-white">
-      <AuthSideBanner />
-
-      <section className="w-full lg:w-1/2 flex flex-col justify-between min-h-screen px-6 sm:px-10 lg:px-16 py-8 overflow-y-auto">
-        {/* Top navigation row */}
-        <div className="flex items-center justify-between w-full max-w-md mx-auto">
-          <Link href="/" className="flex items-center">
-            <Image src="/Zedu.png" alt="Zedu" width={86} height={31} priority />
+    <main className="w-full min-h-screen flex flex-col items-center">
+      <div className="flex items-center justify-between w-full py-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <Link href="/">
+          <Image src="/Zedu.png" alt="" width={86} height={31} />
+        </Link>
+        <div>
+          Already have an account?{" "}
+          <Link href={"/auth/login"} className="text-[#7141F8]">
+            Sign In
           </Link>
-          <div className="text-sm text-[#344054]">
-            Already have an account?{" "}
-            <Link
-              href="/auth/login"
-              className="text-[#7141F8] font-medium hover:underline"
-            >
-              Log in
-            </Link>
-          </div>
+        </div>
+      </div>
+      <section className="w-full md:w-[55%] flex flex-col max-w-xs md:max-w-lg mx-auto items-start justify-start pt-[20px] md:pt-0 ">
+        <div className="w-full flex flex-col justify-center mt-10 items-center gap-[8px] mb-[32px]">
+          <h1 className="w-full text-center mt-8 text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px]">
+            Stay Focused While{" "}
+            <span className="text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px] bg-gradient-to-t from-[#8860F8] to-[#7141F8] bg-clip-text text-transparent">
+              Zedu Handles The Hustle
+            </span>{" "}
+          </h1>
         </div>
 
-        {/* Centered form container */}
-        <div className="w-full max-w-md mx-auto my-auto py-8">
-          <div className="flex flex-col items-center text-center gap-2 mb-8">
-            <h1 className="text-[28px] md:text-[32px] font-bold text-[#101828] tracking-tight">
-              Create an account
-            </h1>
-            <p className="text-sm md:text-base text-[#475467]">
-              Start collaborating with your team today.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-5">
-            {/* Email address */}
-            <div className="flex flex-col gap-1.5">
+        <form onSubmit={handleSubmit} className="w-full pb-[40px]">
+          <div className="flex flex-col gap-[16px] mb-[16px]">
+            <div className="w-full flex flex-col gap-[8px] relative">
               <label
                 htmlFor="email"
-                className="text-sm font-medium text-[#344054]"
+                className="text-[14px] font-[400] leading-[21px]"
               >
                 Email address
               </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={handleEmailChange}
-                onBlur={handleEmailBlur}
-                placeholder="you@example.com"
-                className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 border ${
-                  errors.email
-                    ? "border-[#FDA29B] focus:border-[#F04438]"
-                    : "border-[#D0D5DD] focus:border-[#7141F8]"
-                } outline-none rounded-lg shadow-sm transition-colors`}
-              />
-              {errors.email && (
-                <span className="text-xs text-[#F04438]">{errors.email}</span>
-              )}
+              <div className="w-full flex flex-col gap-[2px]">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  onBlur={handleEmailBlur}
+                  placeholder="Enter your email"
+                  className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
+                    errors.email ? "border-[#F81404]" : "border-[#D0D0FD]"
+                  } outline-none rounded-md py-[13px] pl-[13px]`}
+                />
+                {errors.email && (
+                  <small className="text-[12px] text-[#F81404]">
+                    {errors.email}
+                  </small>
+                )}
+              </div>
             </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
+            <div className="w-full flex flex-col gap-[8px] relative">
               <label
                 htmlFor="password"
-                className="text-sm font-medium text-[#344054]"
+                className="text-[14px] font-[400] leading-[21px]"
               >
                 Password
               </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter your password"
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 pr-10 border ${
-                    formSubmitted
-                      ? errors.password
-                        ? "border-[#FDA29B] focus:border-[#F04438]"
-                        : "border-[#D0D5DD] focus:border-[#7141F8]"
-                      : passwordFocused
+              <div className="w-full flex flex-col gap-[2px]">
+                <div className="relative ">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={handlePasswordChange}
+                    placeholder="Password"
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
+                      formSubmitted
                         ? errors.password
-                          ? "border-[#FDA29B] focus:border-[#F04438]"
-                          : "border-[#D0D5DD] focus:border-[#7141F8]"
-                        : "border-[#D0D5DD] focus:border-[#7141F8]"
-                  } outline-none rounded-lg shadow-sm transition-colors`}
-                />
-                <button
-                  type="button"
-                  onClick={togglePasswordVisibility}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#667085] focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                          ? "border-[#F81404]"
+                          : "border-[#D0D0FD]"
+                        : passwordFocused
+                          ? errors.password
+                            ? "border-[#F81404]"
+                            : "border-[#D0D0FD]"
+                          : "border-[#D0D0FD]"
+                    } outline-none rounded-md py-[13px] pl-[13px] pr-[10px]`}
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#667085] focus:outline-none"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+
+                {errors.password && (
+                  <small className="text-[12px] text-[#F81404]">
+                    {errors.password}
+                  </small>
+                )}
               </div>
-              {errors.password && (
-                <span className="text-xs text-[#F04438]">
-                  {errors.password}
-                </span>
-              )}
             </div>
-            {/* Keep me logged in */}
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                className="rounded border-[#D0D5DD] data-[state=checked]:bg-[#7141F8] data-[state=checked]:border-[#7141F8]"
-              />
-              <label
-                htmlFor="remember"
-                className="text-sm text-[#475467] font-normal cursor-pointer select-none"
+          </div>
+          <div className="flex flex-col gap-[12px] mb-3">
+            <div className="flex flex-row gap-[6px] items-center">
+              <Checkbox className="mt-[2px]" />
+              <p className="text-[14px] font-[400] leading-[17.64px]">
+                Stay Signed In
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-[24px]">
+            <div className="flex flex-col gap-[16px]">
+              <Button
+                type="submit"
+                variant="default"
+                className="py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
               >
-                Keep me logged in
-              </label>
+                {loading ? (
+                  <span className="flex items-center gap-x-2">
+                    <span className="animate-pulse">Creating...</span>{" "}
+                    <Loading width="20" height="20" />
+                  </span>
+                ) : (
+                  <span>Create Account</span>
+                )}
+              </Button>
+            </div>
+            <div className="w-full flex justify-center items-center">
+              <div className="flex items-center justify-center gap-3 max-w-xl w-1/5">
+                <Separator />
+                <p>OR</p>
+                <Separator />
+              </div>
             </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-11 bg-[#7141F8] hover:bg-[#5f33d6] text-white font-medium text-sm rounded-lg shadow-sm transition-colors mt-1"
-              disabled={loading || googleloading || appleLoading}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-pulse">Creating account...</span>
-                  <Loading width="18" height="18" />
-                </span>
-              ) : (
-                "Create account"
-              )}
-            </Button>
-
-            {/* Divider: or */}
-            <div className="relative flex items-center justify-center my-2">
-              <div className="w-full border-t border-[#EAECF0]" />
-              <span className="absolute bg-white px-3 text-xs text-[#667085] lowercase">
-                or
-              </span>
-            </div>
-
-            {/* Social Login 2-columns */}
-            <div className="grid grid-cols-2 gap-3 w-full">
-              <button
-                type="button"
+            {/* Google Login */}
+            <div className="border border-[#D0D0FD] rounded-md mb-2">
+              <div
                 onClick={() => login()}
-                disabled={googleloading}
-                className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors cursor-pointer"
+                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px]"
               >
                 <Image
                   src="/dashboard/google.svg"
-                  width={18}
-                  height={18}
-                  alt="Google"
+                  width={24}
+                  height={24}
+                  alt="google"
                 />
-                <span>
+                <div className="text-[16px] font-[600] leading-[20.16px]">
                   {googleloading ? (
-                    <span className="flex items-center gap-1.5">
-                      <Loading width="14" height="14" color="#7141F8" />
+                    <span className="flex items-center gap-x-2">
+                      <span className="animate-pulse">Logging in...</span>
+                      <Loading width="20" height="20" color="#7141F8" />
                     </span>
                   ) : (
-                    "Google"
+                    "Sign up with Google"
                   )}
-                </span>
-              </button>
-
+                </div>
+              </div>
+            </div>
+            {/* Apple Login */}
+            <div className="border border-[#D0D0FD] py-[11px] rounded-md">
               <AppleSignin
                 authOptions={{
                   clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
@@ -453,30 +444,30 @@ function SignUp() {
                   usePopup: true,
                 }}
                 uiType="dark"
+                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px] w-full"
                 noDefaultStyle={true}
                 render={(props: any) => (
-                  <button
-                    type="button"
+                  <div
                     onClick={props.onClick}
-                    disabled={appleLoading}
-                    className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors w-full cursor-pointer"
+                    className="flex flex-row gap-[10px] items-center justify-center w-full"
                   >
                     <Image
                       src="/dashboard/apple.png"
-                      width={18}
-                      height={18}
-                      alt="Apple"
+                      width={24}
+                      height={24}
+                      alt="apple"
                     />
-                    <span>
+                    <div className="text-[16px] font-[600] leading-[20.16px]">
                       {appleLoading ? (
-                        <span className="flex items-center gap-1.5">
-                          <Loading width="14" height="14" color="#000" />
+                        <span className="flex items-center gap-x-2">
+                          <span className="animate-pulse">Logging in...</span>
+                          <Loading width="20" height="20" color="#000" />
                         </span>
                       ) : (
-                        "Apple"
+                        "Sign up with Apple"
                       )}
-                    </span>
-                  </button>
+                    </div>
+                  </div>
                 )}
                 onSuccess={handleAppleSuccess}
                 onError={(err: any) => {
@@ -485,31 +476,27 @@ function SignUp() {
                 }}
               />
             </div>
+          </div>
 
-            {/* Terms & Privacy */}
-            <p className="text-xs text-[#475467] text-center mt-2 leading-relaxed">
-              By signing up, you agree to our{" "}
-              <Link
-                href="/terms-of-service"
-                target="_blank"
-                className="font-medium text-[#7141F8] hover:underline"
-              >
-                terms of service
-              </Link>{" "}
-              and{" "}
-              <Link
-                href="/policy"
-                target="_blank"
-                className="font-medium text-[#7141F8] hover:underline"
-              >
-                privacy policy
-              </Link>
-              .
-            </p>
-          </form>
-        </div>
-
-        <div className="hidden lg:block h-6" />
+          <p className="text-[14px] font-[400] leading-[17.64px] text-center m-2">
+            By Signing up, you agree to our
+            <Link
+              href="/terms-of-service"
+              target="_blank"
+              className="px-1 font-[500] leading-[21px] text-[#7141F8] hover:text-[#9678e8]"
+            >
+              terms of service
+            </Link>
+            and
+            <Link
+              href="/policy"
+              target="_blank"
+              className="px-1 font-[500] leading-[21px] text-[#7141F8] hover:text-[#9678e8]"
+            >
+              privacy policy
+            </Link>
+          </p>
+        </form>
       </section>
     </main>
   );

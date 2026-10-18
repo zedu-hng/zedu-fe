@@ -13,8 +13,7 @@ import { LoginWebhookRequest } from "~/utils/webhook-request";
 import { useGoogleLogin } from "@react-oauth/google";
 import AppleSignin from "react-apple-signin-auth";
 import { Separator } from "~/components/ui/separator";
-import { Eye, EyeOff, Mail } from "lucide-react";
-import AuthSideBanner from "~/app/(auth)/_components/auth-side-banner";
+import { Eye, EyeOff } from "lucide-react";
 
 //
 
@@ -256,241 +255,215 @@ function Login() {
   return (
     <>
       <Toaster />
-      <main className="w-full min-h-screen flex flex-col lg:flex-row bg-white">
-        <AuthSideBanner />
-
-        <section className="w-full lg:w-1/2 flex flex-col justify-between min-h-screen px-6 sm:px-10 lg:px-16 py-8 overflow-y-auto">
-          {/* Top navigation row */}
-          <div className="flex items-center justify-between w-full max-w-md mx-auto">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/Zedu.png"
-                alt="Zedu"
-                width={86}
-                height={31}
-                priority
-              />
+      <main className="w-full min-h-screen flex flex-col  items-center ">
+        <div className="flex items-center justify-between w-full py-6 max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Link href="/">
+            <Image src="/Zedu.png" alt="" width={86} height={31} />
+          </Link>
+          <div>
+            Don't have an account?{" "}
+            <Link href={"/auth/sign-up"} className="text-[#7141F8]">
+              Sign up
             </Link>
-            <div className="text-sm text-[#344054]">
-              New to Zedu?{" "}
-              <Link
-                href="/auth/sign-up"
-                className="text-[#7141F8] font-medium hover:underline"
-              >
-                Create an account
-              </Link>
-            </div>
+          </div>
+        </div>
+
+        <section className="w-full md:w-[55%] flex flex-col max-w-xs md:max-w-lg mx-auto items-start justify-start pt-[20px] md:pt-0">
+          <div className="w-full flex flex-col justify-center mt-[60px] md:mt-[80px] items-center gap-[8px] mb-[32px]">
+            <h1 className="w-full text-center text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px]">
+              Login to Zedu
+            </h1>
+            <p className="w-full text-center text-[14px] md:text-[16px] text-[#344054] font-[400] leading-[21px] md:leading-[27px]">
+              Welcome back! We&apos;ve missed you!
+            </p>
           </div>
 
-          {/* Centered form container */}
-          <div className="w-full max-w-md mx-auto my-auto py-8">
-            <div className="flex flex-col items-center text-center gap-2 mb-8">
-              <h1 className="text-[28px] md:text-[32px] font-bold text-[#101828] tracking-tight">
-                Welcome back
-              </h1>
-              <p className="text-sm md:text-base text-[#475467]">
-                Log in to catch up with your team.
-              </p>
+          <div className="flex flex-col gap-[10px] w-full mt-4">
+            {/* Google Login */}
+            <div className="border border-[#D0D0FD] rounded-md mb-2">
+              <div
+                onClick={() => login()}
+                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px]"
+              >
+                <Image
+                  src="/dashboard/google.svg"
+                  width={24}
+                  height={24}
+                  alt="google"
+                />
+                <div className="text-[16px] font-[600] leading-[20.16px]">
+                  {googleloading ? (
+                    <span className="flex items-center gap-x-2">
+                      <span className="animate-pulse">Logging in...</span>
+                      <Loading width="20" height="20" color="#7141F8" />
+                    </span>
+                  ) : (
+                    "Sign in with Google"
+                  )}
+                </div>
+              </div>
             </div>
-
-            <form
-              onSubmit={handleSubmit}
-              className="w-full flex flex-col gap-5"
-            >
-              {/* Email address */}
-              <div className="flex flex-col gap-1.5">
+            {/* Apple Login */}
+            <div className="border border-[#D0D0FD] rounded-md  py-[11px] cursor-pointer">
+              <AppleSignin
+                authOptions={{
+                  clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
+                  scope: "email name",
+                  redirectURI:
+                    typeof window !== "undefined" ? window.location.origin : "",
+                  usePopup: true,
+                }}
+                uiType="dark"
+                className="cursor-pointer flex flex-row gap-[10px] border border-[#D0D0FD] rounded-md justify-center py-[11px] w-full"
+                noDefaultStyle={true}
+                render={(props: any) => (
+                  <div
+                    onClick={props.onClick}
+                    className="flex flex-row gap-[10px] items-center justify-center w-full"
+                  >
+                    <Image
+                      src="/dashboard/apple.png"
+                      width={24}
+                      height={24}
+                      alt="apple"
+                    />
+                    <div className="text-[16px] font-[600] leading-[20.16px]">
+                      {appleLoading ? (
+                        <span className="flex items-center gap-x-2">
+                          <span className="animate-pulse">Logging in...</span>
+                          <Loading width="20" height="20" color="#000" />
+                        </span>
+                      ) : (
+                        "Sign in with Apple"
+                      )}
+                    </div>
+                  </div>
+                )}
+                onSuccess={handleAppleSuccess}
+                onError={(err: any) => {
+                  setAppleLoading(false);
+                  console.error("Apple Login Error:", err);
+                }}
+              />
+            </div>
+          </div>
+          <div className="w-full flex justify-center items-center my-5">
+            <div className="flex items-center justify-center gap-3 max-w-xl w-1/5">
+              <Separator />
+              <p>OR</p>
+              <Separator />
+            </div>
+          </div>
+          <form onSubmit={handleSubmit} className="w-full">
+            <div className="flex flex-col gap-[16px]">
+              <div className="w-full flex flex-col gap-[8px] relative">
                 <label
                   htmlFor="email"
-                  className="text-sm font-medium text-[#344054]"
+                  className="text-[14px] font-[400] leading-[21px]"
                 >
                   Email address
                 </label>
-                <input
-                  id="email"
-                  type="text"
-                  value={email}
-                  onChange={handleEmailChange}
-                  onBlur={handleEmailBlur}
-                  placeholder="you@example.com"
-                  className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 border ${
-                    errors.email
-                      ? "border-[#FDA29B] focus:border-[#F04438]"
-                      : "border-[#D0D5DD] focus:border-[#7141F8]"
-                  } outline-none rounded-lg shadow-sm transition-colors`}
-                />
-                {errors.email && (
-                  <span className="text-xs text-[#F04438]">{errors.email}</span>
-                )}
-              </div>
-
-              {/* Password */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium text-[#344054]"
-                  >
-                    Password
-                  </label>
-                  <Link
-                    href="/auth/forgot-password"
-                    className="text-sm font-medium text-[#7141F8] hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
+                <div className="w-full flex flex-col gap-[2px]">
                   <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={handlePasswordChange}
-                    placeholder="Enter your password"
-                    className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 pr-10 border ${
-                      errors.password
-                        ? "border-[#FDA29B] focus:border-[#F04438]"
-                        : "border-[#D0D5DD] focus:border-[#7141F8]"
-                    } outline-none rounded-lg shadow-sm transition-colors`}
+                    type="text"
+                    value={email}
+                    onChange={handleEmailChange}
+                    onBlur={handleEmailBlur}
+                    placeholder="Enter your email"
+                    className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
+                      errors.email ? "border-[#F81404]" : "border-[#D0D0FD]"
+                    } outline-none rounded-md py-[13px] pl-[13px]`}
                   />
-                  <button
-                    type="button"
-                    onClick={togglePasswordVisibility}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#98A2B3] hover:text-[#667085] focus:outline-none"
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  {errors.email && (
+                    <small className="text-[12px] text-[#F81404]">
+                      {errors.email}
+                    </small>
+                  )}
                 </div>
-                {errors.password && (
-                  <span className="text-xs text-[#F04438]">
-                    {errors.password}
-                  </span>
-                )}
               </div>
-
-              {/* Keep me logged in */}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="remember"
-                  className="rounded border-[#D0D5DD] data-[state=checked]:bg-[#7141F8] data-[state=checked]:border-[#7141F8]"
-                />
+              <div className="w-full flex flex-col gap-[8px] relative">
                 <label
-                  htmlFor="remember"
-                  className="text-sm text-[#475467] font-normal cursor-pointer select-none"
+                  htmlFor="password"
+                  className="text-[14px] font-[400] leading-[21px]"
                 >
-                  Keep me logged in
+                  Password
                 </label>
-              </div>
-
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full h-11 bg-[#7141F8] hover:bg-[#5f33d6] text-white font-medium text-sm rounded-lg shadow-sm transition-colors mt-1"
-                disabled={loading || googleloading || appleLoading}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="animate-pulse">Logging in...</span>
-                    <Loading width="18" height="18" />
-                  </span>
-                ) : (
-                  "Log in"
-                )}
-              </Button>
-
-              {/* Divider: or */}
-              <div className="relative flex items-center justify-center my-2">
-                <div className="w-full border-t border-[#EAECF0]" />
-                <span className="absolute bg-white px-3 text-xs text-[#667085] lowercase">
-                  or
-                </span>
-              </div>
-
-              {/* Social Login 2-columns */}
-              <div className="grid grid-cols-2 gap-3 w-full">
-                <button
-                  type="button"
-                  onClick={() => login()}
-                  disabled={googleloading}
-                  className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors cursor-pointer"
-                >
-                  <Image
-                    src="/dashboard/google.svg"
-                    width={18}
-                    height={18}
-                    alt="Google"
-                  />
-                  <span>
-                    {googleloading ? (
-                      <span className="flex items-center gap-1.5">
-                        <Loading width="14" height="14" color="#7141F8" />
-                      </span>
-                    ) : (
-                      "Google"
-                    )}
-                  </span>
-                </button>
-
-                <AppleSignin
-                  authOptions={{
-                    clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
-                    scope: "email name",
-                    redirectURI:
-                      typeof window !== "undefined"
-                        ? window.location.origin
-                        : "",
-                    usePopup: true,
-                  }}
-                  uiType="dark"
-                  noDefaultStyle={true}
-                  render={(props: any) => (
+                <div className="w-full flex flex-col gap-[2px]">
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={handlePasswordChange}
+                      placeholder="Password"
+                      className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
+                        errors.password
+                          ? "border-[#F81404]"
+                          : "border-[#D0D0FD]"
+                      } outline-none rounded-md py-[13px] pl-[13px] pr-[40px]`}
+                    />
                     <button
                       type="button"
-                      onClick={props.onClick}
-                      disabled={appleLoading}
-                      className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors w-full cursor-pointer"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#667085] focus:outline-none"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
-                      <Image
-                        src="/dashboard/apple.png"
-                        width={18}
-                        height={18}
-                        alt="Apple"
-                      />
-                      <span>
-                        {appleLoading ? (
-                          <span className="flex items-center gap-1.5">
-                            <Loading width="14" height="14" color="#000" />
-                          </span>
-                        ) : (
-                          "Apple"
-                        )}
-                      </span>
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
+                  </div>
+                  {errors.password && (
+                    <small className="text-[12px] text-[#F81404]">
+                      {errors.password}
+                    </small>
                   )}
-                  onSuccess={handleAppleSuccess}
-                  onError={(err: any) => {
-                    setAppleLoading(false);
-                    console.error("Apple Login Error:", err);
-                  }}
-                />
+                </div>
               </div>
-
-              {/* Magic link button */}
-              <Link href="/auth/magiclink" className="w-full">
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors cursor-pointer"
-                >
-                  <Mail size={16} className="text-[#667085]" />
-                  <span>Email me a login link</span>
-                </button>
+            </div>
+            <div className="mt-[10px] flex justify-between mb-[32px]">
+              <div className="flex flex-row gap-[4px] items-center">
+                <Checkbox />
+                <p className="text-[14px] font-[500] leading-[17.64px]">
+                  Remember me
+                </p>
+              </div>
+              <Link href="/auth/forgot-password">
+                <p className="text-[14px] font-[500] leading-[21px] hover:text-[#7141F8]">
+                  Forgot Password?
+                </p>
               </Link>
-            </form>
-          </div>
+            </div>
 
-          <div className="hidden lg:block h-6" />
+            <div className="flex flex-col gap-[24px]">
+              <div className="flex flex-col gap-[16px]">
+                <Button
+                  type="submit"
+                  variant="default"
+                  className="py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
+                  disabled={googleloading ? true : false}
+                >
+                  {loading ? (
+                    <span className="flex items-center gap-x-2">
+                      <span className="animate-pulse">Logging in...</span>{" "}
+                      <Loading width="20" height="40" />
+                    </span>
+                  ) : (
+                    <span>Login</span>
+                  )}
+                </Button>
+
+                <Link href="/auth/magiclink">
+                  <Button
+                    type="submit"
+                    variant="ghost"
+                    className="w-fit text-startß !p-0 border-none border-[#8760f8] text-[#8760f8] bg-white h-2"
+                  >
+                    Login with magic link
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </form>
         </section>
       </main>
     </>
