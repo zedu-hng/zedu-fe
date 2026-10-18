@@ -55,7 +55,7 @@ Object.defineProperty(window, "Notification", { configurable: true,
 function Fixture() {
   const [view, setView] = useState({ account, route: "channel" });
   navigate = (account, route = view.route) => setView({ account, route });
-  return <DataContext.Provider value={{state:{user:{id:view.account}, mentions:[], channels:[],
+  return <DataContext.Provider value={{state:{user:view.account === "bob" ? {user_id:view.account} : {id:view.account}, mentions:[], channels:[],
     messages, chats:messages, bookmarks:[], channelName:"Fixture channel",
     channelDetails:{channels_id:"fixture",name:"Fixture channel",users:[]}}, dispatch:()=>{}}}>
     <main className="flex h-[calc(100dvh-70px)] relative w-full overflow-hidden">

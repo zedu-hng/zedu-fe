@@ -14,7 +14,8 @@ const dismissal = createNotificationDismissal(() =>
 
 export function useNotificationDismissal() {
   const { state } = useContext(DataContext);
-  const accountId = state?.user?.id ? String(state.user.id) : null;
+  const userId = state?.user?.user_id ?? state?.user?.id;
+  const accountId = userId ? String(userId) : null;
   const [snapshot, update] = useReducer(
     (_: DismissalSnapshot | null, next: DismissalSnapshot) => next,
     null
