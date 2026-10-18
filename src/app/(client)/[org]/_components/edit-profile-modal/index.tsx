@@ -17,6 +17,8 @@ import { ACTIONS } from "~/store/Actions";
 import { timezones } from "./timezones";
 import { showError, showSuccess } from "~/components/toast/sonner";
 import { compressImage } from "~/utils/compress-image";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const phonePattern = /^\+?[0-9 .()-]+$/;
@@ -267,22 +269,30 @@ const EditProfileDialog = ({ isOpen, onClose }: any) => {
                 >
                   Phone Number
                 </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  inputMode="tel"
-                  autoComplete="tel"
-                  aria-invalid={Boolean(phoneError)}
-                  aria-describedby={phoneError ? "phone-error" : undefined}
-                  value={phone}
-                  placeholder="+44 20 7946 0958"
-                  onChange={(e) => {
-                    setPhone(e.target.value);
+                <PhoneInput
+                  country={"ng"}
+                  value={phone.replace(/\D/g, "")}
+                  onChange={(value, country) => {
+                    // Only the dial code left means the number was cleared.
+                    const dialCode =
+                      "dialCode" in country ? country.dialCode : "";
+                    setPhone(value && value !== dialCode ? `+${value}` : "");
                     if (phoneError) {
                       setPhoneError("");
                     }
                   }}
-                  className="w-full px-3 py-2 border border-[#E6EAEF] rounded-md text-[15px] text-[#344054] focus:outline-none focus:ring-2 focus:ring-[#6868F7]"
+                  placeholder="801 234 5678"
+                  enableSearch
+                  containerClass="!w-full"
+                  inputClass="!w-full !h-[42px] !border !border-[#E6EAEF] !rounded-md !text-[15px] !text-[#344054] focus:!outline-none focus:!ring-2 focus:!ring-[#6868F7]"
+                  buttonClass="!border !border-[#E6EAEF] !rounded-l-md"
+                  dropdownClass="!z-[9999]"
+                  inputProps={{
+                    id: "phone",
+                    autoComplete: "tel",
+                    "aria-invalid": Boolean(phoneError),
+                    "aria-describedby": phoneError ? "phone-error" : undefined,
+                  }}
                 />
                 {phoneError && (
                   <p
