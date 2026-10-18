@@ -19,7 +19,8 @@ import {
 import { cn } from "~/lib/utils";
 import { DataContext } from "~/store/GlobalState";
 import { BuzzRequest, GetRequest } from "~/utils/new-request";
-import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ACTIONS } from "~/store/Actions";
 import ParticipantStack from "./participant-stack";
 import BuzzTimeout from "./buzz-timeout";
@@ -33,7 +34,6 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
   const { user, buzzParticipants, buzzData } = state;
   const videoRef = useRef<HTMLDivElement>(null);
   const { id, org } = useParams() as { id: string; org: string };
-  const router = useRouter();
 
   // Local state for the preview
   const [previewTrack, setPreviewTrack] = useState<any>(null);
@@ -151,8 +151,16 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
 
   if (isInitializing) {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#202124] flex items-center justify-center">
-        <Loader size={24} className="animate-spin text-zinc-500" />
+      <div
+        role="status"
+        aria-label="Loading meeting"
+        className="min-h-screen bg-white dark:bg-[#202124] flex items-center justify-center"
+      >
+        <Loader
+          size={24}
+          aria-hidden="true"
+          className="animate-spin text-zinc-500"
+        />
       </div>
     );
   }
@@ -170,12 +178,12 @@ const GreenRoom: React.FC<GreenRoomProps> = ({ onJoin }) => {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             It can no longer be joined.
           </p>
-          <button
-            onClick={() => router.push(`/${org}`)}
-            className="w-full max-w-[280px] bg-[#1A73E8] hover:bg-[#1B66C9] text-white font-medium py-3 rounded-full shadow-sm transition-all text-sm tracking-wide"
+          <Link
+            href={`/${org}`}
+            className="block w-full max-w-[280px] bg-[#1A73E8] hover:bg-[#1B66C9] text-white font-medium py-3 rounded-full shadow-sm transition-all text-sm tracking-wide text-center"
           >
             Back to home
-          </button>
+          </Link>
         </div>
       </div>
     );
