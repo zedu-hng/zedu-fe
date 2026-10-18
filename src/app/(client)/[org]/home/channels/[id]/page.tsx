@@ -23,6 +23,7 @@ import { ACTIONS } from "~/store/Actions";
 import { useIsSmUp } from "~/hooks/use-media-query";
 import { cn } from "~/lib/utils";
 import RestrictedChannel from "../../../_components/restricted-channel";
+import { ComposerSkeleton } from "../../../_components/ChannelMessage/channel-loading-skeleton";
 import ErrorState, {
   ErrorStateVariant,
   errorVariantFromStatus,
@@ -240,11 +241,15 @@ const ChannelsPage = () => {
         <ChannelsMessage />
 
         <div className="absolute bottom-0 left-0 right-[17px]">
-          {!render && state?.channelDetails?.access === false ? (
+          {/* Until this channel's details load we don't know whether the user
+              may post, so never show an editable composer before then. */}
+          {!channelReady ? (
+            <ComposerSkeleton />
+          ) : !render && state?.channelDetails?.access === false ? (
             <JoinChannel />
           ) : state?.channelDetails?.archived ? (
             <ArchivedChannel />
-          ) : channelReady && state?.channelDetails?.is_restricted ? (
+          ) : state?.channelDetails?.is_restricted ? (
             <RestrictedChannel />
           ) : (
             <MessageBox
