@@ -6,6 +6,8 @@ import { PricingSection } from "./_components/home/PricingSection";
 import { WhySection } from "./_components/home/WhySection";
 import { FAQSection } from "./_components/home/FAQSection";
 import { DynamicFooter } from "./_components/footer/dynamic-footer";
+import { JsonLd } from "./_components/seo/JsonLd";
+import { homeStructuredData } from "./_lib/structuredData";
 
 export const metadata: Metadata = {
   title: {
@@ -26,18 +28,21 @@ export const metadata: Metadata = {
 
 const HomePage = () => {
   return (
-    <section className="mt-12">
-      <HeroSection />
-      <FeatureSection />
-      <ArticlesSection />
-      <PricingSection />
-      <WhySection />
-      <FAQSection />
-      <DynamicFooter
-        text="Run Your Next Cohort Without Limits"
-        description="Join thousands of educators building better learning experiences."
-      />
-    </section>
+    <>
+      <JsonLd data={homeStructuredData} />
+      <section className="mt-12">
+        <HeroSection />
+        <FeatureSection />
+        <ArticlesSection />
+        <PricingSection />
+        <WhySection />
+        <FAQSection />
+        <DynamicFooter
+          text="Run Your Next Cohort Without Limits"
+          description="Join thousands of educators building better learning experiences."
+        />
+      </section>
+    </>
   );
 };
 
