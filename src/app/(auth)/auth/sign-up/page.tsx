@@ -14,6 +14,11 @@ import AppleSignin from "react-apple-signin-auth";
 import { Eye, EyeOff } from "lucide-react";
 import AuthSideBanner from "~/app/(auth)/_components/auth-side-banner";
 
+// The backend auto-creates a workspace at signup, so `is_onboarded` being
+// true does not mean the user ever chose one. A missing type is never default.
+const isAutoCreatedOrg = (type?: string) =>
+  (type ?? "").trim().toLowerCase() === "user default org";
+
 function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,6 +37,7 @@ function SignUp() {
   const [loading, setLoading] = useState(false);
   const [googleloading, setGoogleloading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
+
   // Apple Login handler
   const handleAppleSuccess = async (response: any) => {
     setAppleLoading(true);
@@ -53,13 +59,16 @@ function SignUp() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          if (user?.is_onboarded) {
+          if (
+            user?.is_onboarded &&
+            !isAutoCreatedOrg(user?.organisation?.type)
+          ) {
             router.push(`/${orgSlug}`);
           } else {
             router.push(`/${orgSlug}/welcome`);
           }
         }
-        const message = `\nName: ${user?.username}\\nEmail: ${user?.email}`;
+        const message = `\nName: ${user?.username}\nEmail: ${user?.email}`;
         RegisterWebhookRequest(
           user?.username,
           "User Registration (Apple)",
@@ -189,7 +198,10 @@ function SignUp() {
           }, 100);
         } else {
           setTimeout(() => {
-            if (res?.data?.data?.user?.is_onboarded) {
+            if (
+              res?.data?.data?.user?.is_onboarded &&
+              !isAutoCreatedOrg(res?.data?.data?.user?.organisation?.type)
+            ) {
               router.push(`/${orgSlug}`);
             } else {
               router.push(`/${orgSlug}/welcome`);
@@ -200,7 +212,7 @@ function SignUp() {
         const user = res?.data?.data?.user;
 
         const message = `
-          Name: ${user?.username}\\n
+          Name: ${user?.username}\n
           Email: ${user?.email}
           `;
 
@@ -244,15 +256,18 @@ function SignUp() {
           if (redirectUrl) {
             router.push(redirectUrl);
           } else {
-            if (user?.is_onboarded) {
+            if (
+              user?.is_onboarded &&
+              !isAutoCreatedOrg(user?.organisation?.type)
+            ) {
               router.push(`/${orgSlug}`);
             } else {
-              router.push(`${orgSlug}/welcome`);
+              router.push(`/${orgSlug}/welcome`);
             }
           }
 
           const message = `
-          Name: ${user?.username}\\n
+          Name: ${user?.username}\n
           Email: ${user?.email}
           `;
 
@@ -273,8 +288,6 @@ function SignUp() {
       console.error("Login Failed");
     },
   });
-
-  //
 
   return (
     <main className="w-full min-h-screen flex flex-col lg:flex-row bg-white">
@@ -324,6 +337,8 @@ function SignUp() {
                 onChange={handleEmailChange}
                 onBlur={handleEmailBlur}
                 placeholder="you@example.com"
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? "email-error" : undefined}
                 className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 border ${
                   errors.email
                     ? "border-[#FDA29B] focus:border-[#F04438]"
@@ -331,7 +346,9 @@ function SignUp() {
                 } outline-none rounded-lg shadow-sm transition-colors`}
               />
               {errors.email && (
-                <span className="text-xs text-[#F04438]">{errors.email}</span>
+                <span id="email-error" className="text-xs text-[#F04438]">
+                  {errors.email}
+                </span>
               )}
             </div>
 
@@ -352,15 +369,17 @@ function SignUp() {
                   placeholder="Enter your password"
                   onFocus={handleFocus}
                   onBlur={handleBlur}
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
                   className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 pr-10 border ${
                     formSubmitted
                       ? errors.password
                         ? "border-[#FDA29B] focus:border-[#F04438]"
                         : "border-[#D0D5DD] focus:border-[#7141F8]"
                       : passwordFocused
-                        ? errors.password
-                          ? "border-[#FDA29B] focus:border-[#F04438]"
-                          : "border-[#D0D5DD] focus:border-[#7141F8]"
+                        ? "border-[#D0D5DD] focus:border-[#7141F8]"
                         : "border-[#D0D5DD] focus:border-[#7141F8]"
                   } outline-none rounded-lg shadow-sm transition-colors`}
                 />
@@ -374,11 +393,12 @@ function SignUp() {
                 </button>
               </div>
               {errors.password && (
-                <span className="text-xs text-[#F04438]">
+                <span id="password-error" className="text-xs text-[#F04438]">
                   {errors.password}
                 </span>
               )}
             </div>
+
             {/* Keep me logged in */}
             <div className="flex items-center gap-2">
               <Checkbox
@@ -422,14 +442,17 @@ function SignUp() {
               <button
                 type="button"
                 onClick={() => login()}
-                disabled={googleloading}
+                disabled={googleloading || appleLoading}
+                aria-label="Sign up with Google"
+                aria-busy={googleloading}
                 className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors cursor-pointer"
               >
                 <Image
                   src="/dashboard/google.svg"
                   width={18}
                   height={18}
-                  alt="Google"
+                  alt=""
+                  aria-hidden="true"
                 />
                 <span>
                   {googleloading ? (
@@ -458,14 +481,17 @@ function SignUp() {
                   <button
                     type="button"
                     onClick={props.onClick}
-                    disabled={appleLoading}
+                    disabled={appleLoading || googleloading}
+                    aria-label="Sign up with Apple"
+                    aria-busy={appleLoading}
                     className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors w-full cursor-pointer"
                   >
                     <Image
                       src="/dashboard/apple.png"
                       width={18}
                       height={18}
-                      alt="Apple"
+                      alt=""
+                      aria-hidden="true"
                     />
                     <span>
                       {appleLoading ? (

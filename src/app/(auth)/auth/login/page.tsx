@@ -12,7 +12,6 @@ import Loading from "~/components/ui/loading";
 import { LoginWebhookRequest } from "~/utils/webhook-request";
 import { useGoogleLogin } from "@react-oauth/google";
 import AppleSignin from "react-apple-signin-auth";
-import { Separator } from "~/components/ui/separator";
 import { Eye, EyeOff, Mail } from "lucide-react";
 import AuthSideBanner from "~/app/(auth)/_components/auth-side-banner";
 
@@ -63,7 +62,7 @@ function Login() {
             router.push(`/${orgSlug}/welcome`);
           }
         }
-        const message = `\nName: ${user?.username}\\nEmail: ${user?.email}`;
+        const message = `\nName: ${user?.username}\nEmail: ${user?.email}`;
         await LoginWebhookRequest(
           user?.username,
           "User Login Detected (Apple)",
@@ -102,63 +101,67 @@ function Login() {
     return !newErrors.email && !newErrors.password;
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleEmailBlur = () => {
     const trimmedEmail = email.trim();
-    if (trimmedEmail !== email) {
-      setEmail(trimmedEmail);
+    if (!trimmedEmail) {
+      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+    } else if (!/\S+@\S+\.\S+/.test(trimmedEmail)) {
+      setErrors((prev) => ({ ...prev, email: "Invalid email address" }));
+    } else {
+      setErrors((prev) => ({ ...prev, email: "" }));
     }
+  };
 
-    if (validateForm()) {
-      setLoading(true);
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (errors.email) {
+      setErrors((prev) => ({ ...prev, email: "" }));
+    }
+  };
 
-      const payload = {
-        email: trimmedEmail,
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (errors.password) {
+      setErrors((prev) => ({ ...prev, password: "" }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const res = await PostRequest("/auth/login", {
+        email: email.trim(),
         password,
-      };
-
-      const redirectUrl = searchParams.get("redirect") || "";
-      const coworkerId = searchParams.get("coworkerId") || "";
-
-      const res = await PostRequest("/auth/login", payload);
+      });
 
       if (res?.status === 200 || res?.status === 201) {
-        localStorage.setItem("token", res?.data?.data?.access_token);
-        localStorage.setItem("useremail", res?.data?.data?.user?.email);
-        localStorage.setItem("user", JSON.stringify(res?.data?.data?.user));
-        localStorage.setItem("orgId", res?.data?.data?.user?.current_org);
+        const user = res?.data?.data?.user;
+        const redirectUrl = searchParams.get("redirect") || "";
 
+        localStorage.setItem("token", res?.data?.data?.access_token);
+        localStorage.setItem("useremail", user?.email);
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("orgId", user?.current_org);
         const orgSlug = res.data.data.user.current_organisation_slug;
         if (orgSlug) {
           localStorage.setItem("orgSlug", orgSlug);
         }
 
         if (redirectUrl) {
-          // If there's a coworkerId, append it to the redirect URL
-          const finalRedirectUrl = coworkerId
-            ? `${redirectUrl}?coworkerId=${coworkerId}`
-            : redirectUrl;
-          setTimeout(() => {
-            router.push(finalRedirectUrl);
-          }, 100);
+          router.push(redirectUrl);
         } else {
-          setTimeout(() => {
-            if (res?.data?.data?.user?.is_onboarded) {
-              router.push(`/${orgSlug}`);
-            } else {
-              router.push(`/${orgSlug}/welcome`);
-            }
-          }, 100);
+          if (user?.is_onboarded) {
+            router.push(`/${orgSlug}`);
+          } else {
+            router.push(`/${orgSlug}/welcome`);
+          }
         }
 
-        const user = res?.data?.data?.user;
-        // after successful login call this endpoint
-        const message = `
-            Name: ${user?.username}\\n
-            Email: ${user?.email}
-            `;
-
+        const message = `\nName: ${user?.username}\nEmail: ${user?.email}`;
         await LoginWebhookRequest(
           user?.username,
           "User Login Detected",
@@ -167,41 +170,32 @@ function Login() {
           user?.avatar_url
         );
       } else {
-        setLoading(false);
-        LoginWebhookRequest(
-          trimmedEmail,
-          "New User Login",
-          "Error authenticating user",
-          "error"
-        );
+        const errorMessage =
+          res?.data?.message || "Login failed. Please try again.";
+        setErrors((prev) => ({
+          ...prev,
+          password: errorMessage,
+        }));
       }
+    } catch (err: any) {
+      console.error(err);
+      const errorMessage =
+        err?.response?.data?.message || "An unexpected error occurred.";
+      setErrors((prev) => ({
+        ...prev,
+        password: errorMessage,
+      }));
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setErrors((prevErrors) => ({ ...prevErrors, email: "" }));
-  };
-
-  const handleEmailBlur = () => {
-    setEmail((current) => current.trim());
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    setErrors((prevErrors) => ({ ...prevErrors, password: "" }));
-  };
-
   const login = useGoogleLogin({
-    flow: "auth-code",
     onSuccess: async (tokenResponse) => {
       setGoogleloading(true);
-
-      const { code } = tokenResponse;
-
       try {
         const res = await PostRequest("/auth/google", {
-          grant_code: code,
+          token: tokenResponse.access_token,
         });
 
         if (res?.status === 200 || res?.status === 201) {
@@ -227,14 +221,10 @@ function Login() {
             }
           }
 
-          const message = `
-            Name: ${user?.username}\\n
-            Email: ${user?.email}
-            `;
-
+          const message = `\nName: ${user?.username}\nEmail: ${user?.email}`;
           await LoginWebhookRequest(
             user?.username,
-            "User Login Detected",
+            "User Login Detected (Google)",
             message.trim(),
             "success",
             user?.avatar_url
@@ -250,8 +240,6 @@ function Login() {
       console.error("Login Failed");
     },
   });
-
-  //
 
   return (
     <>
@@ -312,6 +300,8 @@ function Login() {
                   onChange={handleEmailChange}
                   onBlur={handleEmailBlur}
                   placeholder="you@example.com"
+                  aria-invalid={Boolean(errors.email)}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                   className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 border ${
                     errors.email
                       ? "border-[#FDA29B] focus:border-[#F04438]"
@@ -319,7 +309,9 @@ function Login() {
                   } outline-none rounded-lg shadow-sm transition-colors`}
                 />
                 {errors.email && (
-                  <span className="text-xs text-[#F04438]">{errors.email}</span>
+                  <span id="email-error" className="text-xs text-[#F04438]">
+                    {errors.email}
+                  </span>
                 )}
               </div>
 
@@ -346,6 +338,10 @@ function Login() {
                     value={password}
                     onChange={handlePasswordChange}
                     placeholder="Enter your password"
+                    aria-invalid={Boolean(errors.password)}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
                     className={`w-full text-sm text-[#101828] placeholder-[#98A2B3] h-11 px-3.5 pr-10 border ${
                       errors.password
                         ? "border-[#FDA29B] focus:border-[#F04438]"
@@ -364,7 +360,7 @@ function Login() {
                   </button>
                 </div>
                 {errors.password && (
-                  <span className="text-xs text-[#F04438]">
+                  <span id="password-error" className="text-xs text-[#F04438]">
                     {errors.password}
                   </span>
                 )}
@@ -413,14 +409,17 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => login()}
-                  disabled={googleloading}
+                  disabled={googleloading || appleLoading}
+                  aria-label="Sign in with Google"
+                  aria-busy={googleloading}
                   className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors cursor-pointer"
                 >
                   <Image
                     src="/dashboard/google.svg"
                     width={18}
                     height={18}
-                    alt="Google"
+                    alt=""
+                    aria-hidden="true"
                   />
                   <span>
                     {googleloading ? (
@@ -449,14 +448,17 @@ function Login() {
                     <button
                       type="button"
                       onClick={props.onClick}
-                      disabled={appleLoading}
+                      disabled={appleLoading || googleloading}
+                      aria-label="Sign in with Apple"
+                      aria-busy={appleLoading}
                       className="flex items-center justify-center gap-2 h-11 px-4 border border-[#D0D5DD] hover:bg-[#F9FAFB] rounded-lg text-sm font-medium text-[#344054] shadow-sm transition-colors w-full cursor-pointer"
                     >
                       <Image
                         src="/dashboard/apple.png"
                         width={18}
                         height={18}
-                        alt="Apple"
+                        alt=""
+                        aria-hidden="true"
                       />
                       <span>
                         {appleLoading ? (
