@@ -63,7 +63,26 @@ Cypress.on("uncaught:exception", (err) => {
   return true;
 });
 
+const mentionRequests: string[] = [];
+
+const orgUsers = [
+  {
+    id: "user-mimi",
+    user_id: "user-mimi",
+    username: "mimi",
+    name: "Mimi",
+  },
+  {
+    id: "user-abdul",
+    user_id: "user-abdul",
+    username: "abduljaleel_abdulsamad",
+    name: "Abdul",
+  },
+];
+
 const stubWorkspace = () => {
+  mentionRequests.length = 0;
+
   cy.intercept("**/api/v1/**", (req) => {
     const path = new URL(req.url).pathname;
 
@@ -123,8 +142,24 @@ const stubWorkspace = () => {
       return;
     }
 
-    if (path.includes("/users/mentions/")) {
-      req.alias = "mention";
+    if (path.includes(`/organisations/${ORG_ID}/users`)) {
+      req.reply({
+        statusCode: 200,
+        body: {
+          data: orgUsers,
+          pagination: {
+            current_page: 1,
+            total_pages: 1,
+            total_items: orgUsers.length,
+            page_size: 50,
+          },
+        },
+      });
+      return;
+    }
+
+    if (path.endsWith("/users/mentions/user-mimi")) {
+      mentionRequests.push(path);
       req.reply({
         statusCode: 200,
         body: {
@@ -136,6 +171,12 @@ const stubWorkspace = () => {
           },
         },
       });
+      return;
+    }
+
+    if (path.includes("/users/mentions/")) {
+      mentionRequests.push(path);
+      req.reply({ statusCode: 404, body: { message: "user id required" } });
       return;
     }
 
@@ -203,6 +244,11 @@ describe("channel system notices", () => {
         cy.contains("Message").should("be.visible");
       })
       .screenshot("system-notice-name");
+    cy.wrap(null).should(() => {
+      expect(mentionRequests).to.deep.equal([
+        "/api/v1/users/mentions/user-mimi",
+      ]);
+    });
 
     cy.viewport(390, 844);
     cy.contains(".message-row", "mimi joined this channel.").scrollIntoView();

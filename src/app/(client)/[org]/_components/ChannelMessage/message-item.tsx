@@ -128,9 +128,39 @@ const hasLinks = (text: string): boolean => {
   return urlRegex.test(text);
 };
 
+const memberUserId = (member: any): string =>
+  String(
+    member?.user_id ??
+      member?.id ??
+      member?.userid ??
+      member?.profile?.user_id ??
+      ""
+  ).trim();
+
+const memberUsername = (member: any): string =>
+  String(member?.username ?? member?.profile?.username ?? "")
+    .trim()
+    .toLowerCase();
+
+/** System notices store a display name. The mention API needs the user id. */
+const resolveSystemMentionUserId = (
+  label: string,
+  members: unknown
+): string => {
+  const needle = label.trim().toLowerCase();
+  if (!needle || !Array.isArray(members)) return "";
+
+  const match = members.find((member) => memberUsername(member) === needle);
+  const id = match ? memberUserId(match) : "";
+  if (!id || id.toLowerCase() === needle) return "";
+  return id;
+};
+
 const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
   const { state } = useContext(DataContext);
   const currentUser = state?.user;
+  const systemMentionMembers =
+    state?.mentionOrgMembers || state?.orgMembers || [];
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [image, setImage] = useState<any>(null);
@@ -265,12 +295,27 @@ const MessageItem: React.FC<MessageItemProps> = ({ item }) => {
 
       return parts.map((part: any, i: number) => {
         if (typeof part === "string" && part.startsWith("@")) {
+          const label = part.slice(1).trim();
+          const mentionId =
+            props["data-id"] ||
+            (item?.type === "system"
+              ? resolveSystemMentionUserId(label, systemMentionMembers)
+              : "");
+
+          if (!mentionId) {
+            return item?.type === "system" ? (
+              <span key={`${label}-${i}`}>{label}</span>
+            ) : (
+              linkifyText(part, linkifyOptions)
+            );
+          }
+
           return (
             <GlobalMention
-              key={`${part.slice(1)}-${i}`}
-              id={props["data-id"] || part.slice(1).trim()}
+              key={`${mentionId}-${i}`}
+              id={mentionId}
               trigger="@"
-              label={part.slice(1).trim()}
+              label={label}
               item={item}
               currentUser={currentUser}
             />
