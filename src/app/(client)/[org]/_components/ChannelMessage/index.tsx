@@ -70,9 +70,9 @@ const ChannelsMessage = () => {
     const handleScroll = () => {
       const isAtBottom = container.scrollTop >= 0;
 
-      if (isAtBottom) {
-        getData();
+      if (isAtBottom && !hasDispatchedRef.current) {
         hasDispatchedRef.current = true;
+        getData();
       } else if (!isAtBottom && hasDispatchedRef.current) {
         hasDispatchedRef.current = false;
       }
