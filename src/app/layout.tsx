@@ -41,9 +41,6 @@ export const metadata: Metadata = {
       "Zedu is a structured learning platform for bootcamps, schools, and universities. Organize cohorts, channels, and AI-powered learning in one workspace.",
     images: [ogImageUrl("og-image-5.png")],
   },
-  ...(process.env.NEXT_PUBLIC_IOS_APP_ID && {
-    itunes: { appId: process.env.NEXT_PUBLIC_IOS_APP_ID },
-  }),
 };
 
 export default function RootLayout({
