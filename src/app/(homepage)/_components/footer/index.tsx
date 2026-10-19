@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { PostRequest } from "~/utils/request";
 import { useToast } from "~/components/ui/use-toast";
 import {
@@ -99,7 +99,6 @@ const appStoreLinks = [
   },
 ];
 
-const inter = Inter({ subsets: ["latin"] });
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 const Footer = () => {
@@ -154,7 +153,7 @@ const Footer = () => {
 
             <form
               onSubmit={handleSubmit}
-              className={`${inter.className} flex w-full flex-col gap-3 text-slate-100 antialiased`}
+              className="flex w-full flex-col gap-3 text-slate-100 antialiased"
             >
               <div className="flex flex-col gap-1">
                 <label
