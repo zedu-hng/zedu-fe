@@ -3,7 +3,6 @@ import { ogImageUrl, siteUrl } from "~/lib/env-urls";
 import { DynamicFooter } from "../_components/footer/dynamic-footer";
 import { FAQSection } from "../_components/home/FAQSection";
 import { PricingSection } from "../_components/home/PricingSection";
-import { JsonLd } from "../_components/seo/JsonLd";
 import { PricingComparisonTable } from "../_components/pricing/PricingComparisonTable";
 import { Table, TableHead, TableHeader, TableRow } from "~/components/ui/table";
 import {
@@ -61,9 +60,17 @@ export const metadata: Metadata = {
 };
 
 const PricingPage = () => {
+  const structuredData = JSON.stringify(pricingStructuredData).replace(
+    /</g,
+    "\\u003c"
+  );
+
   return (
     <div className="space-y-10">
-      <JsonLd data={pricingStructuredData} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: structuredData }}
+      />
       <PricingSection showSubtitle />
 
       <div
