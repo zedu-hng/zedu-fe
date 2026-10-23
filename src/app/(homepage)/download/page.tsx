@@ -187,7 +187,7 @@ const DownLoadPage = () => {
             </div>
 
             <div className="flex w-full max-w-md items-center gap-4 rounded-2xl border border-neutral-200 px-4 py-3">
-              <QRCodeDisplay url={PLAY_STORE_URL} size={80} />
+              <QRCodeDisplay url="/download/app" size={80} />
 
               <div>
                 <p className="text-sm font-semibold text-neutral-900">

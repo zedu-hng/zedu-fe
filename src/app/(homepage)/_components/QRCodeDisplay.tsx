@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn } from "~/lib/utils";
 
 interface QRCodeDisplayProps {
+  // An absolute URL, or a path that is resolved against the current origin.
   url: string;
   size?: number;
   className?: string;
@@ -25,7 +26,7 @@ export const QRCodeDisplay = ({
     if (!url) return;
 
     setHasError(false);
-    QRCode.toDataURL(url, {
+    QRCode.toDataURL(new URL(url, window.location.origin).toString(), {
       width: size * 3,
       margin: 4,
       color: {
@@ -40,6 +41,9 @@ export const QRCodeDisplay = ({
         setHasError(true);
       });
   }, [url, size]);
+
+  // Without a URL there is nothing to encode, so don't leave a loading box.
+  if (!url) return null;
 
   if (hasError) {
     return (
@@ -82,7 +86,7 @@ export const QRCodeDisplay = ({
     >
       <Image
         src={dataUrl}
-        alt="Scan QR code to download Zedu on Google Play"
+        alt="Scan QR code to download the Zedu app"
         width={size}
         height={size}
         className="h-full w-full object-contain"

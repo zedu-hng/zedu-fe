@@ -48,18 +48,6 @@ pnpm install
 pnpm dev
 ```
 
-## Mobile website navigation
-
-On narrow screens, use the named navigation button to open or close the menu.
-Keyboard users can reach it with Tab and activate it with Enter or Space. The
-button exposes the menu's expanded state and has a visible focus indicator.
-Press Escape while the menu is open to close it and return focus to the button.
-Closed menu links are removed from the page and cannot receive keyboard focus.
-
-To verify, run `pnpm dev`, open the homepage at a mobile viewport width, and
-check Tab, Enter, Space, Escape, and the navigation links. Touch and mouse
-activation use the same button.
-
 ## Contributing
 
 Please see [CONTRIBUTING](./CONTRIBUTING.md)
