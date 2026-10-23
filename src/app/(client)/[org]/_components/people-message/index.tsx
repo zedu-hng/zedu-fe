@@ -26,7 +26,7 @@ import { isUserDeactivated } from "~/utils/user-deactivation";
 import { useMessageHighlight } from "~/hooks/use-message-highlight";
 import { useMessageDeepLink } from "~/hooks/use-message-deep-link";
 
-const PeopleMessage = ({ participant }: any) => {
+const PeopleMessage = ({ participant, onRead }: any) => {
   const { fetchMoreData, hasMore, loading } = UsePeopleMessage();
   const { state, dispatch } = useContext(DataContext);
   const { chats, user, isEdit, thread, notify, bookmarks, dataId } = state;
@@ -50,16 +50,24 @@ const PeopleMessage = ({ participant }: any) => {
     dispatch({ type: ACTIONS.DM_COUNT, payload: 0 });
   }, [dispatch, id]);
 
-  const getData = useCallback(async () => {
-    if (!id) return;
-    await GetRequest(`/dms/channels/${id}/threads?page=1&limit=1`);
-    clearDmUnread();
-  }, [id, clearDmUnread]);
+  const getData = useCallback(
+    async (refreshThreadCount = false) => {
+      if (!id) return;
+      const res = await GetRequest(
+        `/dms/channels/${id}/threads?page=1&limit=1`
+      );
+      if (refreshThreadCount && (res?.status === 200 || res?.status === 201)) {
+        onRead?.();
+      }
+      clearDmUnread();
+    },
+    [id, clearDmUnread, onRead]
+  );
 
   // Mark as read and clear Nav highlight whenever this DM is opened
   useEffect(() => {
     if (!id) return;
-    getData();
+    getData(true);
   }, [id, getData]);
 
   useEffect(() => {
@@ -91,7 +99,7 @@ const PeopleMessage = ({ participant }: any) => {
   // Runs when new messages arrive; reads the latest badge and user without re-running on them.
   const markReadOnNewMessage = useEffectEvent(() => {
     if (!showBadge && notify?.user_id !== user?.user_id) {
-      getData();
+      getData(true);
     }
   });
 
