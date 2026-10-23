@@ -6,15 +6,16 @@ import React, { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Toaster } from "~/components/ui/toaster";
-import { PostRequest } from "~/utils/request";
 import Loading from "~/components/ui/loading";
-import { showSuccess } from "~/components/toast/sonner";
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({ email: "" });
   const router = useRouter();
   const [buttonloading, setButtonloading] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState<
+    "success" | "error" | null
+  >(null);
 
   const validateForm = () => {
     const newErrors = { email: "" };
@@ -34,12 +35,23 @@ function ForgotPassword() {
     if (validateForm()) {
       setButtonloading(true);
 
-      const res = await PostRequest("/auth/password-reset", { email });
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/auth/password-reset`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          }
+        );
 
-      if (res?.status === 200 || res?.status === 201) {
-        showSuccess(res?.data.message);
-        router.push(`/auth/reset-password?email=${encodeURIComponent(email)}`);
-      } else {
+        // The API uses 404 for unknown email addresses; keep that indistinguishable.
+        setSubmissionStatus(
+          response.ok || response.status === 404 ? "success" : "error"
+        );
+      } catch {
+        setSubmissionStatus("error");
+      } finally {
         setButtonloading(false);
       }
     }
@@ -71,69 +83,96 @@ function ForgotPassword() {
         <section className="w-full md:w-[55%] flex flex-col max-w-xs md:max-w-lg mx-auto items-start pt-[20px] md:pt-[30px]">
           <div className="w-full flex flex-col justify-center mt-[60px] md:mt-[120px] items-center gap-[8px] mb-[32px]">
             <h1 className="w-full text-center text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px]">
-              Forgot Password
+              {submissionStatus === "success"
+                ? "Check your inbox"
+                : "Forgot Password"}
             </h1>
-            <p className="w-full text-center text-[14px] md:text-[16px] text-[#344054] font-[400] leading-[21px] md:leading-[27px]">
-              Enter the email you used in creating your account, we will send
-              you instructions on how to reset your password.
+            <p
+              role={submissionStatus === "success" ? "status" : undefined}
+              className="w-full text-center text-[14px] md:text-[16px] text-[#344054] font-[400] leading-[21px] md:leading-[27px]"
+            >
+              {submissionStatus === "success"
+                ? "If an account exists for that email address, we will send instructions to reset your password."
+                : "Enter the email you used in creating your account, we will send you instructions on how to reset your password."}
             </p>
           </div>
-          <form onSubmit={handleSubmit} className="w-full">
-            <div className="flex flex-col gap-[16px] mb-[32px]">
-              <div className="w-full flex flex-col gap-[8px]">
-                <label
-                  htmlFor="email"
-                  className="text-[14px] font-[400] leading-[21px]"
-                >
-                  Email address
-                </label>
-                <div className="w-full flex flex-col gap-[2px]">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={handleEmailChange}
-                    placeholder="Enter your email"
-                    className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
-                      errors.email ? "border-[#F81404]" : "border-[#D0D0FD]"
-                    } outline-none rounded-md py-[13px] pl-[13px]`}
-                  />
-                  {errors.email && (
-                    <small className="text-[12px] text-[#F81404]">
-                      {errors.email}
-                    </small>
-                  )}
+          {submissionStatus === "error" && (
+            <p role="alert" className="mb-4 text-sm text-[#F81404]">
+              We couldn&apos;t process your request. Please try again.
+            </p>
+          )}
+          {submissionStatus === "success" ? (
+            <Button
+              type="button"
+              variant="default"
+              className="w-full py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
+              onClick={() =>
+                router.push(
+                  `/auth/reset-password?email=${encodeURIComponent(email)}`
+                )
+              }
+            >
+              Enter verification code
+            </Button>
+          ) : (
+            <form onSubmit={handleSubmit} className="w-full">
+              <div className="flex flex-col gap-[16px] mb-[32px]">
+                <div className="w-full flex flex-col gap-[8px]">
+                  <label
+                    htmlFor="email"
+                    className="text-[14px] font-[400] leading-[21px]"
+                  >
+                    Email address
+                  </label>
+                  <div className="w-full flex flex-col gap-[2px]">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={handleEmailChange}
+                      placeholder="Enter your email"
+                      className={`w-full text-[14px] text-[#667085] leading-[15.12px] font-[500] h-[48px] border ${
+                        errors.email ? "border-[#F81404]" : "border-[#D0D0FD]"
+                      } outline-none rounded-md py-[13px] pl-[13px]`}
+                    />
+                    {errors.email && (
+                      <small className="text-[12px] text-[#F81404]">
+                        {errors.email}
+                      </small>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-[24px]">
-              <div className="flex flex-col gap-[16px]">
-                <Button
-                  type="submit"
-                  variant="default"
-                  className="py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
-                >
-                  {buttonloading ? (
-                    <span className="flex items-center gap-x-2">
-                      <span className="animate-pulse"> Submitting...</span>{" "}
-                      <Loading width="20" height="40" />
-                    </span>
-                  ) : (
-                    <span>Submit</span>
-                  )}
-                </Button>
-
-                <Link href="/auth/login">
+              <div className="flex flex-col gap-[24px]">
+                <div className="flex flex-col gap-[16px]">
                   <Button
                     type="submit"
-                    variant="outline"
-                    className="w-full py-6 border border-[#8760f8] text-[#8760f8] bg-white hover:bg-[#7141F8] hover:text-white"
+                    variant="default"
+                    disabled={buttonloading}
+                    className="py-6 bg-[#7141F8] hover:bg-[#8760f8] text-white"
                   >
-                    Back to Login
+                    {buttonloading ? (
+                      <span className="flex items-center gap-x-2">
+                        <span className="animate-pulse"> Submitting...</span>{" "}
+                        <Loading width="20" height="40" />
+                      </span>
+                    ) : (
+                      <span>Submit</span>
+                    )}
                   </Button>
-                </Link>
+
+                  <Link href="/auth/login">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full py-6 border border-[#8760f8] text-[#8760f8] bg-white hover:bg-[#7141F8] hover:text-white"
+                    >
+                      Back to Login
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-          </form>
+            </form>
+          )}
         </section>
       </main>
     </>
