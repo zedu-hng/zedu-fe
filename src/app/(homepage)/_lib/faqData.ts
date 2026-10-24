@@ -42,3 +42,13 @@ export const homeFAQs: HomeFAQ[] = [
       "Pricing is flexible based on your institution size, usage needs, and required features. Zedu offers plans for growing cohorts and custom options for larger schools or multi-program organisations.",
   },
 ];
+
+export const pricingFAQs: HomeFAQ[] = [
+  ...homeFAQs,
+  {
+    id: "item-7",
+    question: "Do you charge in naira?",
+    answer:
+      "Plan prices are shown in naira: Starter is ₦0/month and Pro is ₦20K/month. Paid plans are paid by card through Stripe’s secure checkout, which shows the currency you will be charged in before you pay. For Enterprise plans or other payment methods, contact our sales team.",
+  },
+];
