@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { PostRequest } from "~/utils/request";
-import { useToast } from "~/components/ui/use-toast";
+import { PostRequest } from "~/utils/new-request";
+import { showSuccess } from "~/components/toast/sonner";
+import { toast } from "sonner";
 import {
   appStoreUrl,
   facebookUrl,
@@ -36,8 +37,26 @@ const solutionLinks: FooterLink[] = [
 ];
 
 const supportLinks: FooterLink[] = [
-  { id: 0, label: "Pricing", href: "/pricing" },
-  { id: 3, label: "Contact Us", href: "/contact-sales" },
+  {
+    id: 0,
+    label: "About Us",
+    href: "/about",
+  },
+  {
+    id: 1,
+    label: "Pricing",
+    href: "/pricing",
+  },
+  {
+    id: 2,
+    label: "Download",
+    href: "/download",
+  },
+  {
+    id: 3,
+    label: "Contact Us",
+    href: "/contact-sales",
+  },
 ];
 
 const resourcesLinks: FooterLink[] = [
@@ -105,30 +124,75 @@ const Footer = () => {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
-  const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setLoading(true);
-    const token = localStorage.getItem("token") || "";
+
+    if (loading) return;
+
+    setError("");
 
     if (!isValidEmail(email)) {
       setError("Please enter a valid email address.");
-      setLoading(false);
       return;
     }
 
-    const req = await PostRequest("/newsletter", { email: email }, token);
-    setLoading(false);
-    if (req?.data?.status_code === 201) {
-      setEmail("");
-      setError("");
-      toast({
-        description: "Email sent successfully!",
-      });
-    } else {
-      setError(req?.data?.message);
-      return;
+    setLoading(true);
+
+    try {
+      const req = await PostRequest("/newsletter", { email });
+
+      const status = req?.response?.status ?? req?.status;
+      const body = req?.response?.data ?? req?.data;
+
+      const isSuccess =
+        (status === 200 || status === 201) &&
+        status !== 409 &&
+        body?.status_code !== 409;
+
+      const isAlreadySubscribed = status === 409 || body?.status_code === 409;
+
+      if (isSuccess) {
+        setEmail("");
+        setError("");
+        showSuccess(
+          "You're subscribed!",
+          "Thanks for joining us. Stay tuned for the latest updates from Zedu."
+        );
+      } else {
+        // Suppress the duplicate toast triggered inside PostRequest
+        toast.dismiss();
+
+        if (isAlreadySubscribed) {
+          setError(
+            "This email is already subscribed. Please try another email address."
+          );
+        } else {
+          setError(
+            body?.message ||
+              "We couldn't subscribe you right now. Please try again."
+          );
+        }
+      }
+    } catch (error: any) {
+      toast.dismiss();
+      const status = error?.response?.status ?? error?.status;
+      const body = error?.response?.data ?? error?.data;
+      const isAlreadySubscribed = status === 409 || body?.status_code === 409;
+
+      if (isAlreadySubscribed) {
+        setError(
+          "This email is already subscribed. Please try another email address."
+        );
+      } else {
+        setError(
+          body?.message ||
+            error?.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -238,7 +302,7 @@ const Footer = () => {
 
             <div className="space-y-4">
               <p className="text-white/90">
-                Mobile App is available on Google PlayStore and AppStore
+                Mobile App is available on Google Play and the App Store
               </p>
               <div className="mt-5 flex flex-wrap items-start gap-8 text-white">
                 {appStoreLinks.map((store) => (
