@@ -1,0 +1,144 @@
+name: Sync and Release
+
+on:
+  push:
+    branches:
+      - dev
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-release
+  cancel-in-progress: false
+
+jobs:
+  sync-release:
+    if: >-
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' &&
+       !contains(github.event.head_commit.message, '[skip release]') &&
+       !contains(github.event.head_commit.message, 'sync/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Mint fork token
+        id: fork-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RELEASE_SYNC_APP_ID }}
+          private-key: ${{ secrets.RELEASE_SYNC_APP_PRIVATE_KEY }}
+          owner: zedu-hng
+
+      - name: Mint upstream token
+        id: upstream-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RELEASE_SYNC_APP_ID }}
+          private-key: ${{ secrets.RELEASE_SYNC_APP_PRIVATE_KEY }}
+          owner: zeduchat
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Stage release tooling
+        run: |
+          mkdir -p "$RUNNER_TEMP/release-tool"
+          cp .github/scripts/release/reconcile.mjs "$RUNNER_TEMP/release-tool/"
+          cp .github/release-manifest.json "$RUNNER_TEMP/release-tool/"
+
+      - name: Reconcile branches and prepare release candidate
+        id: prepare
+        env:
+          FORK_TOKEN: ${{ steps.fork-token.outputs.token }}
+          UPSTREAM_TOKEN: ${{ steps.upstream-token.outputs.token }}
+          RELEASE_STATE_PATH: ${{ runner.temp }}/release-state.json
+        run: |
+          node "$RUNNER_TEMP/release-tool/reconcile.mjs" \
+            --phase prepare \
+            --repo "$GITHUB_WORKSPACE" \
+            --config "$RUNNER_TEMP/release-tool/release-manifest.json"
+
+      - name: Install dependencies on release candidate
+        if: steps.prepare.outputs.noop != 'true' && steps.prepare.outputs.unchanged != 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Prettier, ESLint, TypeScript, and build
+        if: steps.prepare.outputs.noop != 'true' && steps.prepare.outputs.unchanged != 'true'
+        run: |
+          pnpm run check-format
+          pnpm run check-lint
+          pnpm run check-types
+          pnpm run build
+
+      - name: Publish release candidate
+        env:
+          FORK_TOKEN: ${{ steps.fork-token.outputs.token }}
+          UPSTREAM_TOKEN: ${{ steps.upstream-token.outputs.token }}
+          RELEASE_STATE_PATH: ${{ runner.temp }}/release-state.json
+        run: |
+          node "$RUNNER_TEMP/release-tool/reconcile.mjs" \
+            --phase publish \
+            --repo "$GITHUB_WORKSPACE" \
+            --config "$RUNNER_TEMP/release-tool/release-manifest.json"
+
+      - name: Upload release state
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-state
+          path: ${{ runner.temp }}/release-state.json
+          if-no-files-found: ignore
+
+      - name: Summarize release state
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/release-state.json" ]; then
+            {
+              echo '```json'
+              cat "$RUNNER_TEMP/release-state.json"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Report failure
+        if: failure()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.fork-token.outputs.token }}
+        run: |
+          body="Sync and release failed. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          number=$(gh issue list \
+            --repo zedu-hng/zedu-fe \
+            --state open \
+            --search 'Sync and release failed in:title' \
+            --json number \
+            --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo zedu-hng/zedu-fe --body "$body"
+          else
+            gh issue create \
+              --repo zedu-hng/zedu-fe \
+              --title "Sync and release failed" \
+              --body "$body"
+          fi
