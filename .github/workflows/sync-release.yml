@@ -62,6 +62,10 @@ jobs:
           app-id: ${{ vars.RELEASE_SYNC_APP_ID }}
           private-key: ${{ secrets.RELEASE_SYNC_APP_PRIVATE_KEY }}
           owner: zedu-hng
+          repositories: zedu-fe
+          permission-contents: write
+          permission-workflows: write
+          permission-issues: write
 
       - name: Mint upstream token
         id: upstream-token
@@ -70,6 +74,10 @@ jobs:
           app-id: ${{ vars.RELEASE_SYNC_APP_ID }}
           private-key: ${{ secrets.RELEASE_SYNC_APP_PRIVATE_KEY }}
           owner: zeduchat
+          repositories: zedu-fe
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4

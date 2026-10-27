@@ -45,6 +45,29 @@ const SIGNING_KEY = process.env.RELEASE_SIGNING_KEY_ID || "";
 const BOT_EMAIL = process.env.RELEASE_BOT_EMAIL || cfg.bot.email;
 const GIT_ENV = { ...process.env, GIT_TERMINAL_PROMPT: "0" };
 
+// Git credentials travel with each command instead of the remote URLs. The
+// workflow runs `pnpm install` and `next build` in this same checkout, so a
+// token left in .git/config would be readable by candidate-controlled code.
+function basicAuth(token) {
+  const pair = Buffer.from(`x-access-token:${token}`).toString("base64");
+  return `AUTHORIZATION: basic ${pair}`;
+}
+
+const GIT_AUTH_ARGS = [
+  FORK_TOKEN && [
+    "-c",
+    `http.https://github.com/${FORK}.git.extraheader=${basicAuth(FORK_TOKEN)}`,
+  ],
+  UPSTREAM_TOKEN && [
+    "-c",
+    `http.https://github.com/${UPSTREAM}.git.extraheader=${basicAuth(
+      UPSTREAM_TOKEN
+    )}`,
+  ],
+]
+  .filter((entry) => entry && entry.length > 0)
+  .flat();
+
 class HaltError extends Error {}
 
 function log(message) {
@@ -53,9 +76,10 @@ function log(message) {
 
 function run(cmd, args, options = {}) {
   const { allowFail = false, input, env } = options;
+  const finalArgs = cmd === "git" ? [...GIT_AUTH_ARGS, ...args] : args;
   const baseEnv =
     cmd === "gh" ? { ...GIT_ENV, GH_TOKEN: UPSTREAM_TOKEN } : GIT_ENV;
-  const result = spawnSync(cmd, args, {
+  const result = spawnSync(cmd, finalArgs, {
     cwd: repoDir,
     env: env ? { ...baseEnv, ...env } : baseEnv,
     encoding: "utf8",
@@ -115,8 +139,8 @@ function setup() {
   if (!FORK_TOKEN) throw new Error("FORK_TOKEN is not set");
   if (!UPSTREAM_TOKEN) throw new Error("UPSTREAM_TOKEN is not set");
 
-  const originUrl = `https://x-access-token:${FORK_TOKEN}@github.com/${FORK}.git`;
-  const upstreamUrl = `https://x-access-token:${UPSTREAM_TOKEN}@github.com/${UPSTREAM}.git`;
+  const originUrl = `https://github.com/${FORK}.git`;
+  const upstreamUrl = `https://github.com/${UPSTREAM}.git`;
 
   git(["remote", "set-url", "origin", originUrl], { allowFail: true });
   if (
@@ -605,27 +629,49 @@ function buildPrBody(state) {
   ].join("\n");
 }
 
-function findOpenPr() {
-  const raw = gh([
-    "pr",
-    "list",
-    "--repo",
-    UPSTREAM,
-    "--head",
-    `${FORK_OWNER}:${RELEASE}`,
-    "--base",
-    TARGET,
-    "--state",
-    "open",
-    "--json",
-    "number,url,headRefOid",
-    "--limit",
-    "1",
-  ]);
+// `gh pr list --head` does not accept the "<owner>:<branch>" form, so ask for
+// the bare branch and keep only the fork's own PRs. Both PR lookups go through
+// here so the filter cannot drift.
+function listReleasePrs(state, fields, options = {}) {
+  const result = ghResult(
+    [
+      "pr",
+      "list",
+      "--repo",
+      UPSTREAM,
+      "--head",
+      RELEASE,
+      "--base",
+      TARGET,
+      "--state",
+      state,
+      "--json",
+      `${fields},headRepositoryOwner`,
+      "--limit",
+      "50",
+    ],
+    options
+  );
 
-  if (!raw) return null;
-  const list = JSON.parse(raw);
-  return list[0] || null;
+  if (result.status !== 0) return null;
+
+  let list = [];
+  try {
+    list = JSON.parse(result.stdout.trim() || "[]");
+  } catch {
+    return null;
+  }
+
+  return list.filter(
+    (pr) =>
+      pr.headRepositoryOwner &&
+      pr.headRepositoryOwner.login.toLowerCase() === FORK_OWNER.toLowerCase()
+  );
+}
+
+function findOpenPr() {
+  const list = listReleasePrs("open", "number,url,headRefOid");
+  return list && list.length > 0 ? list[0] : null;
 }
 
 function closeOpenPr(message) {
@@ -729,32 +775,11 @@ function addReleaseLabel(number) {
 function maybeTag() {
   if (!cfg.tagReleases) return;
 
-  const mergedResult = ghResult(
-    [
-      "pr",
-      "list",
-      "--repo",
-      UPSTREAM,
-      "--head",
-      `${FORK_OWNER}:${RELEASE}`,
-      "--state",
-      "merged",
-      "--json",
-      "number,mergeCommit,mergedAt",
-      "--limit",
-      "20",
-    ],
-    { allowFail: true }
-  );
+  const merged = listReleasePrs("merged", "number,mergeCommit,mergedAt", {
+    allowFail: true,
+  });
 
-  if (mergedResult.status !== 0) return;
-
-  let merged = [];
-  try {
-    merged = JSON.parse(mergedResult.stdout || "[]");
-  } catch {
-    return;
-  }
+  if (!merged) return;
 
   for (const pr of merged) {
     const sha = pr.mergeCommit && pr.mergeCommit.oid;
