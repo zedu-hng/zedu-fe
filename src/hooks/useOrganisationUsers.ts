@@ -5,7 +5,7 @@ import { ACTIONS } from "~/store/Actions";
 import { GetRequest } from "~/utils/new-request";
 
 const PAGE_LIMIT = 50;
-const SEARCH_DEBOUNCE_MS = 2000;
+const SEARCH_DEBOUNCE_MS = 300;
 
 type OrgUsersPagination = {
   loadedPage: number;
@@ -123,6 +123,7 @@ export const useOrganisationUsers = (
   const [searchTotalItems, setSearchTotalItems] = useState(0);
   const searchPageRef = useRef(0);
   const searchInflightRef = useRef<Set<number>>(new Set());
+  const activeSearchQueryRef = useRef("");
 
   const orgMembersRef = useRef(state.orgMembers);
   const prevOrgIdRef = useRef(orgId);
@@ -217,6 +218,9 @@ export const useOrganisationUsers = (
           buildUsersUrl(orgId, pageNumber, query)
         );
 
+        const trimmedQuery = query.trim();
+        if (activeSearchQueryRef.current !== trimmedQuery) return;
+
         if (response?.status === 200 || response?.status === 201) {
           const newUsers = response?.data?.data || [];
           const pagination = normalizePagination(response?.data?.pagination);
@@ -240,8 +244,10 @@ export const useOrganisationUsers = (
           );
         }
       } finally {
-        searchInflightRef.current.delete(pageNumber);
-        setSearchLoading(false);
+        if (activeSearchQueryRef.current === query.trim()) {
+          searchInflightRef.current.delete(pageNumber);
+          setSearchLoading(false);
+        }
       }
     },
     [orgId]
@@ -280,6 +286,7 @@ export const useOrganisationUsers = (
     if (!enabled || !orgId) return;
 
     if (!isSearching) {
+      activeSearchQueryRef.current = "";
       setSearchUsers([]);
       setSearchHasMore(false);
       setSearchTotalItems(0);
@@ -288,6 +295,7 @@ export const useOrganisationUsers = (
       return;
     }
 
+    activeSearchQueryRef.current = debouncedSearch.trim();
     searchPageRef.current = 0;
     searchInflightRef.current.clear();
     setSearchUsers([]);
