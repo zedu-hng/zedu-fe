@@ -35,6 +35,14 @@ const UPSTREAM_WORK = cfg.branches.upstreamWork;
 const TARGET = cfg.branches.upstreamTarget;
 const FORK_TOKEN = process.env.FORK_TOKEN || "";
 const UPSTREAM_TOKEN = process.env.UPSTREAM_TOKEN || "";
+// Fingerprint of the imported bot key. Empty means signing is off and the
+// run behaves as before.
+const SIGNING_KEY = process.env.RELEASE_SIGNING_KEY_ID || "";
+// zeduchat/staging requires verified commits, and a signature only verifies
+// when the key belongs to a GitHub account with this exact address. The
+// manifest is the default so local runs still work; the repository variable
+// lets an operator point at the bot account without touching the manifest.
+const BOT_EMAIL = process.env.RELEASE_BOT_EMAIL || cfg.bot.email;
 const GIT_ENV = { ...process.env, GIT_TERMINAL_PROMPT: "0" };
 
 class HaltError extends Error {}
@@ -118,8 +126,77 @@ function setup() {
     git(["remote", "set-url", "upstream", upstreamUrl]);
   }
   git(["config", "user.name", cfg.bot.name]);
-  git(["config", "user.email", cfg.bot.email]);
+  git(["config", "user.email", BOT_EMAIL]);
   git(["config", "advice.detachedHead", "false"]);
+
+  enableSigning();
+}
+
+// Signs every commit the bot creates. `commit.gpgsign` covers the sync merges
+// and the release candidate commit without threading `-S` through each call
+// site. Missing key material fails here, before any branch is touched.
+function enableSigning() {
+  if (!SIGNING_KEY) {
+    // Do not inherit a developer's global signing setup for pushed commits.
+    git(["config", "commit.gpgsign", "false"], { allowFail: true });
+    git(["config", "tag.gpgsign", "false"], { allowFail: true });
+    log("RELEASE_SIGNING_KEY_ID is not set; commits will be unsigned.");
+    return false;
+  }
+
+  const keyring = run("gpg", ["--batch", "--list-secret-keys", SIGNING_KEY], {
+    allowFail: true,
+  });
+
+  if (keyring.status !== 0) {
+    throw new Error(
+      `RELEASE_SIGNING_KEY_ID ${SIGNING_KEY} is not in the keyring; ` +
+        "import the private key before running this script"
+    );
+  }
+
+  git(["config", "user.signingkey", SIGNING_KEY]);
+  // A developer machine may default to SSH signing; the bot key is OpenPGP.
+  git(["config", "gpg.format", "openpgp"]);
+  git(["config", "commit.gpgsign", "true"]);
+  git(["config", "tag.gpgsign", "true"]);
+  log(`Signing commits as ${BOT_EMAIL} with ${SIGNING_KEY}.`);
+  return true;
+}
+
+// zeduchat/staging only accepts verified signatures, and a valid signature
+// from an unknown key still shows as unverified. Check the pushed head before
+// opening a PR that could never be merged, and say exactly what is missing.
+function assertVerified(sha) {
+  if (!SIGNING_KEY) return;
+
+  const result = run(
+    "gh",
+    ["api", `repos/${FORK}/commits/${sha}`, "--jq", ".commit.verification"],
+    { allowFail: true, env: { GH_TOKEN: FORK_TOKEN } }
+  );
+
+  if (result.status !== 0) {
+    log(`Could not read signature status for ${sha}: ${result.stderr.trim()}`);
+    return;
+  }
+
+  let verification = {};
+  try {
+    verification = JSON.parse(result.stdout);
+  } catch {
+    log(`Could not parse signature status for ${sha}.`);
+    return;
+  }
+
+  if (verification.verified) return;
+
+  throw new HaltError(
+    `Head ${sha} is not a verified commit (${verification.reason || "unknown"}). ` +
+      `zeduchat/${TARGET} requires signatures that GitHub can verify: upload the ` +
+      `bot's public key to a GitHub account whose verified email is ${BOT_EMAIL}, ` +
+      "or point RELEASE_BOT_EMAIL at that address."
+  );
 }
 
 function fetchAll() {
@@ -756,6 +833,7 @@ function publish() {
   git(["clean", "-fdq"]);
 
   pushReleaseBranch(state.branch, head);
+  assertVerified(head);
 
   const existing = findOpenPr();
 
