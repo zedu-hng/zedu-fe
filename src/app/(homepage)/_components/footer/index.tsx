@@ -1,9 +1,9 @@
 "use client";
-
+import { isValidEmail } from "~/lib/utils";
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { PostRequest } from "~/utils/request";
 import { useToast } from "~/components/ui/use-toast";
 import {
@@ -42,6 +42,7 @@ const supportLinks: FooterLink[] = [
 
 const resourcesLinks: FooterLink[] = [
   { id: 0, label: "Resource Library", href: "/resources" },
+  { id: 1, label: "Templates", href: "/templates" },
   { id: 2, label: "Privacy Policy", href: "/policy" },
   { id: 3, label: "Terms of Service", href: "/terms-of-service" },
 ];
@@ -99,7 +100,6 @@ const appStoreLinks = [
   },
 ];
 
-const inter = Inter({ subsets: ["latin"] });
 const plusJakartaSans = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 const Footer = () => {
@@ -113,7 +113,7 @@ const Footer = () => {
     setLoading(true);
     const token = localStorage.getItem("token") || "";
 
-    if (!validateEmail(email)) {
+    if (!isValidEmail(email)) {
       setError("Please enter a valid email address.");
       setLoading(false);
       return;
@@ -133,10 +133,7 @@ const Footer = () => {
     }
   };
 
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  };
+  //
 
   return (
     <footer className="flex flex-col bg-[#303073] text-[#fafafa] px-6">
@@ -144,7 +141,11 @@ const Footer = () => {
         <div className="flex flex-col gap-12 xl:flex-row xl:items-start xl:justify-between xl:gap-16">
           <div className="w-full max-w-[420px] space-y-8">
             <div className="flex items-center gap-3">
-              <Link href="/" className="[&>svg]:h-[39px] [&>svg]:w-[39px]">
+              <Link
+                href="/"
+                aria-label="Zedu home"
+                className="[&>svg]:h-[39px] [&>svg]:w-[39px]"
+              >
                 <ZeduRoundedWhiteLogo />
               </Link>
               <h3 className="text-2xl font-semibold leading-none text-white">
@@ -154,7 +155,7 @@ const Footer = () => {
 
             <form
               onSubmit={handleSubmit}
-              className={`${inter.className} flex w-full flex-col gap-3 text-slate-100 antialiased`}
+              className="flex w-full flex-col gap-3 text-slate-100 antialiased"
             >
               <div className="flex flex-col gap-1">
                 <label
