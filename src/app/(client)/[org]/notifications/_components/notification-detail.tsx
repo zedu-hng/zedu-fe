@@ -23,6 +23,8 @@ import {
   resolveNotificationRoute,
   storeMessageHighlightId,
 } from "~/lib/onesignal/notification-route";
+import { summarizeNotification } from "~/lib/notifications/message-preview";
+import { useShowMessagePreviews } from "~/lib/notifications/use-show-message-previews";
 
 const getString = (value: unknown) =>
   typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
@@ -60,6 +62,8 @@ export default function NotificationDetail({
   const route = resolveNotificationRoute(payload, null, state.orgSlug || "");
   const typeLabel = getTypeLabel(type);
   const isDm = type === "dm";
+  const showPreviews = useShowMessagePreviews();
+  const summary = summarizeNotification(notification);
 
   return (
     <div className="flex h-[calc(100dvh-70px)] w-full flex-col bg-white">
@@ -115,9 +119,20 @@ export default function NotificationDetail({
                 )}
               </div>
 
-              <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-7 text-[#344054]">
-                {notification.message}
-              </p>
+              {showPreviews ? (
+                <p className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-7 text-[#344054]">
+                  {notification.message}
+                </p>
+              ) : (
+                <>
+                  <p className="mt-2 text-[15px] leading-7 text-[#344054]">
+                    {summary.line}
+                  </p>
+                  <p className="mt-1 text-[13px] text-[#667085]">
+                    Message previews are off. Open the conversation to read it.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>

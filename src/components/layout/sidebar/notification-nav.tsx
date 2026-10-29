@@ -17,6 +17,8 @@ import OrganisationMenu from "~/app/(client)/[org]/_components/org-dropdown";
 import { cn } from "~/lib/utils";
 import UserAvatar from "~/components/layout/user-avatar";
 import { GetRequest } from "~/utils/new-request";
+import { summarizeNotification } from "~/lib/notifications/message-preview";
+import { useShowMessagePreviews } from "~/lib/notifications/use-show-message-previews";
 
 const LIMIT = 20;
 
@@ -28,6 +30,7 @@ export default function NotificationNav() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const showPreviews = useShowMessagePreviews();
 
   const resolvedOrgId =
     orgId ||
@@ -131,57 +134,60 @@ export default function NotificationNav() {
               </div>
             )}
 
-            {notifications.map((item, index) => (
-              <Fragment key={item.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch({
-                      type: ACTIONS.NOTIFICATION_DETAIL,
-                      payload: item,
-                    })
-                  }
-                  className={cn(
-                    "flex w-full items-start gap-3 px-3 py-4 text-left hover:bg-[#4B4BB4]",
-                    notificationDetail?.id === item.id && "bg-[#4B4BB4]"
-                  )}
-                >
-                  <div className="relative size-8 shrink-0">
-                    {item.avatar_url ? (
-                      <UserAvatar
-                        item={item}
-                        src={item.avatar_url}
-                        userType="user"
-                        size="sidebar"
-                        alt={item.title}
-                      />
-                    ) : (
-                      <div className="flex size-8 items-center justify-center rounded-[7px] bg-[#5F5FE1] text-white">
-                        <Bell size={16} />
-                      </div>
+            {notifications.map((item, index) => {
+              const summary = showPreviews ? null : summarizeNotification(item);
+              return (
+                <Fragment key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      dispatch({
+                        type: ACTIONS.NOTIFICATION_DETAIL,
+                        payload: item,
+                      })
+                    }
+                    className={cn(
+                      "flex w-full items-start gap-3 px-3 py-4 text-left hover:bg-[#4B4BB4]",
+                      notificationDetail?.id === item.id && "bg-[#4B4BB4]"
                     )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-start justify-between gap-2">
-                      <span className="line-clamp-2 max-w-[200px] break-words text-[15px] font-semibold text-white">
-                        {item.title}
-                      </span>
-                      <span className="shrink-0 text-[12px] text-[#BABAFB]">
-                        {moment(item.sent_at || item.created_at).format("LT")}
-                      </span>
+                  >
+                    <div className="relative size-8 shrink-0">
+                      {item.avatar_url ? (
+                        <UserAvatar
+                          item={item}
+                          src={item.avatar_url}
+                          userType="user"
+                          size="sidebar"
+                          alt={item.title}
+                        />
+                      ) : (
+                        <div className="flex size-8 items-center justify-center rounded-[7px] bg-[#5F5FE1] text-white">
+                          <Bell size={16} />
+                        </div>
+                      )}
                     </div>
-                    <p className="line-clamp-2 max-w-[220px] break-words text-[14px] text-[#D0D0FD]">
-                      {item.message}
-                    </p>
-                  </div>
-                </button>
 
-                {index !== notifications.length - 1 && (
-                  <hr className="border-[#5F5FE1]" />
-                )}
-              </Fragment>
-            ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-start justify-between gap-2">
+                        <span className="line-clamp-2 max-w-[200px] break-words text-[15px] font-semibold text-white">
+                          {summary ? summary.name : item.title}
+                        </span>
+                        <span className="shrink-0 text-[12px] text-[#BABAFB]">
+                          {moment(item.sent_at || item.created_at).format("LT")}
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 max-w-[220px] break-words text-[14px] text-[#D0D0FD]">
+                        {summary ? summary.line : item.message}
+                      </p>
+                    </div>
+                  </button>
+
+                  {index !== notifications.length - 1 && (
+                    <hr className="border-[#5F5FE1]" />
+                  )}
+                </Fragment>
+              );
+            })}
 
             {!loading && notifications.length === 0 && (
               <p className="mt-10 text-center">No recent notifications</p>

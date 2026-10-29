@@ -6,6 +6,8 @@ import { GetRequest, PostRequest } from "~/utils/new-request";
 import Loading from "~/components/ui/loading";
 import { NotificationPermissionHelp } from "~/app/(client)/[org]/_components/notification-permission-guidance";
 import { buildTimeRange } from "./time-range";
+import { setShowMessagePreviews } from "~/lib/notifications/message-preview";
+import { useShowMessagePreviews } from "~/lib/notifications/use-show-message-previews";
 
 type Preferences = {
   notificationType: "all" | "mentions" | "nothing";
@@ -28,6 +30,7 @@ const NotificationPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [timeError, setTimeError] = useState<string | null>(null);
+  const showPreviews = useShowMessagePreviews();
 
   const hasChanges = JSON.stringify(prefs) !== JSON.stringify(initialPrefs);
 
@@ -242,6 +245,31 @@ const NotificationPage = () => {
               <span>Receive notifications via email</span>
             </label>
           </div>
+        </div>
+
+        <hr className="bg-[#E6EAEF] border my-4" />
+
+        {/* Message previews (saved on this device straight away) */}
+        <div className="mb-4 max-w-2xl">
+          <label className="block font-semibold text-sm mb-2">
+            Message previews:
+          </label>
+          <label className="flex items-start space-x-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={showPreviews}
+              onChange={(e) => setShowMessagePreviews(e.target.checked)}
+            />
+            <span>
+              Show message previews in notifications
+              <span className="block text-xs text-gray-500 mt-0.5">
+                When this is off, notifications only say who sent a message, for
+                example &quot;Ada sent you a message&quot;. Saved on this
+                device.
+              </span>
+            </span>
+          </label>
         </div>
 
         {/* Save/Cancel */}
