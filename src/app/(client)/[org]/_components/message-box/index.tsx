@@ -58,7 +58,11 @@ import emojione from "emojione";
 import { emoticonMap } from "./emoticon-map";
 import { AttachmentList } from "./attachment-list";
 import { useAttachments } from "./use-attachments";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
+import {
+  markGettingStartedStep,
+  stepForMessagePath,
+} from "~/lib/onboarding/getting-started";
 import { uuidv7 } from "uuidv7";
 import { CHAT_FILE_ACCEPT } from "~/utils/document-files";
 
@@ -103,6 +107,7 @@ const MessageBox = ({
 }: any) => {
   const { state, dispatch } = useContext(DataContext);
   const params = useParams();
+  const pathname = usePathname();
   const id = params.id as string;
   const uuid = uuidv7();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -241,6 +246,10 @@ const MessageBox = ({
 
       sendMessage(id, uuid, content, uploaded);
       dispatch({ type: ACTIONS.CLEAR_MENTIONS });
+      if (typingScope !== "thread") {
+        const step = stepForMessagePath(pathname);
+        if (step) markGettingStartedStep(step);
+      }
     }
   };
 

@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { DataContext } from "~/store/GlobalState";
+import { markGettingStartedStep } from "~/lib/onboarding/getting-started";
 import { ACTIONS } from "~/store/Actions";
 import { useAgoraClient } from "~/hooks/buzz";
 import { getBuzzAgoraToken, getScreenShareBuzzUid } from "~/lib/agora/token";
@@ -571,6 +572,7 @@ export const useBuzz = (options: UseBuzzOptions = {}) => {
         }
 
         setJoined(true);
+        markGettingStartedStep("buzz");
         setJoining(false);
         isJoiningInProgress.current = false;
       } catch (err) {

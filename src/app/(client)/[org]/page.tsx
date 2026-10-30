@@ -5,6 +5,7 @@ import { HashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ChannelNav from "~/components/layout/sidebar/Nav";
 import { DataContext } from "~/store/GlobalState";
+import GettingStartedCard from "./_components/getting-started-card";
 
 const People = () => {
   const [sidebarWidth, setSidebarWidth] = useState(270);
@@ -145,18 +146,31 @@ const People = () => {
             </div>
           </div>
         ) : (
-          <div className="h-[80vh] flex flex-col items-center justify-center">
-            <Image
-              src="/image/empty-message.svg"
-              width={100}
-              height={100}
-              className="size-20 lg:size-30"
-              alt=""
-              unoptimized
+          <div className="min-h-[80vh] flex flex-col items-center justify-center gap-8 px-4 py-8">
+            <GettingStartedCard
+              channelHref={
+                defaultChannel && state?.orgSlug
+                  ? `/${state.orgSlug}/home/channels/${
+                      defaultChannel?.channels_id ??
+                      defaultChannel?.channel_id ??
+                      defaultChannel?.id
+                    }`
+                  : null
+              }
             />
-            <h2 className="font-bold text-xl text-blue-500">
-              Select a channel
-            </h2>
+            <div className="flex flex-col items-center">
+              <Image
+                src="/image/empty-message.svg"
+                width={100}
+                height={100}
+                className="size-20 lg:size-30"
+                alt=""
+                unoptimized
+              />
+              <h2 className="font-bold text-xl text-blue-500">
+                Select a channel
+              </h2>
+            </div>
           </div>
         )}
       </div>
