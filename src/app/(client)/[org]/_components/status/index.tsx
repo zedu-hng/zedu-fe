@@ -27,6 +27,9 @@ type StatusPreset = {
   section?: string;
 };
 
+// Matches the desktop app's limit for the status text field.
+const STATUS_MAX_LENGTH = 100;
+
 const presets: StatusPreset[] = [
   {
     emoji: "📅",
@@ -176,9 +179,14 @@ const StatusModal = () => {
           <input
             type="text"
             value={statusText}
-            onChange={(e) => setStatusText(e.target.value)}
+            onChange={(e) =>
+              setStatusText(e.target.value.slice(0, STATUS_MAX_LENGTH))
+            }
+            maxLength={STATUS_MAX_LENGTH}
             placeholder="What's your status?"
-            className="flex-1 border-0 focus:outline-none"
+            aria-label="Status text"
+            aria-describedby="status-character-count"
+            className="min-w-0 flex-1 border-0 focus:outline-none"
           />
 
           {(statusText || emoji) && (
@@ -193,6 +201,15 @@ const StatusModal = () => {
               <X className="w-4 h-4 text-gray-400" />
             </button>
           )}
+
+          <span
+            id="status-character-count"
+            aria-live="polite"
+            aria-atomic="true"
+            className="shrink-0 text-xs tabular-nums text-gray-500"
+          >
+            {statusText.length}/{STATUS_MAX_LENGTH}
+          </span>
         </div>
 
         {/* Show Suggestions when no status */}
