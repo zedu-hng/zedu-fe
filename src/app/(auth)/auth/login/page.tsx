@@ -15,6 +15,22 @@ import AppleSignin from "react-apple-signin-auth";
 import { Separator } from "~/components/ui/separator";
 import { Eye, EyeOff } from "lucide-react";
 import { saveRememberMe } from "~/utils/auth-session";
+import { getLoggedInRedirectPath } from "~/app/(auth)/layout";
+
+function resolvePostLoginRedirect(orgSlug?: string, user?: any): string {
+  let selectedTemplate: string | null = null;
+  try {
+    selectedTemplate = localStorage.getItem("selected_template");
+    if (selectedTemplate) {
+      localStorage.removeItem("selected_template");
+    }
+  } catch {
+    // ignore storage access errors
+  }
+  const redirectPath = getLoggedInRedirectPath(orgSlug, selectedTemplate);
+  if (redirectPath) return redirectPath;
+  return user?.is_onboarded ? `/${orgSlug}` : `/${orgSlug}/welcome`;
+}
 
 //
 
@@ -59,11 +75,7 @@ function Login() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          if (user?.is_onboarded) {
-            router.push(`/${orgSlug}`);
-          } else {
-            router.push(`/${orgSlug}/welcome`);
-          }
+          router.push(resolvePostLoginRedirect(orgSlug, user));
         }
         const message = `\nName: ${user?.username}\\nEmail: ${user?.email}`;
         await LoginWebhookRequest(
@@ -147,11 +159,9 @@ function Login() {
           }, 100);
         } else {
           setTimeout(() => {
-            if (res?.data?.data?.user?.is_onboarded) {
-              router.push(`/${orgSlug}`);
-            } else {
-              router.push(`/${orgSlug}/welcome`);
-            }
+            router.push(
+              resolvePostLoginRedirect(orgSlug, res?.data?.data?.user)
+            );
           }, 100);
         }
 
@@ -224,11 +234,7 @@ function Login() {
           if (redirectUrl) {
             router.push(redirectUrl);
           } else {
-            if (user?.is_onboarded) {
-              router.push(`/${orgSlug}`);
-            } else {
-              router.push(`/${orgSlug}/welcome`);
-            }
+            router.push(resolvePostLoginRedirect(orgSlug, user));
           }
 
           const message = `
