@@ -14,6 +14,22 @@ import { useGoogleLogin } from "@react-oauth/google";
 import AppleSignin from "react-apple-signin-auth";
 import { Separator } from "~/components/ui/separator";
 import { Eye, EyeOff } from "lucide-react";
+import { getLoggedInRedirectPath } from "~/app/(auth)/layout";
+
+function resolvePostLoginRedirect(orgSlug?: string, user?: any): string {
+  let selectedTemplate: string | null = null;
+  try {
+    selectedTemplate = localStorage.getItem("selected_template");
+    if (selectedTemplate) {
+      localStorage.removeItem("selected_template");
+    }
+  } catch {
+    // ignore storage access errors
+  }
+  const redirectPath = getLoggedInRedirectPath(orgSlug, selectedTemplate);
+  if (redirectPath) return redirectPath;
+  return user?.is_onboarded ? `/${orgSlug}` : `/${orgSlug}/welcome`;
+}
 
 //
 
@@ -56,11 +72,7 @@ function Login() {
         if (redirectUrl) {
           router.push(redirectUrl);
         } else {
-          if (user?.is_onboarded) {
-            router.push(`/${orgSlug}`);
-          } else {
-            router.push(`/${orgSlug}/welcome`);
-          }
+          router.push(resolvePostLoginRedirect(orgSlug, user));
         }
         const message = `\nName: ${user?.username}\\nEmail: ${user?.email}`;
         await LoginWebhookRequest(
@@ -143,11 +155,9 @@ function Login() {
           }, 100);
         } else {
           setTimeout(() => {
-            if (res?.data?.data?.user?.is_onboarded) {
-              router.push(`/${orgSlug}`);
-            } else {
-              router.push(`/${orgSlug}/welcome`);
-            }
+            router.push(
+              resolvePostLoginRedirect(orgSlug, res?.data?.data?.user)
+            );
           }, 100);
         }
 
@@ -219,11 +229,7 @@ function Login() {
           if (redirectUrl) {
             router.push(redirectUrl);
           } else {
-            if (user?.is_onboarded) {
-              router.push(`/${orgSlug}`);
-            } else {
-              router.push(`/${orgSlug}/welcome`);
-            }
+            router.push(resolvePostLoginRedirect(orgSlug, user));
           }
 
           const message = `
@@ -271,7 +277,7 @@ function Login() {
         <section className="w-full md:w-[55%] flex flex-col max-w-xs md:max-w-lg mx-auto items-start justify-start pt-[20px] md:pt-0">
           <div className="w-full flex flex-col justify-center mt-[60px] md:mt-[80px] items-center gap-[8px] mb-[32px]">
             <h1 className="w-full text-center text-[24px] md:text-[28px] font-[600] leading-[30px] md:leading-[35px]">
-              Login to Zedu
+              Log in to Zedu
             </h1>
             <p className="w-full text-center text-[14px] md:text-[16px] text-[#344054] font-[400] leading-[21px] md:leading-[27px]">
               Welcome back! We&apos;ve missed you!
@@ -488,7 +494,7 @@ function Login() {
                     variant="ghost"
                     className="w-fit text-startß !p-0 border-none border-[#8760f8] text-[#8760f8] bg-white h-2"
                   >
-                    Login with magic link
+                    Log in with magic link
                   </Button>
                 </Link>
               </div>
