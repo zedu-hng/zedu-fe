@@ -26,6 +26,14 @@ const viewSource = readSource(
   "_components",
   "invoice-view.tsx"
 );
+const notFoundSource = readSource(
+  "app",
+  "(client)",
+  "billing",
+  "invoice",
+  "[id]",
+  "not-found.tsx"
+);
 
 const ORG_A = "org-a";
 const ORG_B = "org-b";
@@ -177,6 +185,17 @@ test("the old fixed sample invoice is never used as a fallback", () => {
   assert.ok(viewSource.includes("selectInvoice"));
   assert.ok(viewSource.includes("notFound()"));
   assert.ok(viewSource.includes("/subscriptions/list/"));
+});
+
+test("the route has its own not-found boundary below the client ErrorBoundary", () => {
+  // (client)/layout.tsx wraps children in an ErrorBoundary that swallows
+  // throws, so the segment must ship its own not-found boundary or
+  // notFound() renders the "unexpected error" state instead of the 404 page.
+  assert.ok(
+    notFoundSource.includes('from "~/app/not-found"'),
+    "the segment not-found page must reuse the app's 404 UI"
+  );
+  assert.ok(notFoundSource.includes("default"), "must export a default");
 });
 
 test("the invoice route exports noindex nofollow metadata", () => {
