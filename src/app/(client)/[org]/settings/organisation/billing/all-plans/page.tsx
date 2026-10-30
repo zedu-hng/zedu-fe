@@ -61,23 +61,27 @@ const Page = () => {
 
     try {
       const response = await request();
-      if (response?.status !== 200 && response?.status !== 201) {
-        throw new Error("Checkout request failed");
-      }
+      if (response?.status !== 200 && response?.status !== 201) return;
 
-      const checkoutUrl = response?.data?.data?.checkout_session_url;
-      if (typeof checkoutUrl !== "string" || !checkoutUrl.trim()) {
-        throw new Error("Missing checkout URL");
-      }
-      const destination = new URL(checkoutUrl);
-      if (!["https:", "http:"].includes(destination.protocol)) {
-        throw new Error("Invalid checkout URL");
+      let destination: URL;
+      try {
+        const checkoutUrl = response?.data?.data?.checkout_session_url;
+        if (typeof checkoutUrl !== "string" || !checkoutUrl.trim()) {
+          throw new Error("Missing checkout URL");
+        }
+        destination = new URL(checkoutUrl);
+        if (!["https:", "http:"].includes(destination.protocol)) {
+          throw new Error("Invalid checkout URL");
+        }
+      } catch {
+        showError("Unable to start checkout. Please try again.");
+        return;
       }
 
       window.location.assign(destination.href);
       redirecting = true;
     } catch {
-      showError("Unable to start checkout. Please try again.");
+      // The shared request helpers already report request failures.
     } finally {
       if (!redirecting) {
         checkoutPending.current = false;
@@ -86,16 +90,16 @@ const Page = () => {
     }
   };
 
-  const handleUpgrade = (planId: string, planName: string) =>
+  const handleUpgrade = (planId: string) =>
     startCheckout(planId, () =>
       orgData?.subscription_plan_id === "free"
         ? PostRequest("/subscriptions/create", {
-            plan_name: planName,
+            plan_id: planId,
             org_id: orgId || "",
             email,
           })
         : PutRequest("/subscriptions/modify", {
-            plan_name: planName,
+            plan_id: planId,
             org_id: orgId || "",
           })
     );
@@ -341,7 +345,7 @@ const Page = () => {
                             <Button
                               className="w-full rounded-xl border border-[#6941C6] bg-white px-6 py-6 text-center font-semibold text-[#6941C6] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#F8F7FF] hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                               onClick={() => {
-                                handleUpgrade(plan.id, plan.name);
+                                handleUpgrade(plan.id);
                               }}
                               disabled={isLoading || loadingPlan !== ""}
                             >
