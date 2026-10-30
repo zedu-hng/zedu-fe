@@ -9,6 +9,7 @@ import Loading from "~/components/ui/loading";
 import { Button } from "~/components/ui/button";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DataContext } from "~/store/GlobalState";
+import { endSessionIfNotRemembered } from "~/utils/auth-session";
 
 const REDIRECT_SECONDS = 10;
 
@@ -92,6 +93,9 @@ const InviteForm = () => {
     if (hasInitialized.current) return;
 
     hasInitialized.current = true;
+    // Expire a session that was not remembered before this form checks
+    // whether the user is signed in or stores new credentials.
+    endSessionIfNotRemembered();
     localStorage.setItem("orgId", org_id);
 
     const getOrgDetails = async () => {

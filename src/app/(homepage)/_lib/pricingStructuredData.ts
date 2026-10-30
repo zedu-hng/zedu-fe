@@ -20,40 +20,35 @@ export function getPricingStructuredData() {
     publisher: {
       "@id": siteUrl("/#organization"),
     },
-    offers: {
-      "@type": "OfferCatalog",
-      name: "Zedu Pricing Plans",
-      itemListElement: [
-        {
-          "@type": "Offer",
-          name: "Starter",
-          description:
-            "Best for small classes and educators starting with Zedu.",
+    offers: [
+      {
+        "@type": "Offer",
+        name: "Starter",
+        description: "Best for small classes and educators starting with Zedu.",
+        price: "0",
+        priceCurrency: "NGN",
+        url: siteUrl("/pricing"),
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
           price: "0",
           priceCurrency: "NGN",
-          url: siteUrl("/pricing"),
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            price: "0",
-            priceCurrency: "NGN",
-            unitText: "MONTH",
-          },
+          unitText: "MONTH",
         },
-        {
-          "@type": "Offer",
-          name: "Pro",
-          description: "Best for bootcamps and structured programs.",
+      },
+      {
+        "@type": "Offer",
+        name: "Pro",
+        description: "Best for bootcamps and structured programs.",
+        price: "20000",
+        priceCurrency: "NGN",
+        url: siteUrl("/pricing"),
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
           price: "20000",
           priceCurrency: "NGN",
-          url: siteUrl("/pricing"),
-          priceSpecification: {
-            "@type": "UnitPriceSpecification",
-            price: "20000",
-            priceCurrency: "NGN",
-            unitText: "MONTH",
-          },
+          unitText: "MONTH",
         },
-      ],
-    },
+      },
+    ],
   };
 }

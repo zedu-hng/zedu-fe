@@ -51,7 +51,9 @@ const CreateOrganization: React.FC = () => {
       return false;
     }
 
-    if (trimmedName.length < 2 || trimmedName.length > 255) {
+    // Count characters, not UTF-16 units, so an emoji counts as one.
+    const nameLength = Array.from(trimmedName).length;
+    if (nameLength < 2 || nameLength > 255) {
       showError("Organisation name must be between 2 and 255 characters.");
       return false;
     }
@@ -145,8 +147,6 @@ const CreateOrganization: React.FC = () => {
                   value={values.organisationName}
                   onChange={handleChange}
                   name="organisationName"
-                  minLength={2}
-                  maxLength={255}
                   required
                 />
               </div>
@@ -167,16 +167,21 @@ const CreateOrganization: React.FC = () => {
 
               <div className="flex flex-col sm:flex-row align-center justify-between gap-6">
                 <div className="form-box sm:mb-3 w-full relative z-10">
-                  <label className="mb-2 block text-sm font-semibold">
+                  <label
+                    htmlFor="organisation-country"
+                    className="mb-2 block text-sm font-semibold"
+                  >
                     Country
                   </label>
 
                   <CustomSelect
+                    inputId="organisation-country"
                     options={countries}
                     placeholder="Select an option..."
                     onChange={setCountry}
                     defaultValue={country}
                     isDisabled={false}
+                    required
                   />
                 </div>
               </div>

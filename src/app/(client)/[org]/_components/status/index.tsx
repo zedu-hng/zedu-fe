@@ -87,6 +87,9 @@ const StatusModal = () => {
 
   useEffect(() => {
     if (status) {
+      // A composition interrupted by closing the dialog never fires
+      // compositionend, so the flag is reset whenever the dialog opens.
+      isComposingRef.current = false;
       setStatusText("");
       setEmoji("");
       setRemoveAfter("Today");
@@ -210,6 +213,11 @@ const StatusModal = () => {
               isComposingRef.current = true;
             }}
             onCompositionEnd={handleCompositionEnd}
+            onBlur={(event) => {
+              if (!isComposingRef.current) return;
+              isComposingRef.current = false;
+              setStatusText(clampStatusText(event.currentTarget.value));
+            }}
             placeholder="What's your status?"
             aria-label="Status text"
             aria-describedby="status-character-count"

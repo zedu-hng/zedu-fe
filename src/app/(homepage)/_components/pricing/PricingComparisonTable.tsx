@@ -42,7 +42,7 @@ const NotIncludedCell = () => {
       >
         <path
           d="M10.5 1.5L1.5 10.5M1.5 1.5L10.5 10.5"
-          stroke="#98A2B3"
+          stroke="#667085"
           strokeWidth="1.6"
           strokeLinecap="round"
         />
