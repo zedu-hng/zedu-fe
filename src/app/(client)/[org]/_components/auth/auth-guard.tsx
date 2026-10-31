@@ -11,6 +11,7 @@ import {
 } from "~/lib/buzz/session";
 import AuthSessionSetup from "~/components/auth/auth-session-setup";
 import {
+  endSessionIfNotRemembered,
   handleSessionExpired,
   isUnauthorizedResponse,
 } from "~/utils/auth-session";
@@ -40,18 +41,20 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
         return;
       }
 
+      // Expire a session that was not remembered before anything reads it,
+      // including on recorder routes.
+      endSessionIfNotRemembered();
+
       const isRecorderRoute = pathname.includes("/buzz-record/");
       let orgId = localStorage.getItem("orgId");
       let token = localStorage.getItem("token");
 
       if (isRecorderRoute) {
         const session = hydrateRecorderSessionFromSearchParams(searchParams);
-        if (session.token) {
-          token = session.token;
-        }
-        if (session.orgId) {
-          orgId = session.orgId;
-        }
+        // A recorder only uses the credentials in its own URL, never a
+        // session left in this browser.
+        token = session.token;
+        orgId = session.orgId;
         if (session.isRecorder) {
           dispatch({
             type: ACTIONS.BUZZ_SESSION_MODE,
