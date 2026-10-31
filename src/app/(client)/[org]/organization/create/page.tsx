@@ -12,6 +12,7 @@ import {
   redirectAfterOrgSwitch,
   resolveChannelIdForOrgSwitch,
 } from "~/utils/org-switch";
+import { validateOrganisationForm } from "~/utils/organisation-form";
 
 // initial states
 const initialState = {
@@ -43,9 +44,13 @@ const CreateOrganization: React.FC = () => {
   }, []);
 
   const validateForm = () => {
-    const { organisationName, organisationType } = values;
-    if (!organisationName || !organisationType) {
-      showError("Please fill in all required fields.");
+    const error = validateOrganisationForm({
+      organisationName: values.organisationName,
+      organisationType: values.organisationType,
+      country: country?.value,
+    });
+    if (error) {
+      showError(error);
       return false;
     }
     return true;
@@ -65,8 +70,8 @@ const CreateOrganization: React.FC = () => {
     setButtonloding(true);
 
     const payload = {
-      name: values.organisationName,
-      type: values.organisationType,
+      name: values.organisationName.trim(),
+      type: values.organisationType.trim(),
       email: "email@email.com",
       country: country?.value,
     };
@@ -147,16 +152,21 @@ const CreateOrganization: React.FC = () => {
 
               <div className="flex flex-col sm:flex-row align-center justify-between gap-6">
                 <div className="form-box sm:mb-3 w-full relative z-10">
-                  <label className="mb-2 block text-sm font-semibold">
+                  <label
+                    htmlFor="organisation-country"
+                    className="mb-2 block text-sm font-semibold"
+                  >
                     Country
                   </label>
 
                   <CustomSelect
+                    inputId="organisation-country"
                     options={countries}
                     placeholder="Select an option..."
                     onChange={setCountry}
                     defaultValue={country}
                     isDisabled={false}
+                    required
                   />
                 </div>
               </div>

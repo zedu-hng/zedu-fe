@@ -7,6 +7,8 @@ const CustomSelect = ({
   onChange,
   defaultValue,
   isDisabled,
+  inputId,
+  required,
 }: any) => {
   //
 
@@ -19,6 +21,9 @@ const CustomSelect = ({
       isSearchable={true}
       className="basic-select border rounded-lg focus:outline-none focus:border-blue-400"
       isDisabled={isDisabled}
+      inputId={inputId}
+      required={required}
+      aria-required={required}
       menuPlacement="auto"
       styles={{
         control: (baseStyles, state) => {
