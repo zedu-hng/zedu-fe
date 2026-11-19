@@ -5,10 +5,10 @@ import { ArrowBtn, DownloadAppBtn } from "../_components/ui/Button";
 import FeatureCard from "../_components/FeatureCard";
 import { DynamicFooter } from "../_components/footer/dynamic-footer";
 import { QRCodeDisplay } from "../_components/QRCodeDisplay";
-import { storeLink } from "~/lib/env-urls";
+import { appStoreUrl, playStoreUrl } from "~/lib/env-urls";
 
-const HERO_LINK = { campaign: "download-page", content: "hero" };
-const BOTTOM_LINK = { campaign: "download-page", content: "bottom" };
+const APP_STORE_URL = appStoreUrl();
+const PLAY_STORE_URL = playStoreUrl();
 
 export const metadata: Metadata = {
   title: "Download Zedu App | Mobile and Desktop Learning Workspace",
@@ -100,13 +100,13 @@ const DownLoadPage = () => {
             text="Download on the"
             description="App Store"
             leftIcon="apple"
-            href={storeLink("app", HERO_LINK)}
+            href={APP_STORE_URL}
           />
           <DownloadAppBtn
             text="GET IT ON"
             description="Google Play"
             leftIcon="google"
-            href={storeLink("play", HERO_LINK)}
+            href={PLAY_STORE_URL}
           />
         </div>
 
@@ -172,7 +172,7 @@ const DownLoadPage = () => {
                 text="Download on the"
                 description="App Store"
                 leftIcon="apple"
-                href={storeLink("app", BOTTOM_LINK)}
+                href={APP_STORE_URL}
                 dark
                 iconColor="#FFFFFF"
               />
@@ -180,7 +180,7 @@ const DownLoadPage = () => {
                 text="GET IT ON"
                 description="Google Play"
                 leftIcon="google"
-                href={storeLink("play", BOTTOM_LINK)}
+                href={PLAY_STORE_URL}
                 dark
                 iconColor="#FFFFFF"
               />

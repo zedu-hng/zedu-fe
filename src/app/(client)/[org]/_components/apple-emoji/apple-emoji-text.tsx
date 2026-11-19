@@ -1,45 +1,37 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { Fragment } from "react";
 import { tokenizeAppleEmoji } from "~/lib/apple-emoji";
 
-interface AppleEmojiTextProps {
-  text?: string | null;
-  className?: string;
-}
+export function AppleEmojiText({ text }: { text?: string | null }) {
+  const value = text ?? "";
+  const tokens = tokenizeAppleEmoji(value);
 
-export function AppleEmojiText({ text, className }: AppleEmojiTextProps) {
-  const elements = useMemo(() => {
-    if (!text) return null;
+  if (
+    tokens.length === 0 ||
+    (tokens.length === 1 && tokens[0].type === "text")
+  ) {
+    return <>{value}</>;
+  }
 
-    const tokens = tokenizeAppleEmoji(text);
-    return tokens.map((token, index) => {
-      if (token.type === "text") {
-        return token.text;
-      }
+  return (
+    <span>
+      {tokens.map((token, index) => {
+        if (token.type === "text") {
+          return <Fragment key={`text-${index}`}>{token.value}</Fragment>;
+        }
 
-      if (token.src) {
         return (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={`emoji-${index}`}
             className="apple-emoji-img"
-            alt={token.emoji}
             src={token.src}
+            alt={token.emoji}
             draggable={false}
           />
         );
-      }
-
-      return token.emoji;
-    });
-  }, [text]);
-
-  if (!text) return <>{text || ""}</>;
-
-  if (className) {
-    return <span className={className}>{elements}</span>;
-  }
-
-  return <>{elements}</>;
+      })}
+    </span>
+  );
 }

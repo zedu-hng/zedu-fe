@@ -8,7 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Checkbox } from "~/components/ui/checkbox";
 import Loading from "~/components/ui/loading";
 import { PostRequest } from "~/utils/request";
-import { showError } from "~/components/toast/sonner";
 import { useGoogleLogin } from "@react-oauth/google";
 import { RegisterWebhookRequest } from "~/utils/webhook-request";
 import { Separator } from "~/components/ui/separator";
@@ -305,25 +304,8 @@ function SignUp() {
         setGoogleloading(false);
       }
     },
-    onError: (error) => {
-      setGoogleloading(false);
-      console.error("Google Sign-up Failed:", error);
-      if (error.error !== "access_denied") {
-        showError(
-          "Google sign-up failed",
-          "Try again, or sign up with email and password instead."
-        );
-      }
-    },
-    onNonOAuthError: (error) => {
-      setGoogleloading(false);
-      console.error("Google Sign-up Failed:", error);
-      if (error.type === "popup_failed_to_open") {
-        showError(
-          "Google sign-up failed",
-          "Allow pop-ups for this site, then try again."
-        );
-      }
+    onError: () => {
+      console.error("Login Failed");
     },
   });
 

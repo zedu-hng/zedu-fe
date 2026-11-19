@@ -111,7 +111,7 @@ const PricingPage = () => {
 
       <div
         id="compare-plans"
-        className="mx-auto w-full max-w-7xl scroll-mt-24 px-4 sm:px-8 lg:px-12 space-y-6 relative"
+        className="mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-12 space-y-6 relative scroll-mt-24"
       >
         <div className="no-scrollbar">
           <Table className="min-w-[680px] table-fixed sm:min-w-[760px] no-scrollbar">
