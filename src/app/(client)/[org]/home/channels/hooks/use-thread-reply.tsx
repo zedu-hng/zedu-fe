@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { ACTIONS } from "~/store/Actions";
 import { DataContext } from "~/store/GlobalState";
 import { GetRequest } from "~/utils/new-request";
@@ -12,14 +12,30 @@ const UseThreadReply = (onRead?: () => void) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const orgId = state?.orgId || localStorage.getItem("orgId") || "";
+  const scope = `${orgId}:${channelId}:${threadId}`;
+  const scopeRef = useRef(scope);
+  scopeRef.current = scope;
+  const threadActivity = state?.threadActivity ?? 0;
+  const firstActivity = useRef(threadActivity);
 
-  const fetchReplies = async (newPage = 1) => {
+  const fetchReplies = async (
+    newPage = 1,
+    refresh = false,
+    isCancelled = () => false
+  ) => {
     if (!channelId || !threadId) return;
 
     try {
       const res = await GetRequest(
         `/threads/${threadId}/channels/${channelId}?page=${newPage}&limit=30`
       );
+      if (
+        scopeRef.current !== scope ||
+        isCancelled() ||
+        localStorage.getItem("orgId") !== orgId
+      )
+        return;
 
       if (res?.status === 200 || res?.status === 201) {
         const newThreads = Array.isArray(res.data?.data) ? res.data.data : [];
@@ -29,26 +45,29 @@ const UseThreadReply = (onRead?: () => void) => {
           payload: {
             newThreads,
             newPage,
+            refresh,
             parentReactions: state?.thread?.reactions,
           },
         });
 
-        if (newPage === 1 && state?.reply) {
+        if (!refresh && newPage === 1 && state?.reply) {
           onRead?.();
         }
 
         prefetchAvatars(newThreads);
 
-        setHasMore(newThreads.length >= 30);
+        if (!refresh) setHasMore(newThreads.length >= 30);
       } else {
-        setHasMore(false);
+        if (!refresh) setHasMore(false);
       }
     } catch (error) {
       console.error("Error fetching thread replies:", error);
-      setHasMore(false);
+      if (!refresh) setHasMore(false);
     } finally {
-      setLoading(false);
-      setPage(newPage);
+      if (!refresh && scopeRef.current === scope) {
+        setLoading(false);
+        setPage(newPage);
+      }
     }
   };
 
@@ -59,7 +78,28 @@ const UseThreadReply = (onRead?: () => void) => {
         dispatch({ type: ACTIONS.MESSAGE_LOADING, payload: false })
       );
     }
-  }, [state?.reply, threadId, channelId, token, dispatch, onRead]);
+  }, [state?.reply, orgId, threadId, channelId, token, dispatch, onRead]);
+
+  const fetchRepliesRef = useRef(fetchReplies);
+  fetchRepliesRef.current = fetchReplies;
+  useEffect(() => {
+    if (
+      threadActivity === firstActivity.current ||
+      !state?.reply ||
+      !threadId ||
+      !channelId ||
+      !token
+    )
+      return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void fetchRepliesRef.current(1, true, () => cancelled);
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [threadActivity, state?.reply, orgId, threadId, channelId, token]);
 
   const fetchMoreData = () => {
     if (hasMore && !loading) {

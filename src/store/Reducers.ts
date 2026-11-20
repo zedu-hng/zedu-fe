@@ -119,6 +119,7 @@ const sanitizeReplyReactions = (message: any, parentReactions?: any[]) => {
 const prependRealtimeReplyMessage = (list: any[] = [], newMessage: any) => {
   let removedOptimistic = false;
   const cleanList = list.filter((msg) => {
+    if (newMessage?.id && msg?.id === newMessage.id) return false;
     if (
       !removedOptimistic &&
       msg?.isOptimistic &&
@@ -561,6 +562,21 @@ const reducers = (state: any, action: any) => {
         const sanitizedThreads = incoming.map((msg: any) =>
           sanitizeReplyReactions(msg, parentReactions)
         );
+
+        if (action.payload.refresh || action.payload.newPage > 1) {
+          const seen = new Set();
+          const combined = action.payload.refresh
+            ? [...sanitizedThreads, ...(state.replies || [])]
+            : [...(state.replies || []), ...sanitizedThreads];
+          const replies = combined.filter((message: any) => {
+            const id = message?.id || message?.message_id;
+            if (!id) return true;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+          return { ...state, replies };
+        }
 
         return {
           ...state,
@@ -1496,6 +1512,24 @@ const reducers = (state: any, action: any) => {
       }
 
       const incoming = action.payload.newThreads || [];
+      if (action.payload.refresh) {
+        const seen = new Set();
+        const threadMentions = [
+          ...incoming,
+          ...(state.threadMentions || []),
+        ].filter((group: any) => {
+          const id = group?.thread_id || group?.thread_messages?.[0]?.thread_id;
+          if (!id || seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+        return {
+          ...state,
+          threadMentions,
+          threadMentionsHasMore:
+            action.payload.hasMore ?? state.threadMentionsHasMore,
+        };
+      }
       const isFirstPage = action.payload.newPage === 1;
       const previous = state.threadMentions || [];
       const seen = new Set(
@@ -1514,7 +1548,7 @@ const reducers = (state: any, action: any) => {
       });
       const hasMore =
         typeof action.payload.hasMore === "boolean"
-          ? action.payload.hasMore && (isFirstPage || appended.length > 0)
+          ? action.payload.hasMore
           : state.threadMentionsHasMore;
 
       return {
