@@ -21,7 +21,7 @@ import { useRBAC } from "~/hooks/useRBAC";
 interface MenuDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  participants?: { user_id?: string | number }[];
+  participants?: { user_id?: string | number; id?: string | number }[];
 }
 
 const MenuDropdown = ({ isOpen, onClose, participants }: MenuDropdownProps) => {
@@ -36,8 +36,22 @@ const MenuDropdown = ({ isOpen, onClose, participants }: MenuDropdownProps) => {
   const router = useRouter();
   const channelId = params.id as string;
   const { hasPermission } = useRBAC();
+  const currentUserId = state?.user?.user_id ?? state?.user?.id;
+  // This menu belongs to group conversations, including groups with two members.
+  const isGroupMember =
+    currentUserId != null &&
+    currentUserId !== "" &&
+    Array.isArray(participants) &&
+    participants.some((participant) => {
+      const participantId = participant.user_id ?? participant.id;
+      return (
+        participantId != null && String(participantId) === String(currentUserId)
+      );
+    });
   const canAddMembers =
-    hasPermission("manage:members") || hasPermission("invite:members");
+    isGroupMember ||
+    hasPermission("manage:members") ||
+    hasPermission("invite:members");
 
   useEffect(() => {
     if (!isOpen) return;
