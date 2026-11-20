@@ -227,6 +227,7 @@ export default function GeneralNotificationConnection() {
         result?.notification_type === "thread_notification"
       ) {
         const unseen = result?.data?.unseen_thread_count;
+        dispatch({ type: ACTIONS.THREAD_ACTIVITY });
         if (typeof unseen === "number") {
           dispatch({
             type: ACTIONS.UNSEEN_THREAD_COUNT,
